@@ -1,0 +1,8 @@
+pyyaml
+pygeoip
+flask
+argh
+python-crontab
+markdown
+BeautifulSoup
+tables

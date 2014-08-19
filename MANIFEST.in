@@ -1,0 +1,2 @@
+recursive-include wzdat/dashboard/templates *
+recursive-include wzdat/dashboard/static *
