@@ -104,7 +104,7 @@ class SingleFile(FileCommon, IPathable):
         self._lcount = -1
         self._nodes_cache = None
         self._dates_cache = None
-        self._servers_cache = None
+        self._kinds_cache = None
         self._files_cache = None
         self._conv_file = None
 
@@ -212,7 +212,7 @@ class SingleFile(FileCommon, IPathable):
         _c.lineno = 0
         fdates = [date._sdate for date in self._linfos.dates]
         nodes = [node for node in self._linfos.nodes]
-        servers = [server for server in self._linfos.servers]
+        kinds = [kind for kind in self._linfos.kinds]
         for line in f:
             if tfp is None:
                 tfp = self._to_frame_init_tfp()
@@ -230,7 +230,7 @@ class SingleFile(FileCommon, IPathable):
                 tfp.levels.append(level)
                 tfp.dates.append(_date)
                 tfp.nodes.append(nodes[_c.lineno])
-                tfp.servers.append(servers[_c.lineno])
+                tfp.kinds.append(kinds[_c.lineno])
 
             _c.lineno += 1
             slineno += 1
@@ -252,7 +252,7 @@ class SingleFile(FileCommon, IPathable):
         df['msg'] = df['msg'].apply(lambda m: m.encode('utf8'))
         if df_cb is not None:
             df_cb(df)
-        min_itemsize = {'server': 20, 'msg': 255}
+        min_itemsize = {'kind': 20, 'msg': 255}
         if max_msg is not None:
             min_itemsize['msg'] = max_msg
         store.put(store_key, df, format='table', min_itemsize=min_itemsize)
@@ -270,7 +270,7 @@ class SingleFile(FileCommon, IPathable):
         tfp.get_line_type = _get_member(self._ctx, 'get_line_type', False)
 
         tfp.nodes = []
-        tfp.servers = []
+        tfp.kinds = []
         tfp.dates = []
         tfp.levels = []
         tfp.msgs = []
@@ -278,8 +278,8 @@ class SingleFile(FileCommon, IPathable):
 
     def _to_frame_build_data_frame(self, tfp, hasna):
         # build data frame
-        dfinfo = {'node': tfp.nodes, 'server': tfp.servers, 'msg': tfp.msgs}
-        dfcols = ['node', 'server']
+        dfinfo = {'node': tfp.nodes, 'kind': tfp.kinds, 'msg': tfp.msgs}
+        dfcols = ['node', 'kind']
         if tfp.get_line_type is not None:
             dfinfo['level'] = tfp.levels
             dfcols.append('level')
@@ -290,7 +290,7 @@ class SingleFile(FileCommon, IPathable):
         df.index.name = 'dtime'
         # pytable not support unicode for now
         df['node'] = df['node'].astype(str)
-        df['server'] = df['server'].astype(str)
+        df['kind'] = df['kind'].astype(str)
         if 'level' in df.columns:
             df['level'] = df['level'].astype(str)
         return df
@@ -301,9 +301,9 @@ class SingleFile(FileCommon, IPathable):
         return self._linfos.unique_nodes
 
     @property
-    def servers(self):
-        """Return unique server list for each log line is from."""
-        return self._linfos.unique_servers
+    def kinds(self):
+        """Return unique kind list for each log line is from."""
+        return self._linfos.unique_kinds
 
     @property
     def dates(self):
@@ -556,7 +556,7 @@ def _find_in_fileo_grep(ctx, result_file, tmp_file, word, idx, _file, fileno,
         cmd = ['cat', tmp_file]
         check_call(cmd, stdout=out)
     if found:
-        return LineInfo(LineInfoImpl_Count(_file.node, _file.server,
+        return LineInfo(LineInfoImpl_Count(_file.node, _file.kind,
                                            _file.date, _file, cnt))
 
 
@@ -583,7 +583,7 @@ def _normalize_options(options):
         elif isinstance(option, FileSelector):
             for _file in option:
                 opts.append(_file.node)
-                opts.append(_file.server)
+                opts.append(_file.kind)
                 opts.append(_file.date)
         else:
             opts.append(option)
@@ -634,7 +634,7 @@ class FileSelector(FileCommon, IFilterable, IMergeable):
         self._force_all = force_all
         self._lcount = -1
         self._dates_cache = None
-        self._servers_cache = None
+        self._kinds_cache = None
         self._nodes_cache = None
 
     def find(self, word, options=None, print_prog=True):
@@ -717,10 +717,10 @@ class FileSelector(FileCommon, IFilterable, IMergeable):
         return rv
 
     @property
-    def _servers(self):
+    def _kinds(self):
         rv = []
         for _file in self.files:
-            rv.append(_file.server)
+            rv.append(_file.kind)
         return rv
 
     @property
@@ -739,12 +739,12 @@ class FileSelector(FileCommon, IFilterable, IMergeable):
         return self._nodes_cache
 
     @property
-    def servers(self):
-        """Return unique server list for all files."""
-        if self._servers_cache is None:
-            rv = ValueList(unique_list(self._servers))
-            self._servers_cache = rv
-        return self._servers_cache
+    def kinds(self):
+        """Return unique kind list for all files."""
+        if self._kinds_cache is None:
+            rv = ValueList(unique_list(self._kinds))
+            self._kinds_cache = rv
+        return self._kinds_cache
 
     @property
     def dates(self):
@@ -871,7 +871,7 @@ class FileSelector(FileCommon, IFilterable, IMergeable):
         store = HDFStore(store_path, 'w')
         _c = self._to_frame_prop('to_frame_hdf', False)
         for df in self._to_frame_gen(_c, usecols, chunk_cnt):
-            min_itemsize = {'server': 20, 'msg': 255}
+            min_itemsize = {'kind': 20, 'msg': 255}
             # pytables not support unicode for now
             df['msg'] = df['msg'].apply(lambda m: m.encode('utf8'))
             if df_cb is not None:
@@ -1082,14 +1082,14 @@ def _update_files(ctx):
         nprint(msg)
 
 
-class ServerField(Field):
+class KindField(Field):
 
-    """Server field object."""
+    """Kind field object."""
 
-    _clsname = 'server'
+    _clsname = 'kind'
 
     def __init__(self, ctx):
-        super(ServerField, self).__init__(ctx)
+        super(KindField, self).__init__(ctx)
 
     def _match(self, oval, fileo):
         return oval._part in fileo.filename
@@ -1099,13 +1099,7 @@ class ServerField(Field):
         return to_value(self, fileo)
 
     def _value_fn(self):
-        fn = _get_member(self._ctx, 'get_server', False)
-        if fn is None:
-            fn = _get_member(self._ctx, 'get_table', False)
-        if fn is None:
-            raise Exception("neither 'get_server' nor 'get_table' is defined in"
-                            "the context.")
-        return fn
+        return _get_member(self._ctx, 'get_kind')
 
     def __getstate__(self):
         s = self.__dict__.copy()
@@ -1183,7 +1177,7 @@ def _find_in_temp_grep(ctx, result_file, tempo, word, _options):
 
 def _find_in_temp_grep_write(result_file, tempo, tmp_file):
     nodes = []
-    servers = []
+    kinds = []
     dates = []
     files = []
     linenos = []
@@ -1214,9 +1208,9 @@ def _find_in_temp_grep_write(result_file, tempo, tmp_file):
         while True:
             try:
                 if impl.count > lineno:
-                    node, server, date, _file = impl[lineno]
+                    node, kind, date, _file = impl[lineno]
                     nodes.append(node)
-                    servers.append(server)
+                    kinds.append(kind)
                     dates.append(date)
                     files.append(_file)
                     lineno = lineno_gen.next() - off
@@ -1226,7 +1220,7 @@ def _find_in_temp_grep_write(result_file, tempo, tmp_file):
                     impl = impl_gen.next()
             except StopIteration:
                 break
-    return LineInfo(LineInfoImpl_Array(nodes, servers, dates, files))
+    return LineInfo(LineInfoImpl_Array(nodes, kinds, dates, files))
 
 
 def _find_in_fileo_grep_call(ctx, word, idx, _file, fileno, _options, out,
@@ -1271,7 +1265,7 @@ def update(mod, ext, subtype=None):
         _dir = CONV_DIR
     ctx = Context(mod, _dir, encoding, ext)
     date = DateField(ctx)
-    server = ServerField(ctx)
+    kind = KindField(ctx)
     node = NodeField(ctx)
 
     # collect files
@@ -1279,7 +1273,7 @@ def update(mod, ext, subtype=None):
     if encoding.startswith('utf-16'):
         ctx.encoding = 'utf-8'
     ctx.updated = time.time()
-    return ctx, date, server, node
+    return ctx, date, kind, node
 
 
 class FileField(Field):
@@ -1291,9 +1285,9 @@ class FileField(Field):
 
     def _match(self, oval, fileo):
         node = str(oval.node) == str(fileo.node)
-        server = str(oval.server) == str(fileo.server)
+        kind = str(oval.kind) == str(fileo.kind)
         date = oval.date._match(fileo)
-        val = node and server and date
+        val = node and kind and date
         return val
 
     def __getstate__(self):
@@ -1340,7 +1334,7 @@ class FileValue(SingleFile):
                 setattr(self, name, val)
             else:
                 raise InvalidProp()
-        self._linfos = LineInfo(LineInfoImpl_Count(self.node, self.server,
+        self._linfos = LineInfo(LineInfoImpl_Count(self.node, self.kind,
                                                    self.date, self,
                                                    self._calc_lcount))
 
@@ -1349,8 +1343,8 @@ class FileValue(SingleFile):
             return self.path
         elif qmode == 'node':
             return str(self.nodes[0])
-        elif qmode == 'server':
-            return str(self.servers[0])
+        elif qmode == 'kind':
+            return str(self.kinds[0])
         elif qmode == 'date':
             return str(self.dates[0])
         return unicode(type(self))

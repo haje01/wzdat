@@ -3,8 +3,8 @@
 
 from wzdat.selector import FileSelector, Selector, update, SlotMap
 
-ALL_EXPORT = ['files', 'servers', 'dates', 'dates', 'nodes', 'update', 'node',
-              'server', 'date', 'slot']
+ALL_EXPORT = ['files', 'kinds', 'dates', 'dates', 'nodes', 'update', 'node',
+              'kind', 'date', 'slot']
 
 update = update
 
@@ -12,8 +12,8 @@ update = update
 def make_selectors(ctx, all_files):
     """Make selectors and return them."""
     _files = FileSelector(ctx, all_files, 'file')
-    servers = Selector(_files, 'server')
+    kinds = Selector(_files, 'kind')
     dates = Selector(_files, 'date')
     nodes = Selector(_files, 'node')
     slot = SlotMap(ctx)
-    return _files, servers, dates, nodes, slot
+    return _files, kinds, dates, nodes, slot

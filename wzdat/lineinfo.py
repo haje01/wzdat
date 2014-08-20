@@ -62,10 +62,10 @@ class LineInfo(IListable):
         return rv
 
     @property
-    def servers(self):
+    def kinds(self):
         rv = []
         for impl in self.impls:
-            rv += impl.servers
+            rv += impl.kinds
         return rv
 
     @property
@@ -87,8 +87,8 @@ class LineInfo(IListable):
         return unique_list(self.nodes)
 
     @property
-    def unique_servers(self):
-        return unique_list(self.servers)
+    def unique_kinds(self):
+        return unique_list(self.kinds)
 
     @property
     def unique_dates(self):
@@ -196,7 +196,7 @@ class ILineInfoImpl(IListable):
         raise NotImplementedError("Not implemented")
 
     @property
-    def servers(self):
+    def kinds(self):
         raise NotImplementedError("Not implemented")
 
     @property
@@ -212,7 +212,7 @@ class ILineInfoImpl(IListable):
         raise NotImplementedError("Not implemented")
 
     @property
-    def unique_servers(self):
+    def unique_kinds(self):
         raise NotImplementedError("Not implemented")
 
     @property
@@ -238,15 +238,15 @@ class ILineInfoImpl_SInfo(object):
     def make_impl(self, ctx):
         # find unique values TODO: Optimize
         nvals = {f.node for f in ctx.files}
-        svals = {f.server for f in ctx.files}
+        svals = {f.kind for f in ctx.files}
         dvals = {f.date for f in ctx.files}
         return self.impl_class, nvals, svals, dvals
 
 
 class LineInfoImpl_Count(ILineInfoImpl):
-    def __init__(self, node, server, date, _file, count):
+    def __init__(self, node, kind, date, _file, count):
         self.node = node
-        self.server = server
+        self.kind = kind
         self.date = date
         self._file = _file
         self._count = count
@@ -262,7 +262,7 @@ class LineInfoImpl_Count(ILineInfoImpl):
         """Return next file for iteration."""
         self._at += 1
         if self.count > self._at:
-            return self.node, self.server, self.date, self._file
+            return self.node, self.kind, self.date, self._file
         else:
             self._at = -1
             raise StopIteration()
@@ -272,7 +272,7 @@ class LineInfoImpl_Count(ILineInfoImpl):
             return self._slice(idx)
         idx = normalize_idx(idx, self.count)
         if self.count > idx:
-            return self.node, self.server, self.date, self._file
+            return self.node, self.kind, self.date, self._file
         raise IndexError
 
     def __getslice__(self, idx1, idx2):
@@ -281,7 +281,7 @@ class LineInfoImpl_Count(ILineInfoImpl):
     def _slice(self, slc):
         idx1, idx2 = get_slice_idx(slc, self.count)
         cnt = idx2 - idx1
-        return LineInfoImpl_Count(self.node, self.server, self.date,
+        return LineInfoImpl_Count(self.node, self.kind, self.date,
                                   self._file, cnt)
 
     @property
@@ -296,8 +296,8 @@ class LineInfoImpl_Count(ILineInfoImpl):
         return (self.node,) * self.count
 
     @property
-    def servers(self):
-        return (self.server,) * self.count
+    def kinds(self):
+        return (self.kind,) * self.count
 
     @property
     def dates(self):
@@ -312,8 +312,8 @@ class LineInfoImpl_Count(ILineInfoImpl):
         return (self.node,)
 
     @property
-    def unique_servers(self):
-        return (self.server,)
+    def unique_kinds(self):
+        return (self.kind,)
 
     @property
     def unique_dates(self):
@@ -327,7 +327,7 @@ class LineInfoImpl_Count(ILineInfoImpl):
         return LineInfoImpl_Count_SInfo(self)
 
     def __eq__(self, o):
-        return self.node == o.node and self.server == o.server and self.date \
+        return self.node == o.node and self.kind == o.kind and self.date \
             == o.date and self.count == o.count
 
     def __ne__(self, o):
@@ -338,7 +338,7 @@ class LineInfoImpl_Count_SInfo(ILineInfoImpl_SInfo):
     def __init__(self, impl):
         super(LineInfoImpl_Count_SInfo, self).__init__(impl)
         self.node = impl.node._repr
-        self.server = impl.server._part
+        self.kind = impl.kind._part
         self.date = impl.date._sdate
         self._file = impl._file.path
         self.count = impl.count
@@ -356,23 +356,23 @@ class LineInfoImpl_Count_SInfo(ILineInfoImpl_SInfo):
                                               self).make_impl(ctx)
         # find real value by _part
         node = self._find_real_value(self.node, nvals, '_repr')
-        server = self._find_real_value(self.server, svals, '_part')
+        kind = self._find_real_value(self.kind, svals, '_part')
         date = self._find_real_value(self.date, dvals, '_sdate')
         _file = self._find_real_value(self._file, ctx.files, 'path')
-        return impl_cls(node, server, date, _file, self.count)
+        return impl_cls(node, kind, date, _file, self.count)
 
 
 class LineInfoImpl_Array(ILineInfoImpl):
-    def __init__(self, nodes, servers, dates, files):
+    def __init__(self, nodes, kinds, dates, files):
         self._nodes = nodes
-        self._servers = servers
+        self._kinds = kinds
         self._dates = dates
         self._files = files
         nodecnt = len(nodes)
-        servercnt = len(servers)
+        kindcnt = len(kinds)
         datecnt = len(dates)
         filecnt = len(files)
-        assert(nodecnt == servercnt and servercnt == datecnt and datecnt ==
+        assert(nodecnt == kindcnt and kindcnt == datecnt and datecnt ==
                filecnt)
 
     @property
@@ -387,7 +387,7 @@ class LineInfoImpl_Array(ILineInfoImpl):
         return self._slice(slice(idx1, idx2))
 
     def _slice(self, slc):
-        return LineInfoImpl_Array(self._nodes[slc], self._servers[slc],
+        return LineInfoImpl_Array(self._nodes[slc], self._kinds[slc],
                                   self._dates[slc], self._files[slc])
 
     def next(self):
@@ -395,7 +395,7 @@ class LineInfoImpl_Array(ILineInfoImpl):
         self._at += 1
         if self.count > self._at:
             i = self._at
-            return self._nodes[i], self._servers[i], self._dates[i], \
+            return self._nodes[i], self._kinds[i], self._dates[i], \
                 self._files[i]
         else:
             self._at = -1
@@ -406,7 +406,7 @@ class LineInfoImpl_Array(ILineInfoImpl):
             raise NotImplementedError("Not implemented")
         idx = normalize_idx(idx, self.count)
         if self.count > idx:
-            return self._nodes[idx], self._servers[idx], self._dates[idx], \
+            return self._nodes[idx], self._kinds[idx], self._dates[idx], \
                 self._files[idx]
         raise IndexError
 
@@ -415,8 +415,8 @@ class LineInfoImpl_Array(ILineInfoImpl):
         return self._nodes
 
     @property
-    def servers(self):
-        return self._servers
+    def kinds(self):
+        return self._kinds
 
     @property
     def dates(self):
@@ -431,8 +431,8 @@ class LineInfoImpl_Array(ILineInfoImpl):
         return unique_list(self.nodes)
 
     @property
-    def unique_servers(self):
-        return unique_list(self.servers)
+    def unique_kinds(self):
+        return unique_list(self.kinds)
 
     @property
     def unique_dates(self):
@@ -446,7 +446,7 @@ class LineInfoImpl_Array(ILineInfoImpl):
         return LineInfoImpl_Array_SInfo(self)
 
     def __eq__(self, o):
-        return self.nodes == o.nodes and self.servers == o.servers and \
+        return self.nodes == o.nodes and self.kinds == o.kinds and \
             self.dates == o.dates
 
     def __ne__(self, o):
@@ -458,22 +458,22 @@ class LineInfoImpl_Array_SInfo(ILineInfoImpl_SInfo):
         super(LineInfoImpl_Array_SInfo, self).__init__(impl)
         # save string representation of unique values
         unodes = [node._repr for node in impl.unique_nodes]
-        uservers = [server._part for server in impl.unique_servers]
+        ukinds = [kind._part for kind in impl.unique_kinds]
         udates = [date._sdate for date in impl.unique_dates]
         ufiles = [_file.path for _file in impl.unique_files]
 
         nodeidx = {name: idx for idx, name in enumerate(unodes)}
-        serveridx = {name: idx for idx, name in enumerate(uservers)}
+        kindidx = {name: idx for idx, name in enumerate(ukinds)}
         dateidx = {name: idx for idx, name in enumerate(udates)}
         fileidx = {name: idx for idx, name in enumerate(ufiles)}
 
         self.nodes = [nodeidx[node._repr] for node in impl.nodes]
-        self.servers = [serveridx[server._part] for server in impl.servers]
+        self.kinds = [kindidx [kind._part] for kind in impl.kinds]
         self.dates = [dateidx[date._sdate] for date in impl.dates]
         self.files = [fileidx[_file.path] for _file in impl.files]
 
         self.nodemap = {idx: name for idx, name in enumerate(unodes)}
-        self.servermap = {idx: name for idx, name in enumerate(uservers)}
+        self.kindmap = {idx: name for idx, name in enumerate(ukinds)}
         self.datemap = {idx: name for idx, name in enumerate(udates)}
         self.filemap = {idx: name for idx, name in enumerate(ufiles)}
 
@@ -494,10 +494,10 @@ class LineInfoImpl_Array_SInfo(ILineInfoImpl_SInfo):
         # find real value by _part
         nodes = self._find_real_values(self.nodemap, self.nodes, nvals,
                                        '_repr')
-        servers = self._find_real_values(self.servermap, self.servers, svals,
+        kinds = self._find_real_values(self.kindmap, self.kinds, svals,
                                          '_part')
         dates = self._find_real_values(self.datemap, self.dates, dvals,
                                        '_sdate')
         files = self._find_real_values(self.filemap, self.files,
                                        ctx.files, 'path')
-        return impl_cls(nodes, servers, dates, files)
+        return impl_cls(nodes, kinds, dates, files)

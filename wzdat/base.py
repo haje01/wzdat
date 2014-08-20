@@ -110,7 +110,7 @@ class ILineAttr(object):
     def nodes(self):
         raise NotImplementedError("Not implemented")
 
-    def servers(self):
+    def kinds(self):
         raise NotImplementedError("Not implemented")
 
     def dates(self):
