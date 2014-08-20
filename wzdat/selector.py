@@ -1099,7 +1099,13 @@ class ServerField(Field):
         return to_value(self, fileo)
 
     def _value_fn(self):
-        return _get_member(self._ctx, 'get_server')
+        fn = _get_member(self._ctx, 'get_server', False)
+        if fn is None:
+            fn = _get_member(self._ctx, 'get_table', False)
+        if fn is None:
+            raise Exception("neither 'get_server' nor 'get_table' is defined in"
+                            "the context.")
+        return fn
 
     def __getstate__(self):
         s = self.__dict__.copy()
