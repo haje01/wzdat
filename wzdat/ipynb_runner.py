@@ -9,8 +9,7 @@ from Queue import Empty
 from crontab import CronTab
 from markdown import markdown
 
-from wzdat.util import which_python, div, get_notebook_dir
-from wzdat.make_config import make_config
+from wzdat.util import div, get_notebook_dir
 from wzdat import rundb
 
 
@@ -71,7 +70,6 @@ def _run_code_type(outs, runner, msg_type, content):
     elif msg_type == 'stream':
         out.stream = content['name']
         out.text = content['data']
-        #print(out.text, end='')
     elif msg_type in ('display_data', 'pyout'):
         for mime, data in content['data'].items():
             try:
@@ -97,7 +95,6 @@ def _run_init(r, path):
     if os.path.isfile(path):
         with open(path) as f:
             init = f.read()
-            print init
             run_code(r, init)
 
 
@@ -135,7 +132,7 @@ def run_notebook_view_cell(rv, r, cell, cnt):
 
 def get_view_cell_cnt(r):
     cnt = 0
-    for i, cell in enumerate(r.iter_cells()):
+    for _, cell in enumerate(r.iter_cells()):
         _type = cell['cell_type']
         if _type == 'code':
             code = cell['input']
@@ -200,20 +197,19 @@ def _parse_notebook_name(paths, scheds, groups, fnames, path, pjob, static):
 def register_cron_notebooks(paths, scheds):
     print 'Registering cron notebooks'
 
+    pkg = os.environ["WZDAT_SOL_PKG"]
+    prj = os.environ["WZDAT_PRJ"]
     cron = CronTab()
     # clear registered notebooks
     cron.remove_all('cron-ipynb')
-    cfg = make_config()
-    python = cfg['PYTHON'] if 'PYTHON' in cfg else which_python()
 
     for i, path in enumerate(paths):
         path = path.decode('utf8')
         sched = scheds[i]
         fname = os.path.basename(path)
-        cmd = ' '.join([python, '-c', '"from wzdat.ipynb_runner import '
-                        'update_notebook_by_run; update_notebook_by_run'
-                        '(\'%s\')"' % path, ' > "/tmp/cron-ipynb-%s" 2>&1' %
-                        fname])
+        cmd = ' '.join(['WZDAT_SOL_PKG=%s' % pkg, 'WZDAT_PRJ=%s' % prj,
+                        'python', '-m', 'wzdat.jobs run-notebook "%s"' % path,
+                        ' > "/tmp/cron-ipynb-%s" 2>&1' % fname])
         job = cron.new(cmd)
         job.setall(sched)
     cron.write()

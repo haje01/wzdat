@@ -5,6 +5,7 @@ from subprocess import check_call
 import argh
 
 from wzdat.make_config import make_config
+from wzdat.ipynb_runner import update_notebook_by_run
 
 cfg = make_config()
 
@@ -43,5 +44,11 @@ def register_cron():
     register_cron_notebooks(paths, scheds)
 
 
+@argh.arg('path', help="notebook path")
+def run_notebook(path):
+    update_notebook_by_run(path)
+
+
 if __name__ == "__main__":
-    argh.dispatch_commands([cache_files, register_cron, cron_cache_files])
+    argh.dispatch_commands([cache_files, register_cron, cron_cache_files,
+                            run_notebook])
