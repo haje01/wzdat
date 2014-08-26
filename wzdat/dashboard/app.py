@@ -28,8 +28,12 @@ DASHBOARD_PORT = 8095
 def _page_common_vars():
     proj = os.environ['WZDAT_PRJ'] if 'WZDAT_PRJ' in os.environ else 'Noname'
     projname = proj.upper()
-    dev = '[DEV]' if 'WZDAT_DEV' in os.environ else ''
-    return projname, dev
+    sdev = ""
+    if 'WZDAT_DEV' in os.environ:
+        dev = os.environ['WZDAT_DEV']
+        if dev.lower() == 'true':
+            sdev = '[DEV]'
+    return projname, sdev
 
 
 @app.route('/')
