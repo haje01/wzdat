@@ -6,7 +6,7 @@ import re
 from datetime import timedelta
 import urlparse
 
-from flask import Flask, render_template, request, Response
+from flask import Flask, render_template, request, Response, redirect, url_for
 from markdown import markdown
 from IPython.nbformat.current import reads
 
@@ -25,16 +25,28 @@ IPYTHON_PORT = 8090
 DASHBOARD_PORT = 8095
 
 
+def _page_common_vars():
+    proj = os.environ['WZDAT_PRJ'] if 'WZDAT_PRJ' in os.environ else 'Noname'
+    projname = proj.upper()
+    dev = '[DEV]' if 'WZDAT_DEV' in os.environ else ''
+    return projname, dev
+
+
 @app.route('/')
 def home():
+    return redirect(url_for("dashboard"))
+
+
+@app.route('/dashboard')
+def dashboard():
+    projname, dev = _page_common_vars()
+
     from wzdat.ipynb_runner import find_cron_notebooks
     assert "WZDAT_HOST" in os.environ
     host = urlparse.urlparse(os.environ["WZDAT_HOST"]).path
     iport = int(os.environ["WZDAT_IPYTHON_PORT"]) if 'WZDAT_IPYTHON_PORT' in\
         os.environ else IPYTHON_PORT
     base_url = 'http://%s:%d/tree' % (host, iport)
-    proj = os.environ['WZDAT_PRJ'] if 'WZDAT_PRJ' in os.environ else 'Noname'
-    projname = proj.upper()
     notebook_dir = get_notebook_dir()
     paths, _, _groups, fnames = find_cron_notebooks(notebook_dir, static=True)
     groups = {}
@@ -55,8 +67,9 @@ def home():
     if '' in groups:
         _collect_gnbs(gnbs, '', groups)
 
-    return render_template("dashboard.html", projname=projname, notebooks=gnbs,
-                           nb_url=base_url)
+    return render_template("dashboard.html", cur="dashboard",
+                           projname=projname, notebooks=gnbs,
+                           nb_url=base_url, dev=dev)
 
 
 @app.route('/start_view/<path:nbpath>', methods=['POST'])
@@ -208,6 +221,30 @@ def _get_run_time(ri):
         elapsed = None
     return executed, elapsed
 
+
+@app.route('/finder')
+def finder():
+    projname, dev = _page_common_vars()
+
+    return render_template("finder.html", cur="finder", projname=projname,
+                           dev=dev)
+
+
+@app.route('/notebooks')
+def notebooks():
+    projname, dev = _page_common_vars()
+
+    assert "WZDAT_HOST" in os.environ
+    host = urlparse.urlparse(os.environ["WZDAT_HOST"]).path
+    iport = int(os.environ["WZDAT_IPYTHON_PORT"]) if 'WZDAT_IPYTHON_PORT' in\
+        os.environ else IPYTHON_PORT
+    base_url = 'http://%s:%d/tree' % (host, iport)
+    proj = os.environ['WZDAT_PRJ'] if 'WZDAT_PRJ' in os.environ else 'Noname'
+    projname = proj.upper()
+    dev = '[DEV]' if 'WZDAT_DEV' in os.environ else ''
+
+    return render_template("notebooks.html", cur="notebooks",
+                           projname=projname, nb_url=base_url, dev=dev)
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=DASHBOARD_PORT, debug=DEBUG)
