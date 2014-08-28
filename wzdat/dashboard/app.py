@@ -245,7 +245,6 @@ def notebooks():
     base_url = 'http://%s:%d/tree' % (host, iport)
     proj = os.environ['WZDAT_PRJ'] if 'WZDAT_PRJ' in os.environ else 'Noname'
     projname = proj.upper()
-    dev = '[DEV]' if 'WZDAT_DEV' in os.environ else ''
 
     return render_template("notebooks.html", cur="notebooks",
                            projname=projname, nb_url=base_url, dev=dev)
