@@ -5,6 +5,8 @@ import re
 import logging
 
 from Queue import Empty
+import tempfile
+from subprocess import check_call
 
 from crontab import CronTab
 from markdown import markdown
@@ -15,6 +17,7 @@ from wzdat import rundb
 
 CRON_PTRN = re.compile(r'\s*\[\s*((?:[^\s@]+\s+){4}[^\s@]+)?\s*(?:@(.+))?\s*\]\s*(.+)')
 IGNORE_DIRS = ('.ipynb_checkpoints', '.git')
+CRON_CMD = '/usr/bin/crontab'
 
 from IPython.nbformat.current import read, NotebookNode, write
 from wzdat.notebook_runner import NotebookRunner
@@ -199,6 +202,20 @@ def register_cron_notebooks(paths, scheds):
 
     pkg = os.environ["WZDAT_SOL_PKG"]
     prj = os.environ["WZDAT_PRJ"]
+    host = os.environ["WZDAT_HOST"]
+    dport = os.environ["WZDAT_DASHBOARD_PORT"]
+
+    # start new cron file with env vars
+    filed, tpath = tempfile.mkstemp()
+    fileh = os.fdopen(filed, 'wb')
+    fileh.write('WZDAT_SOL_PKG=%s\n' % pkg)
+    fileh.write('WZDAT_PRJ=%s\n' % prj)
+    fileh.write('WZDAT_HOST=%s\n' % host)
+    fileh.write('WZDAT_DASHBOARD_PORT=%s\n' % dport)
+    fileh.close()
+    check_call([CRON_CMD, tpath])
+    os.unlink(tpath)
+
     cron = CronTab()
     # clear registered notebooks
     cron.remove_all('cron-ipynb')
@@ -207,8 +224,7 @@ def register_cron_notebooks(paths, scheds):
         path = path.decode('utf8')
         sched = scheds[i]
         fname = os.path.basename(path)
-        cmd = ' '.join(['WZDAT_SOL_PKG=%s' % pkg, 'WZDAT_PRJ=%s' % prj,
-                        'python', '-m', 'wzdat.jobs run-notebook "%s"' % path,
+        cmd = ' '.join(['python', '-m', 'wzdat.jobs run-notebook "%s"' % path,
                         ' > "/tmp/cron-ipynb-%s" 2>&1' % fname])
         job = cron.new(cmd)
         job.setall(sched)
