@@ -1,7 +1,4 @@
 import os
-from tempfile import NamedTemporaryFile
-from subprocess import check_call
-
 import argh
 
 from wzdat.make_config import make_config
@@ -37,5 +34,4 @@ def run_notebook(path):
 
 
 if __name__ == "__main__":
-    argh.dispatch_commands([cache_files, register_cron, cron_cache_files,
-                            run_notebook])
+    argh.dispatch_commands([cache_files, register_cron, run_notebook])
