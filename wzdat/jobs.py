@@ -10,10 +10,9 @@ from wzdat.ipynb_runner import update_notebook_by_run
 cfg = make_config()
 
 
-@argh.arg('prj', help="solution package name")
-def cache_files(prj):
+def cache_files():
+    prj = os.environ['WZDAT_PRJ']
     print "Caching files for: %s" % prj
-    os.environ["WZDAT_PRJ"] = prj
     datadir = '/logdata'
     pkg = os.environ["WZDAT_SOL_PKG"]
     pcfg = make_config(prj)
@@ -22,18 +21,6 @@ def cache_files(prj):
                'find_files_and_save("%s")' % (pkg, prj, ftype, datadir)]
         cmd = ' '.join(cmd)
         exec(cmd)
-
-
-@argh.arg('hour', help="hour to cache start")
-def cron_cache_files(hour):
-    pkg = os.environ["WZDAT_SOL_PKG"]
-    prj = os.environ["WZDAT_PRJ"]
-    cmd = "0 %s * * * cd /solution; WZDAT_SOL_PKG=%s python -m wzdat.jobs "\
-        "cache-files %s > /tmp/cache_%s 2>&1\n" % (hour, pkg, prj, prj)
-    with NamedTemporaryFile() as f:
-        f.write(cmd)
-        f.flush()
-        check_call(["crontab", f.name])
 
 
 def register_cron():
