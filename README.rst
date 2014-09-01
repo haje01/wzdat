@@ -18,5 +18,5 @@ To install, you need to clone from `GitHub repository`__
 
 __ https://github.com/haje01/wzdat
 
-Though you can install it,the package alone can't do the job. WzDat is a complex system where various software packages cooperate closely each other, putting all the pieces together is not a trivial work. So I decided to adopt `Docker <http://docker.com>`_ as a solution and, for sanitary reason, made another repository `wzdat-sys <https://github.com/haje01/wzdat-sys>`_ for that.
+Though you can install it,the package alone can't do the job. WzDat is a complex system where various softwares cooperate closely each other, putting all the pieces together is not a trivial work. So I decided to adopt `Docker <http://docker.com>`_ as a solution and, for sanitary reason, made another repository `wzdat-sys <https://github.com/haje01/wzdat-sys>`_ for that.
 
