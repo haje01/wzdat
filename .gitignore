@@ -17,3 +17,4 @@ htmlcov/
 build/
 dist/
 .ropeproject/
+docs/_build
