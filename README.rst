@@ -1,11 +1,11 @@
 wzdat_
 ======
 
-WzDat is an acronym for Webzen Data Analysis Toolkit, which started as an attempt to build IPython & Pandas based data analysis system. Currently WzDat consist of three packages. WzDat Python Module, `WzDat Forwarder <https://github.com/haje01/wdfwd>`_ for Windows and WzDat Dashboard.
+**WzDat** is an acronym for Webzen Data Analysis Toolkit, which started as an attempt to build `IPython <http://ipython.org>`_ & `Pandas <http://pandas.pydata.org>`_ based data analysis system. Currently WzDat consist of three packages. WzDat Python Module, `WzDat Forwarder for Windows <https://github.com/haje01/wdfwd>`_ and WzDat Dashboard.
 
-This repository is only for WzDat Python Module. In this document, ``wzdat`` is to name WzDat Python Module, and WzDat to name the data analysis system.
+This repository is for WzDat Python Module & Dashboard.
 
-For now, you can install this package by cloning from `Github repository`__
+To install, you need to clone from `Github repository`__
 
 .. code-block:: console
     
