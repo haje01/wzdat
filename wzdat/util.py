@@ -425,3 +425,14 @@ def convert_data_file(srcpath, encoding, dstpath):
     cmd = ['iconv', '-f', encoding, '-t', 'utf-8', '-o', dstpath, srcpath]
     check_call(cmd)
     return dstpath
+
+
+def convert_server_time_to_client(dt):
+    import pytz
+    cfg = make_config()
+    def get_tz(tz):
+        return pytz.UTC if tz == 'UTC' else pytz.timezone(tz)
+    stz = get_tz(cfg['SERVER_TIMEZONE'])
+    ctz = get_tz(cfg['CLIENT_TIMEZONE'])
+    sdt = stz.localize(dt)
+    return sdt.astimezone(ctz)

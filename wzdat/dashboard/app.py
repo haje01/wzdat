@@ -3,18 +3,20 @@ import sys
 import json
 import time
 import re
-from datetime import timedelta
+from datetime import timedelta, datetime
 import urlparse
 
 from flask import Flask, render_template, request, Response, redirect, url_for
 from markdown import markdown
 from IPython.nbformat.current import reads
+import pytz
 
 DEBUG = True
 
 if DEBUG:
     sys.path.insert(0, ".")
-from wzdat.util import get_notebook_dir
+from wzdat.util import get_notebook_dir, convert_server_time_to_client
+from wzdat.rundb import get_cache_info
 
 app = Flask(__name__)
 app.debug = DEBUG
@@ -33,7 +35,16 @@ def _page_common_vars():
         dev = os.environ['WZDAT_DEV']
         if dev.lower() == 'true':
             sdev = '[DEV]'
-    return projname, sdev
+
+    ci = get_cache_info()
+    if ci is not None:
+        ct = datetime.fromtimestamp(ci[0])
+        ct = convert_server_time_to_client(ct)
+        ctime = ct.strftime('%Y-%m-%d %H:%M')
+    else:
+        ctime = 'N/A'
+
+    return projname, sdev, ctime
 
 
 @app.route('/')
@@ -43,7 +54,7 @@ def home():
 
 @app.route('/dashboard')
 def dashboard():
-    projname, dev = _page_common_vars()
+    projname, dev, cache_time = _page_common_vars()
 
     from wzdat.ipynb_runner import find_cron_notebooks
     assert "WZDAT_HOST" in os.environ
@@ -73,7 +84,7 @@ def dashboard():
 
     return render_template("dashboard.html", cur="dashboard",
                            projname=projname, notebooks=gnbs,
-                           nb_url=base_url, dev=dev)
+                           nb_url=base_url, dev=dev, cache_time=cache_time)
 
 
 @app.route('/start_view/<path:nbpath>', methods=['POST'])
@@ -228,15 +239,15 @@ def _get_run_time(ri):
 
 @app.route('/finder')
 def finder():
-    projname, dev = _page_common_vars()
+    projname, dev, cache_time = _page_common_vars()
 
     return render_template("finder.html", cur="finder", projname=projname,
-                           dev=dev)
+                           dev=dev, cache_time=cache_time)
 
 
 @app.route('/notebooks')
 def notebooks():
-    projname, dev = _page_common_vars()
+    projname, dev, cache_time = _page_common_vars()
 
     assert "WZDAT_HOST" in os.environ
     host = urlparse.urlparse(os.environ["WZDAT_HOST"]).path
@@ -247,7 +258,8 @@ def notebooks():
     projname = proj.upper()
 
     return render_template("notebooks.html", cur="notebooks",
-                           projname=projname, nb_url=base_url, dev=dev)
+                           projname=projname, nb_url=base_url, dev=dev,
+                           cache_time=cache_time)
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=DASHBOARD_PORT, debug=DEBUG)

@@ -48,11 +48,14 @@ def create_db():
     with Cursor(RUNNER_DB_PATH) as cur:
         cur.execute('CREATE TABLE IF NOT EXISTS info '
                     '(path TEXT PRIMARY KEY, start REAL, elapsed REAL, cur INT, total INT);')
+        cur.execute('CREATE TABLE IF NOT EXISTS cache '
+                    '(id INTEGER PRIMARY KEY, time REAL);')
 
 
 def destroy_db():
     with Cursor(RUNNER_DB_PATH) as cur:
         cur.execute('DROP TABLE IF EXISTS info;')
+        cur.execute('DROP TABLE IF EXISTS cache;')
 
 
 def start_run(path, total):
@@ -94,10 +97,21 @@ def get_run_info(path):
     with Cursor(RUNNER_DB_PATH) as cur:
         path = path.decode('utf8')
         cur.execute('SELECT start, elapsed, cur, total FROM info WHERE path=?', (path,))
-        rv = cur.fetchone()
-        if rv is None:
-            return
-        return rv
+        return cur.fetchone()
+
+
+def update_cache_info():
+    with Cursor(RUNNER_DB_PATH) as cur:
+        cur.execute('INSERT INTO cache (time) VALUES (?)', (time.time(),))
+        # trim old
+        cur.execute('DELETE FROM cache WHERE ID NOT IN (SELECT id FROM Cache '
+                    'ORDER BY id DESC limit 10)')
+
+
+def get_cache_info():
+    with Cursor(RUNNER_DB_PATH) as cur:
+        cur.execute('SELECT time from cache ORDER BY id DESC LIMIT 1')
+        return cur.fetchone()
 
 
 if __name__ == "__main__":

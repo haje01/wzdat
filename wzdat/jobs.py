@@ -3,6 +3,8 @@ import argh
 
 from wzdat.make_config import make_config
 from wzdat.ipynb_runner import update_notebook_by_run
+from wzdat.rundb import update_cache_info
+
 
 cfg = make_config()
 
@@ -18,6 +20,7 @@ def cache_files():
                'find_files_and_save("%s")' % (pkg, prj, ftype, datadir)]
         cmd = ' '.join(cmd)
         exec(cmd)
+    update_cache_info()
 
 
 def register_cron():
