@@ -7,7 +7,7 @@ To install, you need to clone from `GitHub repository`__
 
 .. code-block:: console
     
-    $ git clone git https://github.com/haje01/wzdat
+    $ git clone https://github.com/haje01/wzdat
     $ cd wzdat
     $ python setup.py install
 
