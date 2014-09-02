@@ -23,6 +23,10 @@ User's guide
 
 Additional Notes
 ----------------
+
+.. toctree::
+   :maxdepth: 2
+   
    changes
 
 
