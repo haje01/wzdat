@@ -11,7 +11,7 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-User's guide
+User's Guide
 ------------
 
 .. toctree::
