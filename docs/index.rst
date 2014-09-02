@@ -8,7 +8,7 @@ Welcome to WzDat's documentation!
 
 **WzDat** stands for `Webzen <http://www.webzen.com/main>`_ **Data Analysis Toolkit** (pronounce it like "What's that?"), which started as an attempt to build `IPython <http://ipython.org>`_ & `Pandas <http://pandas.pydata.org>`_ based data analysis system. WzDat augments the power of IPython & Pandas.
 
-Currently WzDat consists of three applications. WzDat Python Module, Dashboard and `WzDat Forwarder for Windows <https://github.com/haje01/wdfwd>`_. This repository is for WzDat Python Module & Dashboard.
+Currently WzDat consists of three applications. WzDat Python Module, Dashboard and `WzDat Forwarder for Windows <https://github.com/haje01/wdfwd>`_. This document is for WzDat Python Module & Dashboard.
 
 User's Guide
 ------------
