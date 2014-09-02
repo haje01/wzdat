@@ -17,7 +17,7 @@ User's Guide
 .. toctree::
    :maxdepth: 2
 
-   whatsnew/0.1
+   foreword
    install
    tutorial
 
