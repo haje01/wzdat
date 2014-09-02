@@ -18,8 +18,8 @@ User's Guide
    :maxdepth: 2
 
    whatsnew/0.1
-   guide/install
-   guide/tutorial
+   install
+   tutorial
 
 
 Additional Notes
