@@ -19,6 +19,10 @@ User's guide
 
    whatsnew/0.1
    guide/install
+
+
+Additional Notes
+----------------
    changes
 
 
