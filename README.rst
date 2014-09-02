@@ -10,7 +10,7 @@ wzdat_
 
 * Filter large number of files by condition(``node``, ``server``, ``date``).
 * Select lines in selected files by word matching(``find``).
-* Convert lines into **Pandas**'s ``DataFrame``.
+* Convert lines into Pandas' ``DataFrame``.
 * Present IPython Notebook result to Dashboard.
 
 Currently WzDat consists of three applications. WzDat Python Module, Dashboard and `WzDat Forwarder for Windows <https://github.com/haje01/wdfwd>`_. This repository is for WzDat Python Module & Dashboard.
