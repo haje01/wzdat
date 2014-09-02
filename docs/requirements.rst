@@ -11,10 +11,7 @@ WzDat has been developed and tested on dockerized Linux(Ubuntu). You can deploy 
    Mounting directory from OSX or Windows to docker container would not work.
 
 
-WzDat Solution
---------------
-
-WzDat Project
--------------
+WzDat Solution & Project
+------------------------
 
 
