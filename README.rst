@@ -9,7 +9,7 @@ wzdat_
 **WzDat** is an acronym for `Webzen <http://www.webzen.com/main>`_ **Data Analysis Toolkit** (you may pronounce it like "What's that?"), which started as an attempt to build `IPython <http://ipython.org>`_ & `Pandas <http://pandas.pydata.org>`_ based data analysis system. Major features are:
 
 * Filter large number of files by condition(``node``, ``server``, ``date``).
-* Select lines in selected files by word matching.
+* Select lines in selected files by word matching.(``find``)
 * Convert lines into **Pandas**'s ``DataFrame``.
 * Present IPython Notebook result to Dashboard.
 
