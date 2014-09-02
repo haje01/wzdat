@@ -6,7 +6,7 @@ wzdat_
   :target: https://coveralls.io/r/haje01/wzdat
 
 
-**WzDat** is an acronym for `Webzen <http://www.webzen.com/main>`_ **Data Analysis Toolkit** (you may pronounce it like "What's that?"), which started as an attempt to build `IPython <http://ipython.org>`_ & `Pandas <http://pandas.pydata.org>`_ based data analysis system. WzDat augments the power of IPython & Pandas by prividing features like:
+**WzDat** stands for `Webzen <http://www.webzen.com/main>`_ **Data Analysis Toolkit** (you may pronounce it like "What's that?"), which started as an attempt to build `IPython <http://ipython.org>`_ & `Pandas <http://pandas.pydata.org>`_ based data analysis system. WzDat augments the power of IPython & Pandas by prividing features like:
 
 * Filter large number of files by condition(``node``, ``server``, ``date``).
 * Select lines in selected files by word matching(``find``).
