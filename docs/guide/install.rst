@@ -4,7 +4,7 @@ Installation
 Tryout
 ------
 
-If you're to meddle with WzDat's python module, just clone GitHub repository:
+If you're up to meddle with WzDat's python module, just clone GitHub repository:
 
 .. sourcecode:: console
 
