@@ -1,6 +1,8 @@
 Foreword
 ========
 
+If you are kind of a python enthusiast or data scientist, you might have been heard about the `IPython <http://ipython.org>`_ and `Pandas <http://pandas.pydata.org>`_. They are kind of fad for this data centric era. **IPython** gives us nice interactive python programming environment, and **Pandas** provides easy-to-use and data tools. They are convinient and powerful tools for not only daily data work, but also big companies and laboratories.
+
 Profits
 -------
 
