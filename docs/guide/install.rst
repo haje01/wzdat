@@ -23,7 +23,7 @@ WzDat Solution & Project
 Run Docker
 ----------
 
-After you done with the solution & project, clone ``wzdat-sys`` and build local docker image.
+After you are done with the solution & project, clone ``wzdat-sys`` and build local docker image.
 
 .. sourcecode:: console
 
