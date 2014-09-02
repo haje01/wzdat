@@ -26,5 +26,8 @@ Data Directory
 Run Container
 -------------
 
-Select, Find and Analyze
+Select, Find And Analyze
 ------------------------
+
+Expose Result To Dashboard
+--------------------------
