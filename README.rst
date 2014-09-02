@@ -20,3 +20,7 @@ __ https://github.com/haje01/wzdat
 
 Though you can install it,the package alone can't do the job. WzDat is a complex system where various softwares cooperate closely each other. Since putting all the pieces together is not a trivial work, I decided to adopt `Docker <http://docker.com>`_ as a solution and, for sanitary reason, made another repository `wzdat-sys <https://github.com/haje01/wzdat-sys>`_ for that.
 
+
+Document 
+________
+http://wzdat.readthedocs.org/
