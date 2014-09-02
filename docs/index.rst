@@ -16,6 +16,7 @@ User's Guide
 
    foreword
    whatsnew/0.1
+   requirements
    install
    tutorial
 
