@@ -16,6 +16,8 @@ wzdat_
 Currently WzDat consists of three applications. WzDat Python Module, Dashboard and `WzDat Forwarder for Windows <https://github.com/haje01/wdfwd>`_. This repository is for WzDat Python Module & Dashboard.
 
 
-Document 
+Links
 ________
-http://wzdat.readthedocs.org/
+
+Latest Document
+  http://wzdat.readthedocs.org/
