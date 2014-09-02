@@ -19,6 +19,7 @@ User's Guide
 
    whatsnew/0.1
    guide/install
+   guide/tutorial
 
 
 Additional Notes
