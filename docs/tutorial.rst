@@ -11,4 +11,4 @@ WzDat has been developed and tested on dockerize Ubuntu. You can deploy WzDat se
 
 .. warning:: 
 
-   Docker's VOLUME command would not work on Windows HOST.
+   Mounting directory from OSX or Windows host would not work.
