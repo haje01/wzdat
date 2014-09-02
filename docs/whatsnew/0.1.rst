@@ -1,0 +1,4 @@
+What's new in WzDat 0.1?
+========================
+
+This is initial public release.

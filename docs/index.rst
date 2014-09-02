@@ -11,12 +11,14 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-User's guid
------------
+User's guide
+------------
 
 .. toctree::
    :maxdepth: 2
 
+   whatsnew/0.1
+   guide/install
    changes
 
 
