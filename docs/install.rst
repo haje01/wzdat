@@ -19,7 +19,7 @@ By using ``wzdat-sys``, setting a new WzDat server is in a twinkle. However, the
 
 Regular
 -------
-WzDat requires compliant solution & project to use it as data analysis system. If this is your first time to setup WzDat, visit Tutorial_ page to get aquaint with solution & project.
+WzDat requires compliant solution & project to use it as data analysis system. If this is your first time to setup WzDat, visit :ref:`Tutorial <tutorial>` page to get aquaint with solution & project.
 
 After you are done with the solution & project, clone ``wzdat-sys`` and build local docker image.
 
