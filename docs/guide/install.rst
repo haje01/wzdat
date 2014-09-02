@@ -36,7 +36,7 @@ Replace (..) variables with your own, then run script.
 .. sourcecode:: console
 
    $ WZDAT_HOST=(server-host-name)\
-   $ ZDAT_DATA_DIR=(data-folder)\
+   $ WZDAT_DATA_DIR=(data-folder)\
    $ WZDAT_SOL_DIR=(solution-folder)\
    $ WZDAT_SOL_PKG=(solution-package-name)\
    $ WZDAT_PRJ=(project-id)\
