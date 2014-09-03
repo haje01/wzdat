@@ -1,10 +1,15 @@
 language: python
+
 python:
     - "2.7"
+
 before_install:
     - sudo apt-get -qq -y install libhdf5-serial-dev
+
 install: 
     - "pip install cython numexpr"
     - "pip install -r requirements.txt"
+    - "python setup.py install"
+
 script: py.test
 
