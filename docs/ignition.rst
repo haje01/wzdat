@@ -3,7 +3,7 @@ Ignition
 
 .. warning::
 
-    WzDat requires compliant solution & project to use it as data analysis system. If this is your first time to setup WzDat, visit :ref:`solandprj` page to get aquaint with solution & project.
+    WzDat requires compliant solution & project to use it as data analysis system. If this is your first time to setup WzDat, visit :ref:`solandprj` page to get aquaint with them.
 
 After you are done with making solution & project, clone ``wzdat-sys`` and build local docker image.
 
