@@ -35,8 +35,8 @@ File adapter is a python module in which you implement functions to feed require
          __init__.py
          myprj/
             __init__.py
-            log.py
-            dbdump.py
+            log.py     <--
+            dbdump.py  <--
 
 
 =========== ============== ==========
@@ -56,16 +56,29 @@ To feed setting information, config files are located at your solution and proje
 
    ws_mysol/
       ws_mysol/
-         __init__.py
+         __init__.py     <--
+         config.yaml
+         myprj/
+            __init__.py
+            config.yaml  <--
+            log.py
+            dbdump.py
+
+If some settings are common among your projects, you can place them at solution config file. If some others are specific for a certain project, create project config file.
+
+
+IPython Notebooks
+-----------------
+Finally, create ``__notes__`` folder to accomodate your IPython Notebooks. And create nested folder per project.
+
+   ws_mysol/
+      __notes__     <--
+         myprj/     <--
+      ws_mysol/
+         __init__.py   
          config.yaml
          myprj/
             __init__.py
             config.yaml
             log.py
             dbdump.py
-
-If some settings are common among your projects, you can place it at solution config. If one of your project need different settings, create project config.
-
-
-IPython Notebooks
------------------
