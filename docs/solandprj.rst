@@ -5,6 +5,10 @@ Solution And Projects
 
 Your WzDat solution is a place where your projects exist. Your WzDat projects are place for your domain specific **file adapters** and utilities reside.
 
+.. note:: File Adapter
+
+   There are many log/data formats. They have different file naming rule, date time and log level format. To mitigate these differences, **file adapter** plays role. Refer to the following section for further details.
+   
 Let's have a look at example::
 
    ws_mysol/
