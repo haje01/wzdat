@@ -9,6 +9,10 @@ Your WzDat solution is a place where your projects exist. Your WzDat projects ar
 
    There are many log/data formats. They have different file naming rule, date time and log level format. To mitigate these differences, **file adapter** plays role. Refer to the following section for further details.
    
+   
+Creating The Skeleton
+---------------------
+
 Let's start by a skeleton::
 
    ws_mysol/
