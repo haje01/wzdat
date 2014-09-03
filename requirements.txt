@@ -5,4 +5,5 @@ argh
 python-crontab
 markdown
 BeautifulSoup
+numexpr
 tables
