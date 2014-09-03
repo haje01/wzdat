@@ -29,5 +29,27 @@ In the solution package, there is a WzDat **project python package** ``myprj``.
 File Adapter
 ------------
 
+File adapter is a python module in which you implement functions to feed required information about the file format you are dealing. For example, if you want your WzDat project can handle two types of file( log, dblog ), your project might look like this::
+
+   ws_mysol/
+      ws_mysol/
+         __init__.py
+         myprj/
+            __init__.py
+            log.py
+            dblog.py
+
+
+====== ============== ==========
+Type   File Extension Adapter
+====== ============== ==========
+Log    ``.log``       log.py
+DBLog  ``.csv``       dblog.py
+====== ============== ==========
+
+
+
+
+
 Configs
 -------
