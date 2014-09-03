@@ -13,7 +13,7 @@ Your WzDat solution is a place where your projects exist. Your WzDat projects ar
 Creating The Skeleton
 ---------------------
 
-Let's start by a skeleton::
+Let's start by a barebone folders & files::
 
    ws_mysol/
       ws_mysol/
