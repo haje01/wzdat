@@ -20,7 +20,7 @@ User's Guide
    whatsnew/0.1
    requirements
    solandprj
-   install
+   ignition
    tutorial
 
 
