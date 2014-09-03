@@ -1,7 +1,7 @@
 Ignition
 ========
 
-.. warn::
+.. warning::
 
     WzDat requires compliant solution & project to use it as data analysis system. If this is your first time to setup WzDat, visit :ref:`tutorial` page to get aquaint with solution & project.
 
