@@ -52,7 +52,8 @@ Each adapter moudule is asked to implement following functions:
 
 Configs
 -------
-To feed setting information, config files are located at your solution and projects:
+
+To feed setting information, config files are located at your solution and projects::
 
    ws_mysol/
       ws_mysol/
