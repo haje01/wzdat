@@ -76,7 +76,7 @@ If some settings are common among your projects, you can place them at solution 
 
 Notes Folder
 ------------
-Finally, create ``__notes__`` folder to accomodate your IPython Notebooks. And create nested folder per project::
+Finally, create ``__notes__`` folder to accomodate your IPython Notebooks, and create nested folder per project::
 
    ws_mysol/
       __notes__     <--
@@ -90,5 +90,5 @@ Finally, create ``__notes__`` folder to accomodate your IPython Notebooks. And c
             log.py
             dbdump.py
 
-When you edit your project's IPython notebook, it will be directly put into ``ws_mysol/__notes__/myprj``.
+When you create new IPython notebook, it will be directly put into ``ws_mysol/__notes__/myprj``.
 
