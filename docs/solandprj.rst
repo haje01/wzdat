@@ -67,8 +67,8 @@ To feed setting information, config files are located at your solution and proje
 If some settings are common among your projects, you can place them at solution config file. If some others are specific for a certain project, create project config file.
 
 
-IPython Notebooks
------------------
+Notes Folder
+------------
 Finally, create ``__notes__`` folder to accomodate your IPython Notebooks. And create nested folder per project::
 
    ws_mysol/
@@ -82,3 +82,4 @@ Finally, create ``__notes__`` folder to accomodate your IPython Notebooks. And c
             config.yaml
             log.py
             dbdump.py
+
