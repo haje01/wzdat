@@ -69,7 +69,7 @@ If some settings are common among your projects, you can place them at solution 
 
 IPython Notebooks
 -----------------
-Finally, create ``__notes__`` folder to accomodate your IPython Notebooks. And create nested folder per project.
+Finally, create ``__notes__`` folder to accomodate your IPython Notebooks. And create nested folder per project::
 
    ws_mysol/
       __notes__     <--
