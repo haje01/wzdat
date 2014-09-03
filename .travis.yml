@@ -4,6 +4,7 @@ python:
 before_install:
     - sudo apt-get -qq -y install libhdf5-serial-dev
 install: 
-    - "cat requirements.txt | xargs pip install"
+    - "pip install cython numexpr"
+    - "pip install -r requirements.txt"
 script: py.test
 
