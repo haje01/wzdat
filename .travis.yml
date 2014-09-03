@@ -4,9 +4,11 @@ python:
     - "2.7"
 
 before_install:
+    - sudo apt-get -qq -y install libatlas-base-dev gfortran libpng-dev  libfreetype6-dev libxft-dev
     - sudo apt-get -qq -y install libhdf5-serial-dev
 
 install: 
+    - "pip install --upgrade numpy scipy matplotlib cython pandas pyzmq pygments ipython"
     - "pip install cython numexpr"
     - "pip install -r requirements.txt"
     - "python setup.py install"
