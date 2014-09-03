@@ -1,3 +1,5 @@
+numexpr
+cython
 pyyaml
 pygeoip
 flask
@@ -5,6 +7,4 @@ argh
 python-crontab
 markdown
 BeautifulSoup
-numexpr
 tables
-cython
