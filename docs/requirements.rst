@@ -30,4 +30,4 @@ In this case, your solution name is ``mysol`` (Preferably, solution nams is from
 
    I advise you to start your solution with ``ws_`` prefix(``ws`` stands for **WzDat Solution**).
 
-In the solution package, there is a WzDat project ``myprj``, which also is a python package. 
+In the solution package, there is a WzDat project python package ``myprj``.
