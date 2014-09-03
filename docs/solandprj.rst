@@ -25,6 +25,9 @@ In this case, your solution name is ``mysol`` (Preferably, solution nams comes f
    I advise you to start your solution with ``ws_`` prefix(``ws`` stands for **WzDat Solution**).
 
 
+As need arises, you can append more projects to your solution.
+
+
 File Adapter
 ------------
 
