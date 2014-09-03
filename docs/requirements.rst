@@ -24,8 +24,10 @@ Let's have a look at example::
          myprj/
             __init__.py
 
-In this case, your solution name is ``mysol`` (Preferably, solution nams is from your personal name, or company name), then make topmost ``ws_mysol`` as base folder, and inner ``ws_mysol`` as python package (folder has ``__init__.py`` file). 
+In this case, your solution name is ``mysol`` (Preferably, solution nams is from your personal name, or company name), then make topmost ``ws_mysol`` as solution folder, and inner ``ws_mysol`` as solution python package. 
 
 .. tip::
 
    I advise you to start your solution with ``ws_`` prefix(``ws`` stands for **WzDat Solution**).
+
+In the solution package, there is a WzDat project ``myprj``, which also is a python package. 
