@@ -37,19 +37,35 @@ File adapter is a python module in which you implement functions to feed require
          myprj/
             __init__.py
             log.py
-            dblog.py
+            dbdump.py
 
 
-====== ============== ==========
-Type   File Extension Adapter
-====== ============== ==========
-Log    ``.log``       log.py
-DBLog  ``.csv``       dblog.py
-====== ============== ==========
+=========== ============== ==========
+File Type   File Extension Adapter
+=========== ============== ==========
+Log         ``.log``       log.py
+DB Dump     ``.csv``       dbdump.py
+=========== ============== ==========
 
-
-
+Each adapter moudule is asked to implement following functions:
 
 
 Configs
 -------
+To feed setting information, config files are located at your solution and projects:
+
+   ws_mysol/
+      ws_mysol/
+         __init__.py
+         config.yaml
+         myprj/
+            __init__.py
+            config.yaml
+            log.py
+            dbdump.py
+
+If some settings are common among your projects, you can place it at solution config. If one of your project need different settings, create project config.
+
+
+IPython Notebooks
+-----------------
