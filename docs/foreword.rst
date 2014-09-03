@@ -10,6 +10,8 @@ Let's say you have thousands of log files, want to find some of them by their tr
 
 That's where WzDat comes in handy. Once WzDat Python module & its compliant project are imported under the IPython notebook environment, It will pick out your target files with impressive speed even from hundreds of thounds of files.
 
+When you finished your analysis work in the IPython notebook, you can forwarding your outcome to WzDat Dashboard, from where your collegues share your work instantly with concise web interface.
+
 Docker Depedent
 ---------------
 
