@@ -34,10 +34,10 @@ Replace (..) variables with your own, then run script.
 .. sourcecode:: console
 
    $ WZDAT_HOST=(server-host-name)\
-   $ WZDAT_DATA_DIR=(data-folder)\
-   $ WZDAT_SOL_DIR=(solution-folder)\
-   $ WZDAT_SOL_PKG=(solution-package-name)\
-   $ WZDAT_PRJ=(project-id)\
-   $ WZDAT_IPYTHON_PORT=(ipython-port)\
-   $ WZDAT_DASHBOARD_PORT=(dashboard-port)\
-   $ sys/run.sh
+   > WZDAT_DATA_DIR=(data-folder)\
+   > WZDAT_SOL_DIR=(solution-folder)\
+   > WZDAT_SOL_PKG=(solution-package-name)\
+   > WZDAT_PRJ=(project-id)\
+   > WZDAT_IPYTHON_PORT=(ipython-port)\
+   > WZDAT_DASHBOARD_PORT=(dashboard-port)\
+   > sys/run.sh
