@@ -13,8 +13,12 @@ install:
     - "pip install -r requirements.txt"
     - "pip install -e ."
 
+before_script:
+    mkdir -p shippable/codecoverage
+
 script:
-    coverage run --source=wzdat setup.py test
+    - coverage run --source=wzdat --branch setup.py test
+    - coverage xml -o shippable/codecoverage/coverage.xml
 
 after_success:
     - coveralls
