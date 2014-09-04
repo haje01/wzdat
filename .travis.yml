@@ -9,9 +9,11 @@ before_install:
 
 install: 
     - "pip install --upgrade numpy scipy matplotlib cython pandas pyzmq pygments ipython"
-    - "pip install cython numexpr"
+    - "pip install cython numexpr python-coveralls"
     - "pip install -r requirements.txt"
-    - "python setup.py install"
+    - "pip install -e ."
 
 script: py.test
 
+after_success:
+    - coveralls
