@@ -436,3 +436,51 @@ def convert_server_time_to_client(dt):
     ctz = get_tz(cfg['CLIENT_TIMEZONE'])
     sdt = stz.localize(dt)
     return sdt.astimezone(ctz)
+
+
+def gen_dummydata(td, date_cnt=10):
+    if os.path.isdir(td):
+        import shutil
+        shutil.rmtree(td)
+    os.mkdir(td)
+
+    half_date = int(date_cnt * 0.5)
+    start = _datetime.date(2014, 3, 1)
+    dates = [start + _datetime.timedelta(days=x - half_date) for x in range(0,
+        date_cnt)]
+
+    _gen_dummy_files(td, dates)
+
+
+def _gen_dummy_files(td, dates):
+    # file path style; kr/node-01/game_01.log'
+    locales = ('kr', 'jp', 'us')
+    nodes = ('node-1', 'node-2', 'node-3')
+    kinds = ('game', 'auth', 'community')
+    processes = {'game': 3, 'auth': 1, 'community': 1}
+    for locale in locales:
+        for node in nodes:
+            for kind in kinds:
+                procno = processes[kind]
+                _dir = os.path.join(td, locale, node)
+                _gen_dummy_lines(_dir, locale, node, kind, dates, procno)
+
+
+def _gen_dummy_lines(_dir, locale, node, kind, dates, procno):
+    def write_lines(fname):
+        with open(fname, 'w'):
+            pass
+
+    if not os.path.isdir(_dir):
+        os.makedirs(_dir)
+    for date in dates:
+        date = str(date)
+        if procno == 1:
+            path = os.path.join(_dir, kind + '_%s.log' % date)
+            write_lines(path)
+        else:
+            for proc in range(procno):
+                path = os.path.join(_dir, kind + "_%s %02d.log" %
+                    (date, proc + 1))
+                write_lines(path)
+
