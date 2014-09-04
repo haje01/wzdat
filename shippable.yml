@@ -14,9 +14,11 @@ install:
     - "pip install -e ."
 
 before_script:
+    mkdir -p shippable/testresults
     mkdir -p shippable/codecoverage
 
 script:
+    - nosetests --with-xunit --xunit-file=shippable/testresults/nosetests.xml
     - coverage run --source=wzdat --branch setup.py test
     - coverage xml -o shippable/codecoverage/coverage.xml
 
