@@ -13,7 +13,8 @@ install:
     - "pip install -r requirements.txt"
     - "pip install -e ."
 
-script: py.test
+script:
+    coverage run --source=wzdat setup.py test
 
 after_success:
     - coveralls

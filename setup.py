@@ -1,4 +1,24 @@
+import sys
+
 from setuptools import setup
+from setuptools.command.test import test as TestCommand
+
+
+class PyTest(TestCommand):
+    description = "run tests"
+
+    def initialize_options(self):
+        TestCommand.initialize_options(self)
+        self.pytest_args = None
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        import pytest
+        errorno = pytest.main('tests/')
+        sys.exit(errorno)
+
 
 setup(name="wzdat",
       version="0.1",
@@ -9,4 +29,7 @@ setup(name="wzdat",
       license="MIT",
       packages=["wzdat", "wzdat.dashboard"],
       include_package_data=True,
-      zip_safe=False)
+      zip_safe=False,
+      test_require=['pytest'],
+      cmdclass = {'test': PyTest},
+      )
