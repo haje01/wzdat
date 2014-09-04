@@ -1,8 +1,13 @@
 wzdat_
 ======
 
+.. image:: https://api.shippable.com/projects/5406e58660cab75b099dd5d4/badge/master
+  :alt: Build Status
+  :target: https://www.shippable.com/projects/5406e58660cab75b099dd5d4
+
 
 .. image:: https://coveralls.io/repos/haje01/wzdat/badge.png
+  :alt: Coverage Status
   :target: https://coveralls.io/r/haje01/wzdat
 
 
