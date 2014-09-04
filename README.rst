@@ -1,9 +1,12 @@
 wzdat_
 ======
 
-
 .. image:: https://coveralls.io/repos/haje01/wzdat/badge.png
   :target: https://coveralls.io/r/haje01/wzdat
+
+
+.. image:: https://api.shippable.com/projects/5406e58660cab75b099dd5d4/badge/master
+  :target: https://www.shippable.com/projects/5406e58660cab75b099dd5d4
 
 
 **WzDat** stands for `Webzen <http://www.webzen.com/main>`_ **Data Analysis Toolkit** (pronounce it like "What's that?"), which started as an attempt to build `IPython <http://ipython.org>`_ & `Pandas <http://pandas.pydata.org>`_ based data analysis system. WzDat augments the power of IPython & Pandas by prividing features like:
