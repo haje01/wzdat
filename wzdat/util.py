@@ -8,7 +8,7 @@ from datetime import datetime
 import datetime as _datetime
 import fnmatch
 import time
-from subprocess import check_call, check_output, CalledProcessError
+from subprocess import check_call, CalledProcessError
 from tempfile import TemporaryFile
 import uuid as _uuid
 import codecs
@@ -18,7 +18,7 @@ import numpy as np
 from pandas import HDFStore
 
 from wzdat.make_config import make_config
-from wzdat.const import NAMED_TMP_PREFIX, HDF_FILE_PREFIX, HDF_FILE_EXT,\
+from wzdat.const import NAMED_TMP_PREFIX, HDF_FILE_PREFIX, HDF_FILE_EXT, \
     SOLUTION_DIR, TMP_DIR, HDF_DIR, CONV_DIR, DATA_DIR
 
 
@@ -262,10 +262,6 @@ def head_or_tail(path, head, cnt=10):
     return rv
 
 
-def which_python():
-    return check_output(['which', 'python']).strip()
-
-
 def div(elm, _cls=''):
     if len(_cls) > 0:
         _cls = ' ' + _cls
@@ -308,7 +304,7 @@ def heat_map(df, ax_fs=13, **kwargs):
     rows = kwargs['rows_len']
     cols = kwargs['cols_len']
     cmap = kwargs['cmap']
-    fig, ax = plt.subplots(figsize=kwargs['figsize'])
+    _, ax = plt.subplots(figsize=kwargs['figsize'])
     plt.imshow(df, interpolation='nearest', cmap=cmap, aspect='auto')
     _heat_map_celltext(df, ax, rows, cols, kwargs)
     if kwargs['xaxis_tick_top'] is True:
@@ -391,7 +387,7 @@ def cap_call(cmd, _test=False):
     try:
         logging.info('cap_call: %s', str(cmd))
         check_call(cmd, shell=True, stdout=out, stderr=err)
-    except CalledProcessError, _:
+    except CalledProcessError:
         if not _test:
             raise
     finally:
@@ -412,7 +408,6 @@ def cap_call(cmd, _test=False):
 
 
 def get_convfile_path(path):
-    cfg = make_config()
     relpath = os.path.relpath(path, DATA_DIR)
     return os.path.join(CONV_DIR, relpath)
 
@@ -430,8 +425,10 @@ def convert_data_file(srcpath, encoding, dstpath):
 def convert_server_time_to_client(dt):
     import pytz
     cfg = make_config()
+
     def get_tz(tz):
         return pytz.UTC if tz == 'UTC' else pytz.timezone(tz)
+
     stz = get_tz(cfg['SERVER_TIMEZONE'])
     ctz = get_tz(cfg['CLIENT_TIMEZONE'])
     sdt = stz.localize(dt)
@@ -445,9 +442,9 @@ def gen_dummydata(td, date_cnt=10):
     os.mkdir(td)
 
     half_date = int(date_cnt * 0.5)
-    start = _datetime.date(2014, 3, 1)
+    start = _datetime.datetime(2014, 3, 1, 0, 0, 0)
     dates = [start + _datetime.timedelta(days=x - half_date) for x in range(0,
-        date_cnt)]
+             date_cnt)]
 
     _gen_dummy_files(td, dates)
 
@@ -467,20 +464,43 @@ def _gen_dummy_files(td, dates):
 
 
 def _gen_dummy_lines(_dir, locale, node, kind, dates, procno):
-    def write_lines(fname):
-        with open(fname, 'w'):
-            pass
+
+    def gen_level():
+        i = 0
+        _levels = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
+        while True:
+            yield _levels[i]
+            i += 1
+            if i >= len(_levels):
+                i = 0
+
+    def gen_msg():
+        i = 0
+        _msgs = ['Alloc', 'Move', 'Mismatch', 'Async', 'Failed']
+        while True:
+            yield _msgs[i]
+            i += 1
+            if i >= len(_msgs):
+                i = 0
+
+    def write_lines(fname, date):
+        lgen = gen_level()
+        mgen = gen_msg()
+        with open(fname, 'w') as f:
+            dts = [date + _datetime.timedelta(seconds=x * 60 * 60) for x in range(0, 24)]
+            for dt in dts:
+                sdt = dt.strftime('%Y-%m-%d %H:%M')
+                f.write('%s [%s] - %s\n' % (sdt, lgen.next(), mgen.next()))
 
     if not os.path.isdir(_dir):
         os.makedirs(_dir)
     for date in dates:
-        date = str(date)
+        sdate = date.strftime('%Y-%m-%d')
         if procno == 1:
-            path = os.path.join(_dir, kind + '_%s.log' % date)
-            write_lines(path)
+            path = os.path.join(_dir, kind + '_%s.log' % sdate)
+            write_lines(path, date)
         else:
             for proc in range(procno):
                 path = os.path.join(_dir, kind + "_%s %02d.log" %
-                    (date, proc + 1))
-                write_lines(path)
-
+                                    (sdate, proc + 1))
+                write_lines(path, date)
