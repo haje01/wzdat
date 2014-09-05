@@ -16,6 +16,8 @@ class PyTest(TestCommand):
 
     def run(self):
         import pytest
+        from wzdat.util import gen_dummydata
+        gen_dummydata()
         errorno = pytest.main('tests/')
         sys.exit(errorno)
 

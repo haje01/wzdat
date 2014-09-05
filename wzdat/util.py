@@ -19,7 +19,7 @@ from pandas import HDFStore
 
 from wzdat.make_config import make_config
 from wzdat.const import NAMED_TMP_PREFIX, HDF_FILE_PREFIX, HDF_FILE_EXT, \
-    SOLUTION_DIR, TMP_DIR, HDF_DIR, CONV_DIR, DATA_DIR
+    SOLUTION_DIR, TMP_DIR, HDF_DIR, CONV_DIR, DATA_DIR, BASE_DIR
 
 
 def unique_tmp_path(prefix, ext='.txt'):
@@ -435,7 +435,10 @@ def convert_server_time_to_client(dt):
     return sdt.astimezone(ctz)
 
 
-def gen_dummydata(td, date_cnt=10):
+def gen_dummydata(td=None, date_cnt=10):
+    if td is None:
+        td = os.path.join(BASE_DIR, '..', 'tests', 'dummydata')
+
     if os.path.isdir(td):
         import shutil
         shutil.rmtree(td)

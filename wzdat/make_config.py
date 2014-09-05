@@ -31,7 +31,7 @@ def make_config(prj=None):
     pkg_path = os.path.expandvars(os.path.join(SOLUTION_DIR, pkg_name))
     mode = "%s-" % os.environ["WZDAT_MODE"] if "WZDAT_MODE" in os.environ\
         else ''
-    cfgname = "%sconfig.yaml" % mode
+    cfgname = "%sconfig.yml" % mode
 
     cfg_path = os.path.join(pkg_path, cfgname)
     if os.path.isfile(cfg_path):
