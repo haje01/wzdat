@@ -1,1 +1,32 @@
 {% extends "layout.html" %}
+
+{% block page %}
+<div class="row">
+  <div class="center-block" style="width:800px; margin-top: 30px">
+      <ul class="nav nav-tabs" role="tablist">
+      {% for ft in file_types %}
+        <li id="tab-{{loop.index}}" {%if loop.first%}class="active"{%endif%}><a href="javascript:void(0)" onclick="selectTab({{loop.index}})">{{ft[0] | title}}</a></li>
+      {% endfor %}
+      </ul>
+      {% for ft in file_types %}
+      <div id="tab-body-{{loop.index}}" class="tab-body {%if not loop.first%}hide{%endif%}">
+        <p>{{ft[0]}}</p>
+        <p>{{ft[1].dates}}</p>
+        <p>{{ft[1].kinds}}</p>
+        <p>{{ft[1].nodes}}</p>
+      </div>
+      {% endfor %}
+  </div>
+</div>
+{% endblock %}
+
+{% block pagescript %}
+function selectTab(idx) 
+{
+  $("ul.nav-tabs > li").removeClass("active");
+  $(".tab-body").addClass('hide');
+  $("#tab-" + idx).addClass("active");
+  $("#tab-body-" + idx).removeClass('hide');
+}
+
+{% endblock %}
