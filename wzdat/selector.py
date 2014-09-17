@@ -185,11 +185,13 @@ class SingleFile(FileCommon, IPathable):
         """Build Pandas DataFrame from file and return it."""
         if self.lcount == 0:
             return None
-        if self._ctx.isdblog:
-            _to_frame_func = _get_member(self._ctx, 'to_frame', False)
-            assert _to_frame_func is not None
-            return _to_frame_func(self.abspath, usecols)
+        _to_frame_fn = _get_member(self._ctx, 'to_frame', False)
+
+        if _to_frame_fn is not None:
+            return _to_frame_fn(self.abspath, usecols)
         else:
+            if self._ctx.isdblog:
+                assert False, "dblog should have its own 'to_frame'"
             return self._to_frame(usecols, chunk_cnt, show_prog)
 
     def _to_frame(self, usecols, chunk_cnt, show_prog):
@@ -974,7 +976,6 @@ def _update_files_root_vals(fieldcnt, fields, fileo, field_getter):
             val = field_getter[i]()(fobj, fileo)
         except ValueError, e:
             field_errs.append((str(fobj) + str(e)))
-            field_err = True
             break
         else:
             vals.add(val)
@@ -1000,7 +1001,7 @@ def _update_files_root(ctx, _root, filecnt, fileno, pg):
         fileo = FileValue(ctx, abspath)
 
         vals, field_errs = _update_files_root_vals(fieldcnt, fields, fileo,
-                                                  field_getter)
+                                                   field_getter)
         if len(field_errs) > 0:
             errs += field_errs
             continue
