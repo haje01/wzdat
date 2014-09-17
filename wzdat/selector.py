@@ -966,18 +966,19 @@ class Selector(Representable, Listable):
 
 
 def _update_files_root_vals(fieldcnt, fields, fileo, field_getter):
-    field_err = False
+    field_errs = []
     vals = set()
     for i in range(fieldcnt):
         fobj = fields[i]
         try:
             val = field_getter[i]()(fobj, fileo)
-        except ValueError:
+        except ValueError, e:
+            field_errs.append((str(fobj) + str(e)))
             field_err = True
             break
         else:
             vals.add(val)
-    return vals, field_err
+    return vals, field_errs
 
 
 def _update_files_root(ctx, _root, filecnt, fileno, pg):
@@ -986,6 +987,7 @@ def _update_files_root(ctx, _root, filecnt, fileno, pg):
     fieldcnt = len(fields)
     field_getter = [field._value_fn for field in fields]
     converted = []
+    errs = []
     for filename in _root[1]:
         pg.animate(fileno)
         abspath = os.path.join(root, filename)
@@ -997,9 +999,10 @@ def _update_files_root(ctx, _root, filecnt, fileno, pg):
             abspath = convfile
         fileo = FileValue(ctx, abspath)
 
-        vals, field_err = _update_files_root_vals(fieldcnt, fields, fileo,
+        vals, field_errs = _update_files_root_vals(fieldcnt, fields, fileo,
                                                   field_getter)
-        if field_err:
+        if len(field_errs) > 0:
+            errs += field_errs
             continue
 
         try:
@@ -1012,7 +1015,7 @@ def _update_files_root(ctx, _root, filecnt, fileno, pg):
     if ctx.encoding.startswith('utf-16'):
         if len(converted) > 0:
             nprint("%d files have been converted." % len(converted))
-    return fileno
+    return fileno, errs
 
 
 def _get_found_time(cpath):
@@ -1071,8 +1074,11 @@ def _update_files(ctx):
 
     fileno = 0
     pg = ProgressBar('collecting file info', filecnt)
+    errors = []
     for _root in root_list:
-        fileno = _update_files_root(ctx, _root, filecnt, fileno, pg)
+        fileno, errs = _update_files_root(ctx, _root, filecnt, fileno, pg)
+        if len(errs) > 0:
+            errors += errs
     pg.done()
 
     for _, fobj in ctx.fields.iteritems():
@@ -1080,6 +1086,8 @@ def _update_files(ctx):
 
     if msg is not None:
         nprint(msg)
+    if len(errors) > 0:
+        nprint(errors[-4:])
 
 
 class KindField(Field):
