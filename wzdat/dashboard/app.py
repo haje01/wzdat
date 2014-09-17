@@ -17,6 +17,8 @@ if DEBUG:
     sys.path.insert(0, ".")
 from wzdat.util import get_notebook_dir, convert_server_time_to_client
 from wzdat.rundb import get_cache_info
+from wzdat.make_config import make_config
+
 
 app = Flask(__name__)
 app.debug = DEBUG
@@ -240,9 +242,19 @@ def _get_run_time(ri):
 @app.route('/finder')
 def finder():
     projname, dev, cache_time = _page_common_vars()
-
+    pkg = os.environ["WZDAT_SOL_PKG"]
+    prj = os.environ['WZDAT_PRJ']
+    pcfg = make_config(prj)
+    ftypes = pcfg["FILE_TYPES"]
+    import imp
+    file_types = []
+    for ft in ftypes:
+        mod = imp.load_source('%s.%s' % (prj, ft),  '/solution/%s/%s/%s.py' %
+                              (pkg, prj, ft))
+        file_types.append((ft, mod))
     return render_template("finder.html", cur="finder", projname=projname,
-                           dev=dev, cache_time=cache_time)
+                           dev=dev, cache_time=cache_time,
+                           file_types=file_types)
 
 
 @app.route('/notebooks')
