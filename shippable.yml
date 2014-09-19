@@ -9,7 +9,7 @@ before_install:
 
 install: 
     - "pip install --upgrade cython>=0.13"
-    - "pip tables"
+    - "pip install tables"
     - "pip install --upgrade numpy scipy matplotlib pandas pyzmq pygments ipython"
     - "pip install numexpr python-coveralls"
     - "pip install -r requirements.txt"
