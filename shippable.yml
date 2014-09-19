@@ -8,10 +8,11 @@ before_install:
     - "sudo apt-get -qq -y install libhdf5-serial-dev"
 
 install: 
-    - "pip install --upgrade cython>=0.13"
-    - "pip install --upgrade numpy scipy matplotlib pandas pyzmq pygments ipython"
     - "pip install numexpr python-coveralls"
+    - "pip install --upgrade cython>=0.13"
+    - "pip install --upgrade numpy scipy matplotlib"
     - "pip install tables"
+    - "pip install --upgrade pandas pyzmq pygments ipython"
     - "pip install -r requirements.txt"
     - "pip install -e ."
 

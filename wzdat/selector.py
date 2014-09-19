@@ -188,7 +188,7 @@ class SingleFile(FileCommon, IPathable):
         _to_frame_fn = _get_member(self._ctx, 'to_frame', False)
 
         if _to_frame_fn is not None:
-            return _to_frame_fn(self.abspath, usecols)
+            return _to_frame_fn(self.abspath, self, usecols)
         else:
             if self._ctx.isdblog:
                 assert False, "dblog should have its own 'to_frame'"
