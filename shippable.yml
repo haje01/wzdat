@@ -1,3 +1,5 @@
+build_environment: Ubuntu 14.04
+
 language: python
 
 python:
