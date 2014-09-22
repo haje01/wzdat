@@ -383,19 +383,20 @@ class TempFile(SingleFile):
                     break
                 yield line
 
-    def find(self, word, options=None, print_prog=True):
+    def find(self, word, options=None, include_header=False):
         """Find word in temp file and return result temp file."""
-        return _find_in_temp(self._ctx, self, word, options)
+        return _find_in_temp(self._ctx, self, word, options, include_header)
 
     def save(self, cppath):
         shutil.copy(self.abspath, cppath)
         self._linfos.save(cppath)
 
 
-def _find_in_temp(ctx, tempo, word, options):
+def _find_in_temp(ctx, tempo, word, options, include_header):
     """Find word in a temp file and return result temp file."""
     tmp_file, _ = unique_tmp_path(TMP_PREFIX)
-    linfos = _find_in_temp_grep(ctx, tmp_file, tempo, word, options)
+    linfos = _find_in_temp_grep(ctx, tmp_file, tempo, word, options,
+                                include_header)
     return TempFile(ctx, tmp_file, linfos)
 
 
@@ -515,11 +516,18 @@ def _file_head_or_tail(flike, head, count=10):
     return TempFile(flike._ctx, tmp_file, linfos, True)
 
 
-def find_in_fileo(ctx, _files, hsize, word, options=None, print_prog=True):
+def find_in_fileo(ctx, _files, hsize, word, options=None, print_prog=True,
+                  include_header=False):
     """Find word in file object and return result temp file."""
     _files = remove_empty_file(_files)
     if len(_files) == 0:
         return None
+
+    def _write_header(_file, result_file):
+        with open(_file.abspath, 'r') as ff:
+            with open(result_file, 'w') as rf:
+                header = ff.readline()
+                rf.write(header)
 
     result_file, _ = unique_tmp_path(TMP_PREFIX)
     tmp_file, _ = unique_tmp_path(TMP_PREFIX)
@@ -531,6 +539,9 @@ def find_in_fileo(ctx, _files, hsize, word, options=None, print_prog=True):
         word = '\|'.join(word)
     linfos = LineInfo()
     for idx, _file in enumerate(_files):
+        if include_header:
+            _write_header(_file, result_file)
+            include_header = False
         linfo = _find_in_fileo_grep(ctx, result_file, tmp_file, word, idx,
                                     _file, fileno, options, print_prog)
         if linfo is not None:
@@ -639,7 +650,7 @@ class FileSelector(FileCommon, IFilterable, IMergeable):
         self._kinds_cache = None
         self._nodes_cache = None
 
-    def find(self, word, options=None, print_prog=True):
+    def find(self, word, options=None, print_prog=True, include_header=False):
         """Find word among files.
 
         Returns
@@ -649,7 +660,7 @@ class FileSelector(FileCommon, IFilterable, IMergeable):
 
         """
         return find_in_fileo(self._ctx, self.files, self.hsize, word, options,
-                             print_prog)
+                             print_prog, include_header)
 
     def __len__(self):
         return len(self.files)
@@ -1163,12 +1174,16 @@ def get_grep(word):
     return 'grep' if '\|' in word else 'fgrep'
 
 
-def _find_in_temp_grep(ctx, result_file, tempo, word, _options):
+def _find_in_temp_grep(ctx, result_file, tempo, word, _options,
+                       include_header):
     word = set_grep_encoding(ctx, word)
 
     tmp_file, _ = unique_tmp_path(TMP_PREFIX)
     # grep to tmp with linenum
     with open(tmp_file, 'w') as out:
+        if include_header:
+            header = open(tempo.abspath, 'r').readline()
+            out.write(header)
         try:
             options = ['-h', '-n']
             if _options is not None:
@@ -1361,7 +1376,7 @@ class FileValue(SingleFile):
     def _match(self, fileo):
         return file_field._match(self, fileo)
 
-    def find(self, word, options=None):
+    def find(self, word, options=None, print_prog=True, include_header=False):
         """Find word in file.
 
         Parameters
@@ -1377,7 +1392,8 @@ class FileValue(SingleFile):
             Result temp file.
 
         """
-        return find_in_fileo(self._ctx, [self], self.hsize, word, options)
+        return find_in_fileo(self._ctx, [self], self.hsize, word, options,
+                             print_prog, include_header)
 
 
 class Slot(object):
