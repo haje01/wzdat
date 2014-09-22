@@ -12,7 +12,9 @@ before_install:
 install: 
     - "pip install numpy numexpr python-coveralls"
     - "pip install scipy matplotlib"
-    - "pip install cython tables"
+    - "pip install cython"
+    - "git clone https://github.com/PyTables/PyTables.git"
+    - "cd PyTables; python setup.py build; python setup.py install"
     - "pip install pandas pyzmq pygments"
     - "pip install -r requirements.txt"
     - "pip install ipython"
