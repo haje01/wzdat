@@ -12,7 +12,7 @@ before_install:
 install: 
     - "pip install numpy scipy matplotlib cython pandas pyzmq pygments ipython"
     - "pip install numexpr python-coveralls"
-    - "pip install cython tables"
+    - "pip freeze"
     - "pip install -r requirements.txt"
     #- "pip install -e ."
 
