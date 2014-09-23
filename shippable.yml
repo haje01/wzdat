@@ -10,10 +10,10 @@ before_install:
     - "sudo apt-get -qq -y install libhdf5-serial-dev"
 
 install: 
-    - "pip install --upgrade numpy scipy matplotlib cython pandas pyzmq pygments ipython"
-    - "pip install cython numexpr python-coveralls"
-    - "pip install -r requirements.txt"
-    - "pip install -e ."
+    - "pip install numpy scipy matplotlib cython pandas pyzmq pygments ipython"
+    #- "pip install numexpr python-coveralls"
+    #- "pip install -r requirements.txt"
+    #- "pip install -e ."
 
 before_script:
     mkdir -p shippable/testresults
@@ -21,8 +21,8 @@ before_script:
 
 script:
     #- nosetests --with-xunit --xunit-file=shippable/testresults/nosetests.xml
-    - coverage run --source=wzdat --branch setup.py test
-    - coverage xml -o shippable/codecoverage/coverage.xml
+    #- coverage run --source=wzdat --branch setup.py test
+    #- coverage xml -o shippable/codecoverage/coverage.xml
 
 after_success:
-    - coveralls
+    #- coveralls
