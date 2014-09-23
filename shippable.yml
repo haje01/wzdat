@@ -10,14 +10,9 @@ before_install:
     - "sudo apt-get -qq -y install libhdf5-serial-dev"
 
 install: 
-    - "pip install numpy numexpr python-coveralls"
-    - "pip install scipy matplotlib"
-    - "pip install cython"
-    - "git clone https://github.com/PyTables/PyTables.git"
-    - "cd PyTables; python setup.py build; python setup.py install"
-    - "pip install pandas pyzmq pygments"
+    - "pip install --upgrade numpy scipy matplotlib cython pandas pyzmq pygments ipython"
+    - "pip install cython numexpr python-coveralls"
     - "pip install -r requirements.txt"
-    - "pip install ipython"
     - "pip install -e ."
 
 before_script:
@@ -25,7 +20,7 @@ before_script:
     mkdir -p shippable/codecoverage
 
 script:
-    - nosetests --with-xunit --xunit-file=shippable/testresults/nosetests.xml
+    #- nosetests --with-xunit --xunit-file=shippable/testresults/nosetests.xml
     - coverage run --source=wzdat --branch setup.py test
     - coverage xml -o shippable/codecoverage/coverage.xml
 
