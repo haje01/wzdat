@@ -1,5 +1,5 @@
 numexpr
-cython==3.1.1
+cython
 pyyaml
 pygeoip
 flask
@@ -7,4 +7,4 @@ argh
 python-crontab
 markdown
 BeautifulSoup
-tables
+tables==3.1.1
