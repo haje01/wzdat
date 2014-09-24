@@ -10,9 +10,9 @@ before_install:
     - "sudo apt-get -qq -y install libhdf5-serial-dev"
 
 install: 
-    - "pip install numpy scipy matplotlib cython pandas pyzmq pygments ipython"
+    - "pip install numpy scipy matplotlib pandas pyzmq pygments ipython"
     - "pip install numexpr python-coveralls"
-    - "pip install -e git+https://github.com/PyTables/PyTables.git@v.3.1.1#egg=tables"
+    - "pip install cython==0.20.2"
     - "pip freeze"
     - "pip install -r requirements.txt"
     #- "pip install -e ."

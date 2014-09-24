@@ -1,5 +1,5 @@
 numexpr
-cython
+cython==3.1.1
 pyyaml
 pygeoip
 flask
