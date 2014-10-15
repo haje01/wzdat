@@ -1,9 +1,9 @@
 wzdat_
 ======
 
-.. image:: https://api.shippable.com/projects/541a90d3ac22859af74418a0/badge?branchName=master
+.. image:: https://api.shippable.com/projects/5421021078826375c3f0c956/badge?branchName=master&no=1411529460735
   :alt: Build Status
-  :target: https://app.shippable.com/projects/541a90d3ac22859af74418a0
+  :target: https://app.shippable.com/projects/5421021078826375c3f0c956
 
 
 .. image:: https://coveralls.io/repos/haje01/wzdat/badge.png
