@@ -5,11 +5,11 @@ import time
 import re
 from datetime import timedelta, datetime
 import urlparse
+import imp
 
 from flask import Flask, render_template, request, Response, redirect, url_for
 from markdown import markdown
 from IPython.nbformat.current import reads
-import pytz
 
 DEBUG = True
 
@@ -246,15 +246,53 @@ def finder():
     prj = os.environ['WZDAT_PRJ']
     pcfg = make_config(prj)
     ftypes = pcfg["FILE_TYPES"]
-    import imp
+    os.chdir('/solution')
     file_types = []
     for ft in ftypes:
-        mod = imp.load_source('%s.%s' % (prj, ft),  '/solution/%s/%s/%s.py' %
-                              (pkg, prj, ft))
+        mpath = '%s/%s/%s.py' % (pkg, prj, ft)
+        mod = imp.load_source('%s' % ft,  mpath)
         file_types.append((ft, mod))
     return render_template("finder.html", cur="finder", projname=projname,
                            dev=dev, cache_time=cache_time,
                            file_types=file_types)
+
+
+@app.route('/finder_search/<ftype>', methods=['POST'])
+def finder_search(ftype):
+    data = request.data
+    from urlparse import parse_qs
+    qs = parse_qs(data)
+    _start_dt = qs['start_dt'][0]
+    _end_dt = qs['end_dt'][0]
+    _nodes = qs['nodes[]']
+    _kinds = qs['kinds[]']
+    print ftype, _nodes, _kinds, _start_dt, _end_dt
+
+    os.chdir('/solution')
+    pkg = os.environ["WZDAT_SOL_PKG"]
+    prj = os.environ['WZDAT_PRJ']
+    mpath = '%s/%s/%s.py' % (pkg, prj, ftype)
+    m = imp.load_source('%s' % ftype,  mpath)
+
+    # convert string to object
+    start_dt = end_dt = None
+    for date in m.dates:
+        if str(date) == _start_dt:
+            start_dt = date
+        if str(date) == _end_dt:
+            end_dt = date
+    nodes = []
+    for node in m.nodes:
+        if str(node) in _nodes:
+            nodes.append(node)
+    kinds = []
+    for kind in m.kinds:
+        if str(kind) in _kinds:
+            kinds.append(kind)
+
+    files = m.files[start_dt, end_dt][nodes][kinds]
+
+    return Response(str(files.zlink))
 
 
 @app.route('/notebooks')

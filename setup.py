@@ -15,10 +15,12 @@ class PyTest(TestCommand):
         pass
 
     def run(self):
-        import pytest
+        import pytest, os
         from wzdat.util import gen_dummydata
+        os.environ['WZDAT_SOL_PKG'] = 'ws_mysol'
+        os.environ['WZDAT_PRJ'] = 'myprj'
         gen_dummydata()
-        errorno = pytest.main('tests/')
+        errorno = pytest.main('tests')
         sys.exit(errorno)
 
 

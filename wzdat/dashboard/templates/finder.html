@@ -1,6 +1,16 @@
 {% extends "layout.html" %}
 
 {% block page %}
+<style>
+.falsedate {
+  background-color: red;
+}
+body.wait *, body.wait
+{
+  cursor: progress !important;
+}
+</style>
+
 <div class="row">
   <div class="center-block" style="width:800px; margin-top: 30px">
       <ul class="nav nav-tabs" role="tablist">
@@ -10,10 +20,58 @@
       </ul>
       {% for ft in file_types %}
       <div id="tab-body-{{loop.index}}" class="tab-body {%if not loop.first%}hide{%endif%}">
-        <p>{{ft[0]}}</p>
-        <p>{{ft[1].dates}}</p>
-        <p>{{ft[1].kinds}}</p>
-        <p>{{ft[1].nodes}}</p>
+        <form class="form-horizontal" style="margin-top: 20px" autocomplete="off">
+          <div class="form-group">
+            <label class="col-md-1 control-label">Date </label>
+            <div class="form-inline" style="margin-top: 6px">
+              <span>From</span>
+              <div class="btn-group" style="margin-right: 20px">
+                <a id="start_dt-{{ft[0]}}" role="button" data-toggle="dropdown" href="javascript:void(0)">Start <span class="caret"></span></a>
+                <ul class="dropdown-menu" role="menu">
+                  {% for dt in ft[1].dates[:-15:-1] %}
+                  <li><a class="dateitem" ftype="{{ft[0]}}" role="menuitem" target="start_dt-{{ft[0]}}">{{dt}}</a></li>
+                  {% endfor %}
+                </ul>
+              </div>
+              <span>To</span>
+              <div class="btn-group">
+                <a id="end_dt-{{ft[0]}}" role="button" data-toggle="dropdown" href="javascript:void(0)">End<span class="caret"></span></a>
+                <ul class="dropdown-menu" role="menu">
+                  {% for dt in ft[1].dates[:-15:-1] %}
+                  <li><a class="dateitem" ftype="{{ft[0]}}" role="menuitem" target="end_dt-{{ft[0]}}">{{dt}}</a></li>
+                  {% endfor %}
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-md-1 control-label">Kind </label>
+            <div class="form-inline">
+              {% for kind in ft[1].kinds %}
+              <div class="checkbox" style="margin-right: 20px">
+                <input class="kind" ftype="{{ft[0]}}" type="checkbox" value="{{kind}}" {%if ft[1].kinds.count == 1%}checked{%endif%}> {{kind}}
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-md-1 control-label">Node </label>
+            <div class="form-inline">
+              {% for node in ft[1].nodes %}
+              <div class="checkbox" style="margin-right: 20px">
+                <input class="node" ftype="{{ft[0]}}" type="checkbox" value="{{node}}" {%if ft[1].nodes.count == 1%}checked{%endif%}> {{node}}
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="form-group" style="margin-top: 20px">
+            <div class="col-md-offset-1">
+              <button id="search-{{ft[0]}}" ftype="{{ft[0]}}" class="searchBtn btn btn-default" disabled>Search</button>
+            </div>
+          </div>
+        </form>
+        <div id="search_result-{{ft[0]}}">
+        </div>
       </div>
       {% endfor %}
   </div>
@@ -28,5 +86,84 @@ function selectTab(idx)
   $("#tab-" + idx).addClass("active");
   $("#tab-body-" + idx).removeClass('hide');
 }
+
+$('.dateitem').click(function(e) {
+  var ft = $(this).attr('ftype');
+  var html = $(e.target).text() + '<span class="caret"></span>';
+  var target = $(e.target).attr('target')
+  $('#' + target).html(html);
+  var sdt = $('#start_dt-' + ft).text();
+  var edt = $('#end_dt-' + ft).text();
+  if (sdt != 'Start ' && edt != 'End ') {
+    if (sdt > edt) {
+      $('#end_dt').addClass('falsedate');
+    } else {
+      $('#end_dt').removeClass('falsedate')
+    }
+  }
+  checkSearchCondition();
+});
+
+$('.kind').click(function(e) {
+  var ft = $(this).attr('ftype');
+  checkSearchCondition(ft);
+});
+
+$('.node').click(function(e) {
+  var ft = $(this).attr('ftype');
+  checkSearchCondition(ft);
+});
+
+function checkSearchCondition(ft) {
+  var dt = $('#end_dt-' + ft).attr('class');
+  var sb = $('#search-' + ft);
+  var kinds = checkedKinds();
+  var nodes = checkedNodes();
+  var disabled = false;
+  if (dt == 'falsedate' || kinds.length == 0 || nodes.length == 0) {
+    disabled = true;
+  }
+  if (disabled) {
+    sb.attr('disabled', 'disabled');
+  } else {
+    sb.removeAttr('disabled');
+  }
+}
+
+function checkedKinds() {
+  return $('.kind:visible:checked').map(function() { return this.value; }).get();
+}
+
+function checkedNodes() {
+  return $('.node:visible:checked').map(function() { return this.value; }).get();
+}
+
+
+$('.searchBtn').click(function(e) {
+  var ft = $(this).attr('ftype');
+  var start_dt = $('#start_dt-' + ft).text();
+  var end_dt = $('#end_dt-' + ft).text();
+  var kinds = checkedKinds();
+  var nodes = checkedNodes();
+  var data = {'start_dt': start_dt, 'end_dt': end_dt, 'kinds': kinds, 'nodes': nodes};
+  console.log(data)
+  $('body').addClass('wait');
+  $('#search_result-' + ft).html('');
+  $('#search-' + ft).attr('disabled', 'disabled');
+  $.post('/finder_search/' + ft, data, function(msg) {
+    console.log(msg);
+    if (msg.indexOf('file count: 0') > -1) {
+      $('#search_result-' + ft).html('<hr/><h3>Search Result</h3><b>No files found</b>');
+    } else {
+      $('#search_result-' + ft).html('<hr/><h3>Search Result</h3><pre>' + msg + '</pre><form class="form-horizontal" style="margin-top: 20px"><div class="form-group"><div class="col-md-offset-1"><button id="download-' + ft + '" class="btn btn-default">Download</button></div></div></form>');
+    };
+    }).fail(function() {
+        alert('Search Failed');
+    }).always(function() {
+      $('body').removeClass('wait');
+      $('#search-' + ft).removeAttr('disabled');
+    });
+  e.preventDefault();
+});
 
 {% endblock %}

@@ -1,6 +1,6 @@
 
 from wzdat import selector
+from ws_mysol.myprj.log import *
 
 def test_dummy():
-    pass
-
+    assert len(files) > 0
