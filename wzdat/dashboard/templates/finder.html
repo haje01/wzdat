@@ -35,7 +35,7 @@ body.wait *, body.wait
               </div>
               <span>To</span>
               <div class="btn-group">
-                <a id="end_dt-{{ft[0]}}" role="button" data-toggle="dropdown" href="javascript:void(0)">End<span class="caret"></span></a>
+                <a id="end_dt-{{ft[0]}}" role="button" data-toggle="dropdown" href="javascript:void(0)">End <span class="caret"></span></a>
                 <ul class="dropdown-menu" role="menu">
                   {% for dt in ft[1].dates[:-15:-1] %}
                   <li><a class="dateitem" ftype="{{ft[0]}}" role="menuitem" target="end_dt-{{ft[0]}}">{{dt}}</a></li>
@@ -96,12 +96,12 @@ $('.dateitem').click(function(e) {
   var edt = $('#end_dt-' + ft).text();
   if (sdt != 'Start ' && edt != 'End ') {
     if (sdt > edt) {
-      $('#end_dt').addClass('falsedate');
+      $('#end_dt-' + ft).addClass('falsedate');
     } else {
-      $('#end_dt').removeClass('falsedate')
+      $('#end_dt-' + ft).removeClass('falsedate')
     }
   }
-  checkSearchCondition();
+  checkSearchCondition(ft);
 });
 
 $('.kind').click(function(e) {
@@ -114,13 +114,32 @@ $('.node').click(function(e) {
   checkSearchCondition(ft);
 });
 
+function clearSearchResults() {
+  {% for ft in file_types %}
+  $('#search_result-{{ft[0]}}').html('');
+  {% endfor %}
+}
+
+
+function clearDownloadResults() {
+  {% for ft in file_types %}
+  $('#download_result-{{ft[0]}}').html('');
+  {% endfor %}
+}
+
+
 function checkSearchCondition(ft) {
+  clearSearchResults();
+  clearDownloadResults();
+
+  var sdt = $('#start_dt-' + ft).text();
+  var edt = $('#end_dt-' + ft).text();
   var dt = $('#end_dt-' + ft).attr('class');
   var sb = $('#search-' + ft);
   var kinds = checkedKinds();
   var nodes = checkedNodes();
   var disabled = false;
-  if (dt == 'falsedate' || kinds.length == 0 || nodes.length == 0) {
+  if (sdt == 'Start ' || edt == 'End ' || dt == 'falsedate' || kinds.length == 0 || nodes.length == 0) {
     disabled = true;
   }
   if (disabled) {
@@ -139,24 +158,35 @@ function checkedNodes() {
 }
 
 
-$('.searchBtn').click(function(e) {
-  var ft = $(this).attr('ftype');
+function getFormData(ft) {
   var start_dt = $('#start_dt-' + ft).text();
   var end_dt = $('#end_dt-' + ft).text();
   var kinds = checkedKinds();
   var nodes = checkedNodes();
   var data = {'start_dt': start_dt, 'end_dt': end_dt, 'kinds': kinds, 'nodes': nodes};
-  console.log(data)
+  return data
+}
+
+
+$('.searchBtn').click(function(e) {
+  clearSearchResults();
+
+  var ft = $(this).attr('ftype');
+  var data = getFormData(ft);
   $('body').addClass('wait');
-  $('#search_result-' + ft).html('');
   $('#search-' + ft).attr('disabled', 'disabled');
   $.post('/finder_search/' + ft, data, function(msg) {
-    console.log(msg);
     if (msg.indexOf('file count: 0') > -1) {
       $('#search_result-' + ft).html('<hr/><h3>Search Result</h3><b>No files found</b>');
     } else {
-      $('#search_result-' + ft).html('<hr/><h3>Search Result</h3><pre>' + msg + '</pre><form class="form-horizontal" style="margin-top: 20px"><div class="form-group"><div class="col-md-offset-1"><button id="download-' + ft + '" class="btn btn-default">Download</button></div></div></form>');
-    };
+      var splited = msg.split('\n');
+      var hsize = splited[splited.length -1];
+      if(msg.lastIndexOf("\n") > 0) {
+        msg = msg.substring(0, msg.lastIndexOf("\n"));
+      }
+      $('#search_result-' + ft).html('<hr/><h3>Search Result</h3><pre>' + msg + '</pre><b>Total ' + hsize + '</b><form class="form-horizontal" style="margin-top: 20px"><div class="form-group"><div class="col-md-offset-1"><button id="request_download-' + ft + '" class="btn btn-default">Request Download</button></div></div></form><div id="download_result-' + ft + '"></div>');
+      attachRequestHandler(ft);
+    }
     }).fail(function() {
         alert('Search Failed');
     }).always(function() {
@@ -165,5 +195,23 @@ $('.searchBtn').click(function(e) {
     });
   e.preventDefault();
 });
+
+
+function attachRequestHandler(ft) {
+  $('#request_download-' + ft).click(function(e) {
+    clearDownloadResults();
+    var data = getFormData(ft);
+    $('body').addClass('wait');
+    $('#request_download-' + ft).attr('disabled', 'disabled');
+    $.post('/finder_request_download/' + ft, data, function(msg) {
+      $('#download_result-' + ft).html('<b>Click to download: </b>' + msg)
+    }).fail(function() {
+      alert('Request Download Failed');
+    }).always(function() {
+      $('body').removeClass('wait');
+    });
+    e.preventDefault();
+  });
+}
 
 {% endblock %}

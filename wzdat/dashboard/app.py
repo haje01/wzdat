@@ -6,6 +6,7 @@ import re
 from datetime import timedelta, datetime
 import urlparse
 import imp
+from urlparse import parse_qs
 
 from flask import Flask, render_template, request, Response, redirect, url_for
 from markdown import markdown
@@ -257,16 +258,12 @@ def finder():
                            file_types=file_types)
 
 
-@app.route('/finder_search/<ftype>', methods=['POST'])
-def finder_search(ftype):
-    data = request.data
-    from urlparse import parse_qs
+def _select_files(ftype, data):
     qs = parse_qs(data)
     _start_dt = qs['start_dt'][0]
     _end_dt = qs['end_dt'][0]
     _nodes = qs['nodes[]']
     _kinds = qs['kinds[]']
-    print ftype, _nodes, _kinds, _start_dt, _end_dt
 
     os.chdir('/solution')
     pkg = os.environ["WZDAT_SOL_PKG"]
@@ -274,6 +271,7 @@ def finder_search(ftype):
     mpath = '%s/%s/%s.py' % (pkg, prj, ftype)
     m = imp.load_source('%s' % ftype,  mpath)
 
+    print ftype, _nodes, _kinds, _start_dt, _end_dt
     # convert string to object
     start_dt = end_dt = None
     for date in m.dates:
@@ -291,8 +289,22 @@ def finder_search(ftype):
             kinds.append(kind)
 
     files = m.files[start_dt, end_dt][nodes][kinds]
+    return files
 
-    return Response(str(files.zlink))
+
+@app.route('/finder_search/<ftype>', methods=['POST'])
+def finder_search(ftype):
+    files = _select_files(ftype, request.data)
+    sfiles = str(files)
+    if 'size: ' not in sfiles:
+        sfiles += '\nsize: ' + files.hsize
+    return Response(sfiles)
+
+
+@app.route('/finder_request_download/<ftype>', methods=['POST'])
+def finder_request_download(ftype):
+    files = _select_files(ftype, request.data)
+    return Response(files.zlink.data)
 
 
 @app.route('/notebooks')
