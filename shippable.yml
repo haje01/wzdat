@@ -21,7 +21,7 @@ before_script:
     mkdir -p shippable/codecoverage
 
 script:
-    - nosetests --with-xunit --xunit-file=shippable/testresults/nosetests.xml
+    - WZDAT_NO_CACHE=True WZDAT_DATA_DIR=/wzdat/tests/dummydata WZDAT_SOL_DIR=/wzdat/tests WZDAT_SOL_PKG=ws_mysol WZDAT_PRJ=myprj nosetests --with-xunit --xunit-file=shippable/testresults/nosetests.xml
     - coverage run --source=wzdat --branch setup.py test
     - coverage xml -o shippable/codecoverage/coverage.xml
 
