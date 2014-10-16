@@ -28,7 +28,9 @@ def make_config(prj=None):
     """Make config object for project and return it."""
     assert "WZDAT_SOL_PKG" in os.environ, "No WZDAT_SOL_PKG exists!"
     pkg_name = os.environ["WZDAT_SOL_PKG"]
-    pkg_path = os.path.expandvars(os.path.join(SOLUTION_DIR, pkg_name))
+    sol_dir = os.environ['WZDAT_SOL_DIR']\
+        if 'WZDAT_SOL_DIR' in os.environ else SOLUTION_DIR
+    pkg_path = os.path.expandvars(os.path.join(sol_dir, pkg_name))
     mode = "%s-" % os.environ["WZDAT_MODE"] if "WZDAT_MODE" in os.environ\
         else ''
     cfgname = "%sconfig.yml" % mode
@@ -48,7 +50,8 @@ def make_config(prj=None):
             pcfg_path = os.path.join(prj_path, cfgname)
             if os.path.isfile(pcfg_path):
                 loaded = yaml.load(open(pcfg_path, 'r'))
-                pcfg = _expand_var(loaded)
-                cfg.update(pcfg)
+                if loaded:
+                    pcfg = _expand_var(loaded)
+                    cfg.update(pcfg)
 
     return cfg

@@ -4,7 +4,7 @@ import argh
 from wzdat.make_config import make_config
 from wzdat.ipynb_runner import update_notebook_by_run
 from wzdat.rundb import update_cache_info
-from wzdat.util import gen_dummydata as _gen_dummydata
+from wzdat.util import gen_dummydata as _gen_dummydata, get_data_dir
 
 
 cfg = make_config()
@@ -13,7 +13,7 @@ cfg = make_config()
 def cache_files():
     prj = os.environ['WZDAT_PRJ']
     print "Caching files for: %s" % prj
-    datadir = '/logdata'
+    datadir = get_data_dir()
     pkg = os.environ["WZDAT_SOL_PKG"]
     pcfg = make_config(prj)
     for ftype in pcfg["FILE_TYPES"]:

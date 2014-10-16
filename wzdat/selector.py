@@ -29,7 +29,7 @@ from wzdat.value import ValueList, FailValue, Value, check_date_slice
 from wzdat.util import unique_tmp_path, sizeof_fmt, unique_list, \
     remove_empty_file, Property, remove_old_tmps, get_line_count, \
     get_slice_idx, ProgressBar, nprint, Context, convert_data_file,\
-    get_convfile_path
+    get_convfile_path, get_data_dir
 from wzdat.lineinfo import LineInfo, LineInfoImpl_Count, LineInfoImpl_Array
 
 qmode = 'files'
@@ -1045,8 +1045,9 @@ def _get_cache_path(ext):
 
 
 def _update_files_precalc(ctx, root_list):
+    nocache = True if 'WZDAT_NO_CACHE' in os.environ else False
     cpath = _get_cache_path(ctx.fileext)
-    if os.path.isfile(cpath):
+    if not nocache and os.path.isfile(cpath):
         tstr = _get_found_time(cpath)
         msg = '\nusing file infos found %s ago.' % tstr
         with open(cpath, 'r') as f:
@@ -1060,7 +1061,9 @@ def _update_files_precalc(ctx, root_list):
 def find_files_and_save(startdir, ext, root_list=None):
     if root_list is None:
         root_list = []
-    cpath = _get_cache_path(ext)
+    nocache = True if 'WZDAT_NO_CACHE' in os.environ else False
+    if not nocache:
+        cpath = _get_cache_path(ext)
     nprint('finding files and save info...')
     filecnt = 0
     assert os.path.isdir(startdir)
@@ -1074,8 +1077,9 @@ def find_files_and_save(startdir, ext, root_list=None):
         rfiles = sorted(rfiles)
         _root[1] = rfiles
     rv = sorted(root_list), filecnt
-    with open(cpath, 'w') as f:
-        pickle.dump(rv, f)
+    if not nocache:
+        with open(cpath, 'w') as f:
+            pickle.dump(rv, f)
     return rv
 
 
@@ -1280,7 +1284,7 @@ def update(mod, ext, subtype=None):
     _remove_old()
 
     cfg = make_config()
-    _dir = os.path.join(DATA_DIR)
+    _dir = get_data_dir()
     encoding = cfg["DATA_ENCODING"]
     if subtype is not None and type(encoding) == dict:
         encoding = encoding[subtype]

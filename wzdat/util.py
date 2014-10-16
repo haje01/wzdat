@@ -407,8 +407,13 @@ def cap_call(cmd, _test=False):
                 print(_err)
 
 
+def get_data_dir():
+    return os.environ['WZDAT_DATA_DIR'] if 'WZDAT_DATA_DIR' in os.environ\
+        else DATA_DIR
+
+
 def get_convfile_path(path):
-    relpath = os.path.relpath(path, DATA_DIR)
+    relpath = os.path.relpath(path, get_data_dir())
     return os.path.join(CONV_DIR, relpath)
 
 
@@ -507,3 +512,5 @@ def _gen_dummy_lines(_dir, locale, node, kind, dates, procno):
                 path = os.path.join(_dir, kind + "_%s %02d.log" %
                                     (sdate, proc + 1))
                 write_lines(path, date)
+
+

@@ -17,6 +17,9 @@ class PyTest(TestCommand):
     def run(self):
         import pytest, os
         from wzdat.util import gen_dummydata
+        os.environ['WZDAT_NO_CACHE'] = 'True'
+        os.environ['WZDAT_DATA_DIR'] = '/wzdat/tests/dummydata'
+        os.environ['WZDAT_SOL_DIR'] = '/wzdat/tests'
         os.environ['WZDAT_SOL_PKG'] = 'ws_mysol'
         os.environ['WZDAT_PRJ'] = 'myprj'
         gen_dummydata()
