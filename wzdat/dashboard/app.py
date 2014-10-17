@@ -283,10 +283,11 @@ def _select_files(ftype, data):
         if str(node) in _nodes:
             nodes.append(node)
     kinds = []
-    for kind in m.kinds:
+    for kind in m.kinds.group():
         if str(kind) in _kinds:
             kinds.append(kind)
 
+    print start_dt, end_dt, nodes, kinds
     files = m.files[start_dt, end_dt][nodes][kinds]
     return files
 
