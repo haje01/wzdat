@@ -271,7 +271,6 @@ def _select_files(ftype, data):
     mpath = '%s/%s/%s.py' % (pkg, prj, ftype)
     m = imp.load_source('%s' % ftype,  mpath)
 
-    print ftype, _nodes, _kinds, _start_dt, _end_dt
     # convert string to object
     start_dt = end_dt = None
     for date in m.dates:

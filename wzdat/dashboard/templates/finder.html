@@ -47,7 +47,7 @@ body.wait *, body.wait
           <div class="form-group">
             <label class="col-md-1 control-label">Kind </label>
             <div class="form-inline">
-              {% for kind in ft[1].kinds %}
+              {% for kind in ft[1].kinds.group() %}
               <div class="checkbox" style="margin-right: 20px">
                 <input class="kind" ftype="{{ft[0]}}" type="checkbox" value="{{kind}}" {%if ft[1].kinds.count == 1%}checked{%endif%}> {{kind}}
               </div>
