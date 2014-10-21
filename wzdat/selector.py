@@ -24,7 +24,7 @@ from wzdat.base import Listable, Representable, ISearchable, ILineAttr, \
     IFramable, IPathable, IFilterable, IMergeable
 from wzdat.make_config import make_config
 from wzdat.const import TMP_PREFIX, PRINT_LMAX, NAMED_TMP_PREFIX, \
-    CHUNK_CNT, TMP_DIR, CONV_DIR, DATA_DIR
+    CHUNK_CNT, TMP_DIR, CONV_DIR
 from wzdat.value import ValueList, FailValue, Value, check_date_slice
 from wzdat.util import unique_tmp_path, sizeof_fmt, unique_list, \
     remove_empty_file, Property, remove_old_tmps, get_line_count, \
@@ -924,7 +924,7 @@ def _add_zip_flat(zf, abspath):
     odir = os.getcwd()
     _dir, filename = os.path.split(abspath)
     os.chdir(_dir)
-    zf.write(filename)
+    zf.write(filename, abspath)
     os.chdir(odir)
 
 
