@@ -7,6 +7,7 @@ HDF_FILE_PREFIX = 'wzdathdf-'
 HDF_FILE_EXT = 'h5'
 SAVE_INFO_EXT = '.sinfo'
 CHUNK_CNT = 500000
+FORWARDER_LOG_PREFIX = '_wdfwd'
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 SOLUTION_DIR = '/solution'
