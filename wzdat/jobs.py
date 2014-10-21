@@ -11,6 +11,9 @@ cfg = make_config()
 
 
 def cache_files():
+    # prevent using cache
+    os.environ['WZDAT_NO_CACHE'] = 'True'
+
     prj = os.environ['WZDAT_PRJ']
     print "Caching files for: %s" % prj
     datadir = get_data_dir()
@@ -46,4 +49,5 @@ def gen_dummydata(**kwargs):
 
 
 if __name__ == "__main__":
-    argh.dispatch_commands([cache_files, register_cron, run_notebook, gen_dummydata])
+    argh.dispatch_commands([cache_files, register_cron, run_notebook,
+                            gen_dummydata])
