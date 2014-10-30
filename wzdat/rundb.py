@@ -43,19 +43,28 @@ class Cursor(object):
         assert self.cur is not None
         return self.cur.fetchone()
 
+    def fetchall(self):
+        assert self.cur is not None
+        return self.cur.fetchall()
+
 
 def create_db():
     with Cursor(RUNNER_DB_PATH) as cur:
         cur.execute('CREATE TABLE IF NOT EXISTS info '
-                    '(path TEXT PRIMARY KEY, start REAL, elapsed REAL, cur INT, total INT);')
+                    '(path TEXT PRIMARY KEY, start REAL, elapsed REAL, cur INT'
+                    ', total INT);')
         cur.execute('CREATE TABLE IF NOT EXISTS cache '
                     '(id INTEGER PRIMARY KEY, time REAL);')
+        cur.execute('CREATE TABLE IF NOT EXISTS finder '
+                    '(ft TEXT PRIMARY KEY, dates TEXT, kinds TEXT, nodes'
+                    ' TEXT);')
 
 
 def destroy_db():
     with Cursor(RUNNER_DB_PATH) as cur:
         cur.execute('DROP TABLE IF EXISTS info;')
         cur.execute('DROP TABLE IF EXISTS cache;')
+        cur.execute('DROP TABLE IF EXISTS finder;')
 
 
 def start_run(path, total):
@@ -67,8 +76,8 @@ def start_run(path, total):
             cur.execute('INSERT INTO info(path, start, total) VALUES(?, ?, ?)',
                         (path, start, total))
         else:
-            cur.execute('UPDATE info SET start=?, elapsed=NULL, cur=0, total=? '
-                        'WHERE path=?', (start, total, path))
+            cur.execute('UPDATE info SET start=?, elapsed=NULL, cur=0, total=?'
+                        ' WHERE path=?', (start, total, path))
 
 
 def finish_run(path):
@@ -96,7 +105,8 @@ def update_run_info(path, curcell):
 def get_run_info(path):
     with Cursor(RUNNER_DB_PATH) as cur:
         path = path.decode('utf8')
-        cur.execute('SELECT start, elapsed, cur, total FROM info WHERE path=?', (path,))
+        cur.execute('SELECT start, elapsed, cur, total FROM info WHERE path=?',
+                    (path,))
         return cur.fetchone()
 
 
@@ -112,6 +122,43 @@ def get_cache_info():
     with Cursor(RUNNER_DB_PATH) as cur:
         cur.execute('SELECT time from cache ORDER BY id DESC LIMIT 1')
         return cur.fetchone()
+
+
+def update_finder_info(info):
+    with Cursor(RUNNER_DB_PATH) as cur:
+        try:
+            # delete old
+            cur.execute('DELETE FROM finder')
+        except sqlite3.OperationalError, e:
+            logging.error(str(e))
+            return
+
+        for ft, _dates, _kinds, _nodes in info:
+            dates = ','.join(_dates)
+            kinds = ','.join(_kinds)
+            nodes = ','.join(_nodes)
+            # insert new
+            cur.execute('INSERT INTO finder (ft, dates, kinds, nodes) VALUES'
+                        '(?, ?, ?, ?)', (ft, dates, kinds, nodes))
+
+
+def get_finder_info():
+    with Cursor(RUNNER_DB_PATH) as cur:
+        try:
+            cur.execute('SELECT * FROM finder')
+        except sqlite3.OperationalError, e:
+            logging.error(str(e))
+            return
+
+        ret = []
+        for row in cur.fetchall():
+            ft = row[0]
+            dates = row[1].split(',')
+            kinds = row[2].split(',')
+            nodes = row[3].split(',')
+            ret.append((ft, dates, kinds, nodes))
+
+        return ret
 
 
 if __name__ == "__main__":

@@ -1,13 +1,19 @@
 import os
 import argh
+import imp
 
 from wzdat.make_config import make_config
 from wzdat.ipynb_runner import update_notebook_by_run
-from wzdat.rundb import update_cache_info
+from wzdat.rundb import update_cache_info, update_finder_info
 from wzdat.util import gen_dummydata as _gen_dummydata, get_data_dir
 
 
 cfg = make_config()
+
+
+def cache_all():
+    cache_files()
+    cache_finder()
 
 
 def cache_files():
@@ -25,6 +31,27 @@ def cache_files():
         cmd = ' '.join(cmd)
         exec(cmd)
     update_cache_info()
+
+
+def cache_finder():
+    ret = []
+    if ret is None or len(ret) == 0:
+        pkg = os.environ["WZDAT_SOL_PKG"]
+        prj = os.environ['WZDAT_PRJ']
+        pcfg = make_config(prj)
+        ftypes = pcfg["FILE_TYPES"]
+        os.chdir('/solution')
+        ret = []
+        for ft in ftypes:
+            mpath = '%s/%s/%s.py' % (pkg, prj, ft)
+            mod = imp.load_source('%s' % ft,  mpath)
+            dates = [str(date) for date in mod.dates[:-15:-1]]
+            kinds = [str(kind) for kind in mod.kinds.group()]
+            nodes = [str(node) for node in mod.nodes]
+            info = ft, dates, kinds, nodes
+            ret.append(info)
+        update_finder_info(ret)
+    return ret
 
 
 def register_cron():

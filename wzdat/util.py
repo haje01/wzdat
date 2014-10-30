@@ -495,7 +495,8 @@ def _gen_dummy_lines(_dir, locale, node, kind, dates, procno):
         lgen = gen_level()
         mgen = gen_msg()
         with open(fname, 'w') as f:
-            dts = [date + _datetime.timedelta(seconds=x * 60 * 60) for x in range(0, 24)]
+            dts = [date + _datetime.timedelta(seconds=x * 60 * 60) for x in
+                   range(0, 24)]
             for dt in dts:
                 sdt = dt.strftime('%Y-%m-%d %H:%M')
                 f.write('%s [%s] - %s\n' % (sdt, lgen.next(), mgen.next()))
@@ -512,5 +513,3 @@ def _gen_dummy_lines(_dir, locale, node, kind, dates, procno):
                 path = os.path.join(_dir, kind + "_%s %02d.log" %
                                     (sdate, proc + 1))
                 write_lines(path, date)
-
-

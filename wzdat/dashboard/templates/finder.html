@@ -28,7 +28,7 @@ body.wait *, body.wait
               <div class="btn-group" style="margin-right: 20px">
                 <a id="start_dt-{{ft[0]}}" role="button" data-toggle="dropdown" href="javascript:void(0)">Start <span class="caret"></span></a>
                 <ul class="dropdown-menu" role="menu">
-                  {% for dt in ft[1].dates[:-15:-1] %}
+                  {% for dt in ft[1] %}
                   <li><a class="dateitem" ftype="{{ft[0]}}" role="menuitem" target="start_dt-{{ft[0]}}">{{dt}}</a></li>
                   {% endfor %}
                 </ul>
@@ -37,7 +37,7 @@ body.wait *, body.wait
               <div class="btn-group">
                 <a id="end_dt-{{ft[0]}}" role="button" data-toggle="dropdown" href="javascript:void(0)">End <span class="caret"></span></a>
                 <ul class="dropdown-menu" role="menu">
-                  {% for dt in ft[1].dates[:-15:-1] %}
+                  {% for dt in ft[1] %}
                   <li><a class="dateitem" ftype="{{ft[0]}}" role="menuitem" target="end_dt-{{ft[0]}}">{{dt}}</a></li>
                   {% endfor %}
                 </ul>
@@ -47,9 +47,9 @@ body.wait *, body.wait
           <div class="form-group">
             <label class="col-md-1 control-label">Kind </label>
             <div class="form-inline col-md-11">
-              {% for kind in ft[1].kinds.group() %}
+              {% for kind in ft[2] %}
               <div class="checkbox" style="margin-right: 20px">
-                <input class="kind" ftype="{{ft[0]}}" type="checkbox" value="{{kind}}" {%if ft[1].kinds.count == 1%}checked{%endif%}> {{kind}}
+                <input class="kind" ftype="{{ft[0]}}" type="checkbox" value="{{kind}}" {%if ft[2]|length == 1%}checked{%endif%}> {{kind}}
               </div>
               {% endfor %}
             </div>
@@ -57,9 +57,9 @@ body.wait *, body.wait
           <div class="form-group">
             <label class="col-md-1 control-label">Node </label>
             <div class="form-inline col-md-11">
-              {% for node in ft[1].nodes %}
+              {% for node in ft[3] %}
               <div class="checkbox" style="margin-right: 20px">
-                <input class="node" ftype="{{ft[0]}}" type="checkbox" value="{{node}}" {%if ft[1].nodes.count == 1%}checked{%endif%}> {{node}}
+                <input class="node" ftype="{{ft[0]}}" type="checkbox" value="{{node}}" {%if ft[3]|length == 1%}checked{%endif%}> {{node}}
               </div>
               {% endfor %}
             </div>
