@@ -12,9 +12,10 @@ from wzdat.make_config import make_config
 ALL_EXPORT = ['files', 'kinds', 'dates', 'dates', 'nodes', 'update', 'node',
               'kind', 'date', 'slot']
 
-cfg = make_config()
-if 'log' in cfg:
-    logging.config.dictConfig(cfg['log'])
+with open('wzdatcfg.yml') as f:
+    cfg = yaml.load(f.read())
+    if 'log' in cfg:
+        logging.config.dictConfig(cfg['log'])
 
 
 def make_selectors(ctx, all_files):
