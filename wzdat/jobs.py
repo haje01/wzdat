@@ -14,6 +14,7 @@ cfg = make_config()
 
 
 def cache_all():
+    logging.debug('cache_all')
     cache_files()
     cache_finder()
 
@@ -37,6 +38,7 @@ def cache_files():
 
 
 def cache_finder():
+    logging.debug('cache_finder')
     ret = []
     if ret is None or len(ret) == 0:
         pkg = os.environ["WZDAT_SOL_PKG"]
@@ -67,6 +69,7 @@ def register_cron():
 
 @argh.arg('path', help="notebook path")
 def run_notebook(path):
+    logging.debug('run_notebook ' + path)
     update_notebook_by_run(path)
 
 
@@ -79,5 +82,5 @@ def gen_dummydata(**kwargs):
 
 
 if __name__ == "__main__":
-    argh.dispatch_commands([cache_files, register_cron, run_notebook,
+    argh.dispatch_commands([cache_all, register_cron, run_notebook,
                             gen_dummydata])

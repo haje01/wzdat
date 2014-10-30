@@ -126,6 +126,7 @@ def get_cache_info():
 
 
 def update_finder_info(info):
+    logging.debug('update_finder_info')
     with Cursor(RUNNER_DB_PATH) as cur:
         try:
             # delete old
@@ -144,6 +145,7 @@ def update_finder_info(info):
 
 
 def get_finder_info():
+    logging.debug('get_finder_info')
     with Cursor(RUNNER_DB_PATH) as cur:
         try:
             cur.execute('SELECT * FROM finder')

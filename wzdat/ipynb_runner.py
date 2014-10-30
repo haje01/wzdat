@@ -102,6 +102,7 @@ def _run_init(r, path):
 
 
 def update_notebook_by_run(path):
+    logging.debug('update_notebook_by_run ' + path)
     # run common init
     nb = read(open(path), 'json')
     r = NotebookRunner(nb, pylab=True)
