@@ -101,6 +101,7 @@ def get_run_info(path):
 
 
 def update_cache_info():
+    logging.debug('update_cache_info')
     with Cursor(RUNNER_DB_PATH) as cur:
         cur.execute('INSERT INTO cache (time) VALUES (?)', (time.time(),))
         # trim old

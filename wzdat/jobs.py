@@ -1,4 +1,6 @@
 import os
+import logging
+
 import argh
 
 from wzdat.make_config import make_config
@@ -11,6 +13,7 @@ cfg = make_config()
 
 
 def cache_files():
+    logging.debug('cache_files')
     # prevent using cache
     os.environ['WZDAT_NO_CACHE'] = 'True'
 
