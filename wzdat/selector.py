@@ -13,6 +13,8 @@ import shutil
 from collections import defaultdict
 from subprocess import check_call, CalledProcessError
 import pickle
+import logging
+import traceback
 
 import numpy as np
 import pandas as pd
@@ -985,8 +987,9 @@ def _update_files_root_vals(fieldcnt, fields, fileo, field_getter):
         fobj = fields[i]
         try:
             val = field_getter[i]()(fobj, fileo)
-        except ValueError, e:
+        except Exception, e:
             field_errs.append((str(fobj) + str(e)))
+            logging.error(traceback.format_exc())
             break
         else:
             vals.add(val)
