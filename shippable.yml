@@ -10,11 +10,11 @@ before_install:
     - "sudo apt-get -qq -y install libhdf5-serial-dev"
 
 install: 
-    - "pip install numpy scipy matplotlib pandas pyzmq pygments ipython"
-    - "pip install numexpr python-coveralls"
-    - "pip install cython==0.20.2"
-    - "pip install -r requirements.txt"
-    - "pip install -e ."
+    #- "pip install numpy scipy matplotlib pandas pyzmq pygments ipython"
+    #- "pip install cython==0.20.2"
+    - "cat test_requirements.txt | xargs pip install"
+    - "pip install ."
+    - "pip install python-coveralls"
 
 before_script:
     mkdir -p shippable/testresults
