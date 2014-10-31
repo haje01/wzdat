@@ -1152,7 +1152,12 @@ class DateField(Field):
 
     def _value(self, fileo):
         to_datevalue = self._value_fn()
-        return to_datevalue(self, fileo)
+        try:
+            return to_datevalue(self, fileo)
+        except Exception, e:
+            logging.error(str(e))
+            logging.error(traceback.format_exc())
+            raise
 
     def _value_fn(self):
         return _get_member(self._ctx, 'get_date')
