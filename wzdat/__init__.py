@@ -1,25 +1,20 @@
 # -*- coding: utf-8 -*-
 """ Webzen data anaylysis toolkit common."""
 
-import os
 import logging
 import logging.config
 
-import yaml
-
-from wzdat.const import WZDAT_DIR
-from wzdat.selector import FileSelector, Selector, update, SlotMap
 from wzdat.make_config import make_config
+from wzdat.selector import FileSelector, Selector, update as _update, SlotMap
+
+update = _update
 
 ALL_EXPORT = ['files', 'kinds', 'dates', 'dates', 'nodes', 'update', 'node',
               'kind', 'date', 'slot']
 
 
-cfgpath = os.path.join(WZDAT_DIR, 'wzdatcfg.yml')
-with open(cfgpath) as f:
-    cfg = yaml.load(f.read())
-    if 'log' in cfg:
-        logging.config.dictConfig(cfg['log'])
+cfg = make_config()
+logging.config.dictConfig(cfg['log'])
 
 
 def make_selectors(ctx, all_files):

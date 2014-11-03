@@ -1,1 +1,2 @@
-DATA_ENCODING: 'utf-8'
+base_cfg: ../config.yml
+data_encoding: 'utf-8'

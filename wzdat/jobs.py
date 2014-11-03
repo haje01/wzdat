@@ -7,7 +7,7 @@ import imp
 from wzdat.make_config import make_config
 from wzdat.ipynb_runner import update_notebook_by_run
 from wzdat.rundb import update_cache_info, update_finder_info
-from wzdat.util import gen_dummydata as _gen_dummydata, get_data_dir
+from wzdat.util import gen_dummydata as _gen_dummydata
 
 
 cfg = make_config()
@@ -22,30 +22,32 @@ def cache_all():
 def cache_files():
     logging.debug('cache_files')
     # prevent using cache
-    os.environ['WZDAT_NO_CACHE'] = 'True'
-
-    prj = os.environ['WZDAT_PRJ']
+    cfg = make_config()
+    old_nocache = cfg['no_cache']
+    prj = os.environ['prj']
     print "Caching files for: %s" % prj
-    datadir = get_data_dir()
-    pkg = os.environ["WZDAT_SOL_PKG"]
-    pcfg = make_config(prj)
-    for ftype in pcfg["FILE_TYPES"]:
+    datadir = cfg['data_dir']
+    pkg = cfg['sol_pkg']
+    ftypes = cfg['file_types']
+    for ftype in ftypes:
         cmd = ['from %s.%s.%s import find_files_and_save; '
                'find_files_and_save("%s")' % (pkg, prj, ftype, datadir)]
         cmd = ' '.join(cmd)
         exec(cmd)
     update_cache_info()
+    cfg['no_cache'] = old_nocache
 
 
 def cache_finder():
+    # Make cache for file finder.
     logging.debug('cache_finder')
     ret = []
     if ret is None or len(ret) == 0:
-        pkg = os.environ["WZDAT_SOL_PKG"]
-        prj = os.environ['WZDAT_PRJ']
-        pcfg = make_config(prj)
-        ftypes = pcfg["FILE_TYPES"]
-        os.chdir('/solution')
+        pkg = cfg['sol_pkg']
+        prj = cfg['prj']
+        ftypes = cfg["file_types"]
+        sol_dir = cfg['sol_dir']
+        os.chdir(sol_dir)
         ret = []
         for ft in ftypes:
             mpath = '%s/%s/%s.py' % (pkg, prj, ft)

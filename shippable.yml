@@ -12,8 +12,9 @@ before_install:
 install: 
     #- "pip install numpy scipy matplotlib pandas pyzmq pygments ipython"
     #- "pip install cython==0.20.2"
-    - "cat test_requirements.txt | xargs pip install"
+    - "cat requirements.txt | xargs pip install"
     - "pip install ."
+    - "pip install pytest>=2.6.4"
     - "pip install python-coveralls"
 
 before_script:
@@ -24,7 +25,7 @@ before_script:
 
 script:
     - pwd
-    - WZDAT_NO_CACHE=True WZDAT_DATA_DIR=/wzdat/tests/dummydata WZDAT_SOL_DIR=/wzdat/tests WZDAT_SOL_PKG=ws_mysol WZDAT_PRJ=myprj nosetests --with-xunit --xunit-file=shippable/testresults/nosetests.xml
+    - WZDAT_CFG=/wzdat/tests/wzdatcfg.yml nosetests --with-xunit --xunit-file=shippable/testresults/nosetests.xml
     - coverage run --source=wzdat --branch setup.py test
     - coverage xml -o shippable/codecoverage/coverage.xml
 

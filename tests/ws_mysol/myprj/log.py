@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Sample log adapter"""
+import os
 
 from wzdat.value import DateValue
 from wzdat import ALL_EXPORT, make_selectors
@@ -35,6 +36,7 @@ def get_kind(sfield, fileo):
     name = elms[0]
     obj = Value._instance(None, sfield, name, name, name)
     return obj
+
 
 def get_cols(path):
     return ['datetime', 'type', 'msg']
@@ -83,6 +85,5 @@ def update():
 def find_files_and_save(startdir):
     _find_files_and_save(startdir, 'log')
 
-import os
-if "WZDAT_PRJ" in os.environ:
-    update()
+
+update()

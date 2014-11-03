@@ -1,4 +1,6 @@
-TMP_VALID_HOUR: 24
-NAMED_TMP_VALID_HOUR: 720  # 24 * 30
-SERVER_TIMEZONE: UTC
-CLIENT_TIMEZONE: "Asia/Seoul"
+base_cfg: ../config.yml
+# Common config for ws_mysol
+tmp_valid_hour: 24
+named_tmp_valid_hour: 720  # 24 * 30
+server_timezone: UTC
+client_timezone: "Asia/Seoul"

@@ -18,21 +18,23 @@ import numpy as np
 from pandas import HDFStore
 
 from wzdat.make_config import make_config
-from wzdat.const import NAMED_TMP_PREFIX, HDF_FILE_PREFIX, HDF_FILE_EXT, \
-    SOLUTION_DIR, TMP_DIR, HDF_DIR, CONV_DIR, DATA_DIR, BASE_DIR
+from wzdat.const import NAMED_TMP_PREFIX, HDF_FILE_PREFIX, HDF_FILE_EXT
+
+
+cfg = make_config()
 
 
 def unique_tmp_path(prefix, ext='.txt'):
     """Return temp file path with given extension."""
     uuid = prefix + str(_uuid.uuid4())
-    tmp_dir = TMP_DIR
+    tmp_dir = cfg['tmp_dir']
     return os.path.join(tmp_dir, uuid) + ext, uuid
 
 
 def named_tmp_path(userid, slotname, test=False):
     name = "{prefix}{user}-{slot}".format(prefix=NAMED_TMP_PREFIX, uid=userid,
                                           slot=slotname)
-    tmp_dir = TMP_DIR
+    tmp_dir = cfg['tmp_dir']
     return os.path.join(tmp_dir, name)
 
 
@@ -146,7 +148,7 @@ def nprint(*args):
 
 
 def hdf_path(name):
-    hdf_dir = HDF_DIR
+    hdf_dir = cfg['hdf_dir']
     path = os.path.join(hdf_dir, HDF_FILE_PREFIX) + name
     if path.split('.')[-1] != HDF_FILE_EXT:
         path += '.%s' % HDF_FILE_EXT
@@ -375,10 +377,10 @@ def _set_ticks_labels(df, ax, ax_fs, rows, cols, kwargs):
 
 
 def get_notebook_dir():
-    cfg = make_config()
-    prj = os.environ['WZDAT_PRJ'] if 'WZDAT_PRJ' in os.environ else ''
-    return cfg["NOTEBOOK_DIR"] if "NOTEBOOK_DIR" in cfg\
-        else os.path.join(SOLUTION_DIR, "__notes__", prj)
+    sol_dir = cfg['sol_dir']
+    prj = cfg['prj']
+    return cfg["notebook_dir"] if "notebook_dir" in cfg\
+        else os.path.join(sol_dir, "__notes__", prj)
 
 
 def cap_call(cmd, _test=False):
@@ -407,14 +409,10 @@ def cap_call(cmd, _test=False):
                 print(_err)
 
 
-def get_data_dir():
-    return os.environ['WZDAT_DATA_DIR'] if 'WZDAT_DATA_DIR' in os.environ\
-        else DATA_DIR
-
-
 def get_convfile_path(path):
-    relpath = os.path.relpath(path, get_data_dir())
-    return os.path.join(CONV_DIR, relpath)
+    relpath = os.path.relpath(path, cfg['data-dir'])
+    conv_dir = cfg['conv_dir']
+    return os.path.join(conv_dir, relpath)
 
 
 def convert_data_file(srcpath, encoding, dstpath):
@@ -429,7 +427,6 @@ def convert_data_file(srcpath, encoding, dstpath):
 
 def convert_server_time_to_client(dt):
     import pytz
-    cfg = make_config()
 
     def get_tz(tz):
         return pytz.UTC if tz == 'UTC' else pytz.timezone(tz)
@@ -441,9 +438,6 @@ def convert_server_time_to_client(dt):
 
 
 def gen_dummydata(td=None, date_cnt=10):
-    if td is None:
-        td = os.path.join(BASE_DIR, '..', 'tests', 'dummydata')
-
     if os.path.isdir(td):
         import shutil
         shutil.rmtree(td)
@@ -513,3 +507,15 @@ def _gen_dummy_lines(_dir, locale, node, kind, dates, procno):
                 path = os.path.join(_dir, kind + "_%s %02d.log" %
                                     (sdate, proc + 1))
                 write_lines(path, date)
+
+
+class ChangeDir(object):
+    def __init__(self, *dirs):
+        self.cwd = os.getcwd
+        self.path = os.path.join(*dirs)
+
+    def __enter__(self):
+        logging.info('change dir to %s', self.path)
+
+    def __exit__(self, atype, value, tb):
+        os.chdir(self.cwd)
