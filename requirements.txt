@@ -13,5 +13,4 @@ BeautifulSoup>=3.2.1
 tables>=3.1.1
 pandas>=0.15.0
 ipython>=2.3.0
-pygeoip>=0.3.2
 pysqlite>=2.6.3
