@@ -1,4 +1,28 @@
-base_cfg: ../config.yml
+# for Log settings
+log:
+    version: 1
+    formatters:
+        simpleFormatter:
+            format: '%(asctime)s [%(levelname)s] - %(message)s'
+            datefmt: '%Y/%m/%d %H:%M:%S'
+    handlers:
+        console:
+            class: logging.StreamHandler
+            formatter: simpleFormatter
+            level: DEBUG
+            stream: ext://sys.stdout
+    root:
+        level: DEBUG
+        handlers: [console]
+
+# for WzDat
+no_cache: true
+data_dir: $PKG_DIR/../tests/dummydata
+sol_dir: /wzdat/tests
+sol_pkg: ws_mysol
+prj: myprj
+tmp_dir: $PKG_DIR/../tests/tmp
+
 # Common config for ws_mysol
 tmp_valid_hour: 24
 named_tmp_valid_hour: 720  # 24 * 30
