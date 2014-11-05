@@ -8,7 +8,10 @@ import logging
 
 import sqlite3
 
-from wzdat.const import RUNNER_DB_PATH
+from wzdat.make_config import make_config
+
+cfg = make_config()
+RUNNER_DB_PATH = cfg['runnder_db_path']
 
 sys.path.append('.')
 
