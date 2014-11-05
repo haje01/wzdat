@@ -14,10 +14,10 @@ ALL_EXPORT = ['files', 'kinds', 'dates', 'dates', 'nodes', 'update', 'node',
               'kind', 'date', 'slot']
 
 
-if 'WZDAT_CFG' in os.environ:
-    cfg = make_config()
-    if 'WZDAT_NOLOG' not in os.environ:
-        logging.config.dictConfig(cfg['log'])
+cfg = make_config()
+
+if 'WZDAT_NOLOG' not in os.environ:
+    logging.config.dictConfig(cfg['log'])
 
 
 def make_selectors(ctx, all_files):
