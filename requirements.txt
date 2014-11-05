@@ -1,3 +1,4 @@
+Markdown==2.4.1
 numpy==1.9.1
 scipy==0.14.0
 numexpr==2.4
@@ -8,9 +9,9 @@ matplotlib==1.4.2
 Flask==0.10.1
 argh==0.25.0
 python-crontab==1.8.1
-Markdown==2.4.1
 BeautifulSoup==3.2.1
 tables==3.1.1
 pandas==0.15.0
 ipython==2.3.0
 pysqlite==2.6.3
+pyzmq==14.4.1

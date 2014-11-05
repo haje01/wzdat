@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """ Webzen data anaylysis toolkit common."""
+import os
 
 import logging
 import logging.config
@@ -14,7 +15,9 @@ ALL_EXPORT = ['files', 'kinds', 'dates', 'dates', 'nodes', 'update', 'node',
 
 
 cfg = make_config()
-logging.config.dictConfig(cfg['log'])
+
+if 'WZDAT_NOLOG' not in os.environ:
+    logging.config.dictConfig(cfg['log'])
 
 
 def make_selectors(ctx, all_files):

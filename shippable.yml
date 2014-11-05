@@ -10,8 +10,8 @@ before_install:
     - "sudo apt-get -qq -y install libhdf5-serial-dev"
 
 install: 
-    #- "pip install numpy scipy matplotlib pandas pyzmq pygments ipython"
-    #- "pip install cython==0.20.2"
+    # resolve pytable dependencies first
+    - "wget -qO- https://raw.github.com/PyTables/PyTables/develop/requirements.txt | xargs pip install"
     - "cat requirements.txt | xargs pip install"
     - "pip install ."
     - "pip install pytest>=2.6.4"

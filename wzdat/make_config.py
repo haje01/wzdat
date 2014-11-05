@@ -23,7 +23,8 @@ class ChangeDir(object):
         self.path = apath
 
     def __enter__(self):
-        logging.info('change dir to %s', self.path)
+        logging.info('change dir to {0}'.format(self.path))
+        assert os.path.isdir(self.path)
         os.chdir(self.path)
 
     def __exit__(self, atype, value, tb):
@@ -60,6 +61,7 @@ def cfg_path():
 def make_config(cfgpath=None, usecache=True):
     """Make config object for project and return it."""
     global _cfg, _cfgpath
+    logging.debug('make_config ' + str(cfgpath))
 
     if _cfg is not None and usecache:
         return _cfg
@@ -121,5 +123,5 @@ if __name__ == "__main__":
         keys = sys.argv[1:]
         for key in keys:
             val = cfg[key]
-            values.append(val)
+            values.append(str(val))
         print ' '.join(values)
