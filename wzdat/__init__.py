@@ -16,7 +16,7 @@ ALL_EXPORT = ['files', 'kinds', 'dates', 'dates', 'nodes', 'update', 'node',
 
 cfg = make_config()
 
-if 'WZDAT_NOLOG' not in os.environ:
+if 'WZDAT_NOLOG' not in os.environ and 'log' in cfg:
     logging.config.dictConfig(cfg['log'])
 
 
