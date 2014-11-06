@@ -24,6 +24,7 @@ def cache_files():
     # prevent using cache
     if 'file_types' not in cfg:
         logging.warning('no file_types in cfg. exit')
+        return
     old_nocache = cfg['no_cache']
     prj = cfg['prj']
     print "Caching files for: %s" % prj
@@ -44,6 +45,7 @@ def cache_finder():
     logging.debug('cache_finder')
     if 'file_types' not in cfg:
         logging.warning('no file_types in cfg. exit')
+        return
     ret = []
     if ret is None or len(ret) == 0:
         pkg = cfg['sol_pkg']
