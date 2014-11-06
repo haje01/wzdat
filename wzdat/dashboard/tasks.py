@@ -3,7 +3,6 @@ import os
 from celery import Celery
 from IPython.nbformat.current import read
 
-from wzdat.const import SOLUTION_DIR
 from wzdat.ipynb_runner import run_notebook_view_cell, get_view_cell_cnt,\
     run_code
 from wzdat.make_config import make_config
@@ -11,6 +10,7 @@ from wzdat.notebook_runner import NotebookRunner
 
 app = Celery('wdtask', backend='redis://localhost', broker='redis://localhost')
 cfg = make_config()
+sol_dir = cfg['sol_dir']
 
 
 @app.task()
@@ -19,7 +19,7 @@ def run_view_cell(nbpath, formname, kwargs):
     r = NotebookRunner(nb, pylab=True)
     total = float(get_view_cell_cnt(r) + 1)
 
-    ipython_init_path = os.path.join(SOLUTION_DIR, 'ipython_init.py')
+    ipython_init_path = os.path.join(sol_dir, 'ipython_init.py')
     if os.path.isfile(ipython_init_path):
         with open(ipython_init_path) as f:
             init = f.read()
