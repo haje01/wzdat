@@ -1,2 +1,3 @@
 base_cfg: ../config.yml
 data_encoding: 'utf-8'
+file_types=['log']

@@ -4,7 +4,6 @@ import json
 import time
 import re
 from datetime import timedelta, datetime
-import urlparse
 import imp
 from urlparse import parse_qs
 
@@ -21,9 +20,6 @@ from wzdat.rundb import get_cache_info, get_finder_info
 from wzdat.jobs import cache_finder
 from wzdat.make_config import make_config
 
-#IPYTHON_PORT = 8090
-#DASHBOARD_PORT = 8095
-
 app = Flask(__name__)
 app.debug = DEBUG
 
@@ -31,6 +27,8 @@ ansi_escape = re.compile(r'\x1b[^m]*m')
 
 
 cfg = make_config()
+assert 'WZDAT_HOST' in os.environ
+HOST = os.environ['WZDAT_HOST']
 
 
 def _page_common_vars():
@@ -63,10 +61,8 @@ def dashboard():
     projname, dev, cache_time = _page_common_vars()
 
     from wzdat.ipynb_runner import find_cron_notebooks
-    assert "host" in cfg
-    host = urlparse.urlparse(cfg["host"]).path
     iport = int(cfg["ipython_port"])
-    base_url = 'http://%s:%d/tree' % (host, iport)
+    base_url = 'http://%s:%d/tree' % (HOST, iport)
     notebook_dir = get_notebook_dir()
     paths, _, _groups, fnames = find_cron_notebooks(notebook_dir, static=True)
     groups = {}
@@ -306,9 +302,8 @@ def finder_request_download(ftype):
 def notebooks():
     projname, dev, cache_time = _page_common_vars()
 
-    host = urlparse.urlparse(cfg["host"]).path
     iport = int(cfg["ipython_port"])
-    base_url = 'http://%s:%d/tree' % (host, iport)
+    base_url = 'http://%s:%d/tree' % (HOST, iport)
     prj = cfg['prj']
     projname = prj.upper()
 
@@ -317,4 +312,4 @@ def notebooks():
                            cache_time=cache_time)
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=cfg['dashboard_port'], debug=DEBUG)
+    app.run(host=HOST, port=cfg['dashboard_port'], debug=DEBUG)
