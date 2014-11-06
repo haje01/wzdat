@@ -61,7 +61,7 @@ def dashboard():
     projname, dev, cache_time = _page_common_vars()
 
     from wzdat.ipynb_runner import find_cron_notebooks
-    iport = int(cfg["ipython_port"])
+    iport = int(cfg["host_ipython_port"])
     base_url = 'http://%s:%d/tree' % (HOST, iport)
     notebook_dir = get_notebook_dir()
     paths, _, _groups, fnames = find_cron_notebooks(notebook_dir, static=True)
@@ -302,7 +302,7 @@ def finder_request_download(ftype):
 def notebooks():
     projname, dev, cache_time = _page_common_vars()
 
-    iport = int(cfg["ipython_port"])
+    iport = int(cfg["host_ipython_port"])
     base_url = 'http://%s:%d/tree' % (HOST, iport)
     prj = cfg['prj']
     projname = prj.upper()
