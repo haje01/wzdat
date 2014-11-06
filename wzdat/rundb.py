@@ -11,7 +11,7 @@ import sqlite3
 from wzdat.make_config import make_config
 
 cfg = make_config()
-RUNNER_DB_PATH = cfg['runnder_db_path']
+RUNNER_DB_PATH = cfg['runner_db_path']
 
 sys.path.append('.')
 
