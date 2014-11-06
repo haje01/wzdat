@@ -24,7 +24,7 @@ def cache_files():
     # prevent using cache
     cfg = make_config()
     old_nocache = cfg['no_cache']
-    prj = os.environ['prj']
+    prj = cfg['prj']
     print "Caching files for: %s" % prj
     datadir = cfg['data_dir']
     pkg = cfg['sol_pkg']
