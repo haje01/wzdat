@@ -22,6 +22,7 @@ sol_dir: /wzdat/tests
 sol_pkg: ws_mysol
 prj: myprj
 tmp_dir: $PKG_DIR/../tests/tmp
+runner_db_path: $PKG_DIR/../tests/runner.db
 
 # Common config for ws_mysol
 tmp_valid_hour: 24

@@ -81,10 +81,11 @@ def run_notebook(path):
 
 
 @argh.arg('-d', '--dir', help="target directory where dummy data will be"
-          "written into. if skipped, $WZDAT_DIR/tests/dummydata/ will be"
-          "chosen.")
+          "written into. if skipped, cfg['data_dir'] will be chosen.")
 def gen_dummydata(**kwargs):
     td = kwargs['dir']
+    if td is None:
+        td = cfg['data_dir']
     return _gen_dummydata(td)
 
 
