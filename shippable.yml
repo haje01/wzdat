@@ -24,8 +24,8 @@ before_script:
 
 script:
     - pwd
-    - WZDAT_CFG=tests/ws_mysol/myprj/config.yml python -m wzdat.jobs gen-dummydata
-    - WZDAT_CFG=tests/ws_mysol/myprj/config.yml py.test --cov wzdat --cov-report xml tests/
+    - WZDAT_DIR=$(pwd) WZDAT_CFG=tests/ws_mysol/myprj/config.yml python -m wzdat.jobs gen-dummydata
+    - WZDAT_DIR=$(pwd) WZDAT_CFG=tests/ws_mysol/myprj/config.yml py.test --cov wzdat --cov-report xml tests/
 
 after_success:
     - coveralls

@@ -1,5 +1,3 @@
-import os
-
 PRINT_LMAX = 50
 TMP_PREFIX = 'wzdat-'
 NAMED_TMP_PREFIX = 'wzdatnm-'
@@ -8,5 +6,3 @@ HDF_FILE_EXT = 'h5'
 SAVE_INFO_EXT = '.sinfo'
 CHUNK_CNT = 500000
 FORWARDER_LOG_PREFIX = '_wdfwd'
-
-PKG_DIR = os.path.abspath(os.path.dirname(__file__))

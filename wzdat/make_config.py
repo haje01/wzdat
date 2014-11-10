@@ -32,12 +32,7 @@ class ChangeDir(object):
 
 
 def _expand_var(dic):
-    from wzdat.const import PKG_DIR
-
     assert type(dic) == dict
-    # register wzdat consts
-    os.environ['PKG_DIR'] = PKG_DIR
-
     # expand vars
     for k, v in dic.iteritems():
         typ = type(v)
