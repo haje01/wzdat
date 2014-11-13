@@ -1065,6 +1065,8 @@ def _update_files_precalc(ctx, root_list):
 
 
 def find_files_and_save(startdir, ext, root_list=None):
+    logging.debug('find_files_and_save')
+    logging.debug('startdir: ' + str(startdir))
     if root_list is None:
         root_list = []
     nocache = True if 'no_cache' in cfg else False

@@ -1,4 +1,4 @@
-# for Log settings
+# for Test common Log settings
 log:
     version: 1
     formatters:

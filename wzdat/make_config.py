@@ -72,6 +72,7 @@ def make_config(cfgpath=None, usecache=True):
 
     adir = os.path.dirname(cfgpath)
     afile = os.path.basename(cfgpath)
+
     with ChangeDir(adir):
         loaded = yaml.load(open(afile, 'r'))
         loaded = _expand_var(loaded)
@@ -79,7 +80,7 @@ def make_config(cfgpath=None, usecache=True):
             bcfgpath = loaded['base_cfg']
             bcfg = make_config(bcfgpath, False)
             del loaded['base_cfg']
-            loaded.update(bcfg)
+            bcfg.update(loaded)
     _cfg.update(loaded)
     #assert "WZDAT_SOL_PKG" in os.environ, "No WZDAT_SOL_PKG exists!"
     #pkg_name = os.environ["WZDAT_SOL_PKG"]
