@@ -379,8 +379,9 @@ def _set_ticks_labels(df, ax, ax_fs, rows, cols, kwargs):
 def get_notebook_dir():
     sol_dir = cfg['sol_dir']
     prj = cfg['prj']
-    return cfg["notebook_dir"] if "notebook_dir" in cfg\
-        else os.path.join(sol_dir, "__notes__", prj)
+    base = cfg['notebook_base_dir'] if 'notebook_base_dir' in cfg else\
+        os.path.join(sol_dir, '__notes__')
+    return os.path.join(base, prj)
 
 
 def cap_call(cmd, _test=False):
