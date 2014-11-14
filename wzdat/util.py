@@ -431,8 +431,8 @@ def convert_server_time_to_client(dt):
     def get_tz(tz):
         return pytz.UTC if tz == 'UTC' else pytz.timezone(tz)
 
-    stz = get_tz(cfg['SERVER_TIMEZONE'])
-    ctz = get_tz(cfg['CLIENT_TIMEZONE'])
+    stz = get_tz(cfg['server_timezone'])
+    ctz = get_tz(cfg['client_timezone'])
     sdt = stz.localize(dt)
     return sdt.astimezone(ctz)
 
