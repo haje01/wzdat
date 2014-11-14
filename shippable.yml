@@ -6,27 +6,26 @@ python:
     - "2.7"
 
 before_install:
-    - "sudo apt-get -qq -y install libatlas-base-dev gfortran libpng-dev  libfreetype6-dev libxft-dev"
-    - "sudo apt-get -qq -y install libhdf5-serial-dev"
+    - sudo apt-get -qq -y install libatlas-base-dev gfortran libpng-dev  libfreetype6-dev libxft-dev
+    - sudo apt-get -qq -y install libhdf5-serial-dev
 
 install: 
-    #- "pip install numpy scipy matplotlib pandas pyzmq pygments ipython"
-    #- "pip install cython==0.20.2"
-    - "cat test_requirements.txt | xargs pip install"
-    - "pip install ."
-    - "pip install python-coveralls"
+    # resolve pytable dependencies first
+    - wget -qO- https://raw.github.com/PyTables/PyTables/develop/requirements.txt | xargs pip install
+    - cat requirements.txt | xargs pip install
+    - pip install .
+    - pip install pytest>=2.6.4
+    - pip install python-coveralls
+    - pip install pytest-cov
 
 before_script:
     mkdir -p shippable/testresults
     mkdir -p shippable/codecoverage
-    touch /var/log/wzdat
-    chmod 777 /var/log/wzdat
 
 script:
     - pwd
-    - WZDAT_NO_CACHE=True WZDAT_DATA_DIR=/wzdat/tests/dummydata WZDAT_SOL_DIR=/wzdat/tests WZDAT_SOL_PKG=ws_mysol WZDAT_PRJ=myprj nosetests --with-xunit --xunit-file=shippable/testresults/nosetests.xml
-    - coverage run --source=wzdat --branch setup.py test
-    - coverage xml -o shippable/codecoverage/coverage.xml
+    - WZDAT_DIR=$(pwd) WZDAT_CFG=tests/ws_mysol/myprj/config.yml python -m wzdat.jobs gen-dummydata
+    - WZDAT_DIR=$(pwd) WZDAT_CFG=tests/ws_mysol/myprj/config.yml py.test --cov wzdat --cov-report xml tests/
 
 after_success:
-    #- coveralls
+    - coveralls

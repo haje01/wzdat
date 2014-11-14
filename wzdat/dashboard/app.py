@@ -4,7 +4,6 @@ import json
 import time
 import re
 from datetime import timedelta, datetime
-import urlparse
 import imp
 from urlparse import parse_qs
 
@@ -19,23 +18,25 @@ if DEBUG:
 from wzdat.util import get_notebook_dir, convert_server_time_to_client
 from wzdat.rundb import get_cache_info, get_finder_info
 from wzdat.jobs import cache_finder
-
+from wzdat.make_config import make_config
 
 app = Flask(__name__)
 app.debug = DEBUG
 
 ansi_escape = re.compile(r'\x1b[^m]*m')
 
-IPYTHON_PORT = 8090
-DASHBOARD_PORT = 8095
+
+cfg = make_config()
+assert 'WZDAT_HOST' in os.environ
+HOST = os.environ['WZDAT_HOST']
 
 
 def _page_common_vars():
-    proj = os.environ['WZDAT_PRJ'] if 'WZDAT_PRJ' in os.environ else 'Noname'
-    projname = proj.upper()
+    prj = cfg['prj']
+    projname = prj.upper()
     sdev = ""
-    if 'WZDAT_DEV' in os.environ:
-        dev = os.environ['WZDAT_DEV']
+    if 'dev' in cfg:
+        dev = cfg['dev']
         if dev.lower() == 'true':
             sdev = '[DEV]'
 
@@ -60,11 +61,8 @@ def dashboard():
     projname, dev, cache_time = _page_common_vars()
 
     from wzdat.ipynb_runner import find_cron_notebooks
-    assert "WZDAT_HOST" in os.environ
-    host = urlparse.urlparse(os.environ["WZDAT_HOST"]).path
-    iport = int(os.environ["WZDAT_IPYTHON_PORT"]) if 'WZDAT_IPYTHON_PORT' in\
-        os.environ else IPYTHON_PORT
-    base_url = 'http://%s:%d/tree' % (host, iport)
+    iport = int(cfg["host_ipython_port"])
+    base_url = 'http://%s:%d/tree' % (HOST, iport)
     notebook_dir = get_notebook_dir()
     paths, _, _groups, fnames = find_cron_notebooks(notebook_dir, static=True)
     groups = {}
@@ -259,8 +257,8 @@ def _select_files(ftype, data):
     _kinds = qs['kinds[]']
 
     os.chdir('/solution')
-    pkg = os.environ["WZDAT_SOL_PKG"]
-    prj = os.environ['WZDAT_PRJ']
+    pkg = cfg['sol_pkg']
+    prj = cfg['prj']
     mpath = '%s/%s/%s.py' % (pkg, prj, ftype)
     m = imp.load_source('%s' % ftype,  mpath)
 
@@ -304,17 +302,14 @@ def finder_request_download(ftype):
 def notebooks():
     projname, dev, cache_time = _page_common_vars()
 
-    assert "WZDAT_HOST" in os.environ
-    host = urlparse.urlparse(os.environ["WZDAT_HOST"]).path
-    iport = int(os.environ["WZDAT_IPYTHON_PORT"]) if 'WZDAT_IPYTHON_PORT' in\
-        os.environ else IPYTHON_PORT
-    base_url = 'http://%s:%d/tree' % (host, iport)
-    proj = os.environ['WZDAT_PRJ'] if 'WZDAT_PRJ' in os.environ else 'Noname'
-    projname = proj.upper()
+    iport = int(cfg["host_ipython_port"])
+    base_url = 'http://%s:%d/tree' % (HOST, iport)
+    prj = cfg['prj']
+    projname = prj.upper()
 
     return render_template("notebooks.html", cur="notebooks",
                            projname=projname, nb_url=base_url, dev=dev,
                            cache_time=cache_time)
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=DASHBOARD_PORT, debug=DEBUG)
+    app.run(host=HOST, port=cfg['dashboard_port'], debug=DEBUG)

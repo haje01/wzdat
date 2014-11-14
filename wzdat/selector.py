@@ -26,28 +26,29 @@ from wzdat.base import Listable, Representable, ISearchable, ILineAttr, \
     IFramable, IPathable, IFilterable, IMergeable
 from wzdat.make_config import make_config
 from wzdat.const import TMP_PREFIX, PRINT_LMAX, NAMED_TMP_PREFIX, \
-    CHUNK_CNT, TMP_DIR, CONV_DIR, FORWARDER_LOG_PREFIX
+    CHUNK_CNT, FORWARDER_LOG_PREFIX
 from wzdat.value import ValueList, FailValue, Value, check_date_slice
 from wzdat.util import unique_tmp_path, sizeof_fmt, unique_list, \
     remove_empty_file, Property, remove_old_tmps, get_line_count, \
     get_slice_idx, ProgressBar, nprint, Context, convert_data_file,\
-    get_convfile_path, get_data_dir
+    get_convfile_path
 from wzdat.lineinfo import LineInfo, LineInfoImpl_Count, LineInfoImpl_Array
 
 qmode = 'files'
+cfg = make_config()
 
 
 def get_urls():
-    if "WZDAT_DASHBOARD_PORT" in os.environ:
-        port = ":%s/" % os.environ["WZDAT_DASHBOARD_PORT"]
+    port = cfg['dashboard_port']
+    if "dashboard_port" in cfg:
+        port = ":%s/" % cfg["_dashboard_port"]
     else:
         port = ":80/"
-    if "WZDAT_HOST" in os.environ:
-        host = os.environ["WZDAT_HOST"]
+    if "host" in cfg:
+        host = cfg["host"]
     else:
         host = socket.gethostbyname(socket.gethostname())
-    mode = os.environ['WZDAT_MODE'] + '-' if 'WZDAT_MODE' in os.environ\
-        else ''
+    mode = cfg['mode'] + '-' if 'mode' in cfg else ''
 
     data_url = '<a href="http://' + host + port + 'file/%s">%s</a>'
     tmp_url = '<a href="http://' + host + port + mode + 'tmp/%s">%s</a>'
@@ -1050,7 +1051,7 @@ def _get_cache_path(ext):
 
 
 def _update_files_precalc(ctx, root_list):
-    nocache = True if 'WZDAT_NO_CACHE' in os.environ else False
+    nocache = True if 'no_cache' in cfg else False
     cpath = _get_cache_path(ctx.fileext)
     if not nocache and os.path.isfile(cpath):
         tstr = _get_found_time(cpath)
@@ -1064,9 +1065,11 @@ def _update_files_precalc(ctx, root_list):
 
 
 def find_files_and_save(startdir, ext, root_list=None):
+    logging.debug('find_files_and_save')
+    logging.debug('startdir: ' + str(startdir))
     if root_list is None:
         root_list = []
-    nocache = True if 'WZDAT_NO_CACHE' in os.environ else False
+    nocache = True if 'no_cache' in cfg else False
     if not nocache:
         cpath = _get_cache_path(ext)
     nprint('finding files and save info...')
@@ -1280,9 +1283,9 @@ def _find_in_fileo_grep_call(ctx, word, idx, _file, fileno, _options, out,
 def _remove_old():
     nprint('deleting old files...')
     cfg = make_config()
-    tmp_dir = cfg["TMP_DIR"] if "TMP_DIR" in cfg else TMP_DIR
-    remove_old_tmps(tmp_dir, TMP_PREFIX, cfg["TMP_VALID_HOUR"])
-    remove_old_tmps(tmp_dir, NAMED_TMP_PREFIX, cfg["NAMED_TMP_VALID_HOUR"])
+    tmp_dir = cfg["tmp_dir"]
+    remove_old_tmps(tmp_dir, TMP_PREFIX, cfg["tmp_valid_hour"])
+    remove_old_tmps(tmp_dir, NAMED_TMP_PREFIX, cfg["named_tmp_valid_hour"])
 
 
 def update(mod, ext, subtype=None):
@@ -1294,13 +1297,13 @@ def update(mod, ext, subtype=None):
     _remove_old()
 
     cfg = make_config()
-    _dir = get_data_dir()
-    encoding = cfg["DATA_ENCODING"]
+    _dir = cfg['data_dir']
+    encoding = cfg["data_encoding"]
     if subtype is not None and type(encoding) == dict:
         encoding = encoding[subtype]
 
     if encoding.startswith('utf-16'):
-        _dir = CONV_DIR
+        _dir = cfg['conv_dir']
     ctx = Context(mod, _dir, encoding, ext)
     date = DateField(ctx)
     kind = KindField(ctx)
@@ -1440,7 +1443,7 @@ class SlotMap(object):
         if key not in self._dict:
             cfg = make_config()
             name = NAMED_TMP_PREFIX + userid + '-' + slotname
-            tmp_dir = cfg["TMP_DIR"] if "TMP_DIR" in cfg else TMP_DIR
+            tmp_dir = cfg["tmp_dir"]
             self._dict[key] = Slot(self.ctx, os.path.join(tmp_dir, name))
         return self._dict[key]
 

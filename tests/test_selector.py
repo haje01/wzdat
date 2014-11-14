@@ -1,6 +1,17 @@
+import pytest
 
-from wzdat import selector
-from ws_mysol.myprj.log import *
+from wzdat.make_config import make_config
+from ws_mysol.myprj import log as l
 
-def test_dummy():
-    assert len(files) > 0
+
+cfg = make_config()
+
+
+@pytest.fixture(scope="session")
+def dummy():
+    from wzdat.util import gen_dummydata
+    gen_dummydata(cfg['data_dir'])
+
+
+def test_dummy(dummy):
+    assert len(l.files) > 0

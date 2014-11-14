@@ -13,6 +13,7 @@ from markdown import markdown
 
 from wzdat.util import div, get_notebook_dir
 from wzdat import rundb
+from wzdat.make_config import make_config
 
 
 CRON_PTRN = re.compile(r'\s*\[\s*((?:[^\s@]+\s+){4}[^\s@]+)?\s*(?:@(.+))?\s*\]\s*(.+)')
@@ -200,19 +201,12 @@ def _parse_notebook_name(paths, scheds, groups, fnames, path, pjob, static):
 
 def register_cron_notebooks(paths, scheds):
     print 'Registering cron notebooks'
-
-    pkg = os.environ["WZDAT_SOL_PKG"]
-    prj = os.environ["WZDAT_PRJ"]
-    host = os.environ["WZDAT_HOST"]
-    dport = os.environ["WZDAT_DASHBOARD_PORT"]
+    cfg = make_config()
 
     # start new cron file with env vars
     filed, tpath = tempfile.mkstemp()
     fileh = os.fdopen(filed, 'wb')
-    fileh.write('WZDAT_SOL_PKG=%s\n' % pkg)
-    fileh.write('WZDAT_PRJ=%s\n' % prj)
-    fileh.write('WZDAT_HOST=%s\n' % host)
-    fileh.write('WZDAT_DASHBOARD_PORT=%s\n' % dport)
+    fileh.write('WZDAT_CFG=%s\n' % cfg.cfg_path())
     fileh.close()
     check_call([CRON_CMD, tpath])
     os.unlink(tpath)
