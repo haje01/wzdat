@@ -73,6 +73,7 @@ def register_cron():
     from wzdat.ipynb_runner import find_cron_notebooks, register_cron_notebooks
     nb_dir = get_notebook_dir()
     paths, scheds, _, _ = find_cron_notebooks(nb_dir)
+    logging.debug("register_cron " + str(paths))
     register_cron_notebooks(paths, scheds)
 
 
