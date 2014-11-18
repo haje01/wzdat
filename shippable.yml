@@ -7,6 +7,7 @@ python:
     - "2.7"
 
 before_install:
+    - sudo apt-get --qq -y install python-pip python-dev
     - sudo apt-get -qq -y install libatlas-base-dev gfortran libpng-dev  libfreetype6-dev libxft-dev
     - sudo apt-get -qq -y install libhdf5-serial-dev
 
