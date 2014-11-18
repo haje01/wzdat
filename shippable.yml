@@ -1,4 +1,4 @@
-build_image: haje01/wzdat-base 
+build_image: haje01/wzdat
 
 language: python
 
