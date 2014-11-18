@@ -1,4 +1,4 @@
-build_environment: Ubuntu 14.04
+build_image: haje01/wzdat-base
 
 language: python
 
@@ -25,7 +25,8 @@ before_script:
 script:
     - pwd
     - WZDAT_DIR=$(pwd) WZDAT_CFG=tests/ws_mysol/myprj/config.yml python -m wzdat.jobs gen-dummydata
-    - WZDAT_DIR=$(pwd) WZDAT_CFG=tests/ws_mysol/myprj/config.yml py.test --cov wzdat --cov-report xml tests/
+    - WZDAT_DIR=$(pwd) WZDAT_CFG=tests/ws_mysol/myprj/config.yml py.test --junit-xml=shippable/testresults/nosetests.xml --cov wzdat --cov-report xml tests/
 
 after_success:
-    - coveralls
+    - cp coverage.xml shippable/codecoverage
+    - COVERALLS_REPO_TOKEN=zPgllUbNeNY8CDoEScsDTmn236jjIkSHY coveralls
