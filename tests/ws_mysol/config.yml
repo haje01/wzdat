@@ -17,12 +17,12 @@ log:
 
 # for WzDat
 no_cache: true
-data_dir: $WZDAT_DIR/../tests/dummydata
+data_dir: $WZDAT_DIR/tests/dummydata
 sol_dir: /wzdat/tests
 sol_pkg: ws_mysol
 prj: myprj
 tmp_dir: $WZDAT_DIR/../tests/tmp
-runner_db_path: $WZDAT_DIR/../tests/runner.db
+runner_db_path: $WZDAT_DIR/tests/runner.db
 
 # Common config for ws_mysol
 tmp_valid_hour: 24
