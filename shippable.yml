@@ -1,5 +1,5 @@
 #build_image: haje01/wzdat-base 
-build_image: shippableimages/ubuntu1404_python
+build_environment: Ubuntu 14.04
 
 language: python
 
