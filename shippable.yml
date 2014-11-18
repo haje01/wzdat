@@ -1,28 +1,9 @@
-#build_image: haje01/wzdat-base 
-build_environment: Ubuntu 14.04
+build_image: haje01/wzdat-base 
 
 language: python
 
 python:
     - "2.7"
-
-before_install:
-    - sudo apt-get -qq -y install python-pip python-dev
-    - sudo apt-get -qq -y install libatlas-base-dev gfortran libpng-dev  libfreetype6-dev libxft-dev
-    - sudo apt-get -qq -y install libhdf5-serial-dev
-
-install: 
-    # resolve pytable dependencies first
-    - wget -qO- https://raw.github.com/PyTables/PyTables/develop/requirements.txt | xargs pip install
-    - cat requirements.txt | xargs pip install
-    - pip install .
-    - pip install pytest>=2.6.4
-    - pip install python-coveralls
-    - pip install pytest-cov
-
-before_script:
-    mkdir -p shippable/testresults
-    mkdir -p shippable/codecoverage
 
 script:
     - pwd
