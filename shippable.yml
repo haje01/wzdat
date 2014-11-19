@@ -1,15 +1,31 @@
-build_image: haje01/wzdat
+build_environment: Ubuntu 14.04
 
 language: python
 
 python:
     - "2.7"
 
+before_install:
+    - sudo apt-get -qq -y install libatlas-base-dev gfortran libpng-dev  libfreetype6-dev libxft-dev
+    - sudo apt-get -qq -y install libhdf5-serial-dev
+
+install:
+    # resolve pytable dependencies first
+    - wget -qO- https://raw.github.com/PyTables/PyTables/develop/requirements.txt | xargs pip install
+    - cat requirements.txt | xargs pip install
+    - pip install .
+    - pip install pytest>=2.6.4
+    - pip install python-coveralls
+    - pip install pytest-cov
+
+before_script:
+    mkdir -p shippable/testresults
+    mkdir -p shippable/codecoverage
+
 script:
     - pwd
     - WZDAT_DIR=$(pwd) WZDAT_CFG=tests/ws_mysol/myprj/config.yml python -m wzdat.jobs gen-dummydata
-    - WZDAT_DIR=$(pwd) WZDAT_CFG=tests/ws_mysol/myprj/config.yml py.test --junit-xml=shippable/testresults/nosetests.xml --cov wzdat --cov-report xml tests/
+    - WZDAT_DIR=$(pwd) WZDAT_CFG=tests/ws_mysol/myprj/config.yml py.test --cov wzdat --cov-report xml tests/
 
 after_success:
-    - cp coverage.xml shippable/codecoverage
-    - COVERALLS_REPO_TOKEN=zPgllUbNeNY8CDoEScsDTmn236jjIkSHY coveralls
+    - coveralls
