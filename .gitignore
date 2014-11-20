@@ -19,3 +19,4 @@ dist/
 .ropeproject/
 docs/_build
 dummydata/
+dump.rdb
