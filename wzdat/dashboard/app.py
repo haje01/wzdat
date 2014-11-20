@@ -281,7 +281,7 @@ def _select_files(ftype, data):
             kinds.append(kind)
 
     print start_dt, end_dt, nodes, kinds
-    files = m.files[start_dt, end_dt][nodes][kinds]
+    files = m.files[start_dt:end_dt][nodes][kinds]
     return files
 
 

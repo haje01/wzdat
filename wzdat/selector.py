@@ -39,15 +39,12 @@ cfg = make_config()
 
 
 def get_urls():
-    port = cfg['dashboard_port']
-    if "dashboard_port" in cfg:
-        port = ":%s/" % cfg["_dashboard_port"]
+    assert 'WZDAT_HOST' in os.environ
+    host = os.environ['WZDAT_HOST']
+    if "host_dashboard_port" in cfg:
+        port = ":%s/" % cfg["host_dashboard_port"]
     else:
         port = ":80/"
-    if "host" in cfg:
-        host = cfg["host"]
-    else:
-        host = socket.gethostbyname(socket.gethostname())
     mode = cfg['mode'] + '-' if 'mode' in cfg else ''
 
     data_url = '<a href="http://' + host + port + 'file/%s">%s</a>'
@@ -1047,7 +1044,8 @@ def _get_found_time(cpath):
 
 
 def _get_cache_path(ext):
-    return os.path.join("/var/wzdat/cache", '%s_found_files.pkl' % (ext))
+    cache_dir = cfg['cache_dir']
+    return os.path.join(cache_dir, '%s_found_files.pkl' % (ext))
 
 
 def _update_files_precalc(ctx, root_list):
