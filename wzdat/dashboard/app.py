@@ -5,6 +5,7 @@ import time
 import re
 from datetime import timedelta, datetime
 import imp
+import logging
 from urlparse import parse_qs
 
 from flask import Flask, render_template, request, Response, redirect, url_for
@@ -250,6 +251,7 @@ def finder():
 
 
 def _select_files(ftype, data):
+    logging.debug("_select_files")
     qs = parse_qs(data)
     _start_dt = qs['start_dt'][0]
     _end_dt = qs['end_dt'][0]
@@ -285,6 +287,7 @@ def _select_files(ftype, data):
 
 @app.route('/finder_search/<ftype>', methods=['POST'])
 def finder_search(ftype):
+    logging.debug("finder_search")
     files = _select_files(ftype, request.data)
     sfiles = str(files)
     if 'size: ' not in sfiles:
@@ -294,6 +297,7 @@ def finder_search(ftype):
 
 @app.route('/finder_request_download/<ftype>', methods=['POST'])
 def finder_request_download(ftype):
+    logging.debug("finder_request_download")
     files = _select_files(ftype, request.data)
     return Response(files.zlink.data)
 
