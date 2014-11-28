@@ -206,7 +206,9 @@ def register_cron_notebooks(paths, scheds):
     # start new cron file with env vars
     filed, tpath = tempfile.mkstemp()
     fileh = os.fdopen(filed, 'wb')
-    fileh.write('WZDAT_CFG=%s\n' % cfg.cfg_path())
+    assert 'WZDAT_CFG' in os.environ
+    cfg_path = os.environ['WZDAT_CFG']
+    fileh.write('WZDAT_CFG=%s\n' % cfg_path)
     fileh.close()
     check_call([CRON_CMD, tpath])
     os.unlink(tpath)
