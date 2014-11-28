@@ -71,7 +71,7 @@ def dashboard():
         sdir = os.path.dirname(path).replace(notebook_dir, '')[1:]
         fn = os.path.basename(path)
         url = os.path.join(base_url, sdir, fn)
-        gk = _groups[i].decode('utf8')
+        gk = _groups[i]
         fname = os.path.splitext(os.path.basename(fnames[i]))[0]
         if gk not in groups:
             groups[gk] = []
@@ -219,8 +219,8 @@ def _collect_gnbs(gnbs, gk, groups):
             cur = ri[2]
             total = ri[3]
             ri = (executed, elapsed, cur, total)
-        path = path.replace(notebook_dir, '')[1:].decode('utf-8')
-        nbs.append((url.decode('utf-8'), fname.decode('utf-8'), out, ri, path))
+        path = path.replace(notebook_dir, '')[1:]
+        nbs.append((url, fname, out, ri, path))
     gnbs.append((gk, nbs))
 
 

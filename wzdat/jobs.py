@@ -1,12 +1,14 @@
 import os
 import logging
+import time
 
 import argh
 import imp
 
 from wzdat.make_config import make_config, ChangeDir
 from wzdat.ipynb_runner import update_notebook_by_run
-from wzdat.rundb import update_cache_info, update_finder_info
+from wzdat.rundb import update_cache_info, update_finder_info, save_cron, \
+    update_cron_run, get_cron_notebooks
 from wzdat.util import gen_dummydata as _gen_dummydata
 
 
@@ -75,12 +77,22 @@ def register_cron():
     paths, scheds, _, _ = find_cron_notebooks(nb_dir)
     logging.debug("register_cron")
     register_cron_notebooks(paths, scheds)
+    save_cron(paths, scheds)
+
+
+def run_all_cron_notebooks():
+    logging.debug('run_all_cron_notebooks')
+    for nbpath in get_cron_notebooks():
+        run_notebook(nbpath)
 
 
 @argh.arg('path', help="notebook path")
 def run_notebook(path):
-    logging.debug('run_notebook ' + path)
+    path = path.decode('utf-8') if type(path) == str else path
+    logging.debug(u'run_notebook {}'.format(path))
+    st = time.time()
     update_notebook_by_run(path)
+    update_cron_run(path, st, time.time() - st)
 
 
 @argh.arg('-d', '--dir', help="target directory where dummy data will be"
@@ -94,4 +106,4 @@ def gen_dummydata(**kwargs):
 
 if __name__ == "__main__":
     argh.dispatch_commands([cache_all, register_cron, run_notebook,
-                            gen_dummydata])
+                            gen_dummydata, run_all_cron_notebooks])

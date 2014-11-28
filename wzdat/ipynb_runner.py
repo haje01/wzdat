@@ -97,15 +97,15 @@ def _run_code_type(outs, runner, msg_type, content):
 
 def _run_init(r, path):
     if os.path.isfile(path):
-        with open(path) as f:
+        with open(path.encode('utf-8')) as f:
             init = f.read()
             run_code(r, init)
 
 
 def update_notebook_by_run(path):
-    logging.debug('update_notebook_by_run ' + path)
+    logging.debug(u'update_notebook_by_run {}'.format(path))
     # run common init
-    nb = read(open(path), 'json')
+    nb = read(open(path.encode('utf-8')), 'json')
     r = NotebookRunner(nb, pylab=True)
 
     # run config & startup
@@ -115,7 +115,7 @@ def update_notebook_by_run(path):
     cellcnt = r.cellcnt
     rundb.start_run(path, cellcnt)
     r.run_notebook(lambda cur: _progress_cell(path, cur))
-    write(r.nb, open(path, 'w'), 'json')
+    write(r.nb, open(path.encode('utf-8'), 'w'), 'json')
     rundb.finish_run(path)
 
 
@@ -169,7 +169,7 @@ def find_cron_notebooks(nb_dir, static=False):
         root = root[2:]
         for name in names:
             if name.endswith('.ipynb'):
-                apath = os.path.join(nb_dir, root, name)
+                apath = os.path.join(nb_dir, root, name).decode('utf-8')
                 _parse_notebook_name(paths, scheds, groups, fnames, apath,
                                      pjob, static)
     os.chdir(odir)
@@ -190,7 +190,7 @@ def _parse_notebook_name(paths, scheds, groups, fnames, path, pjob, static):
             return
         sched = '' if g[0] is None else g[0].replace('|', '/')
         if pjob.setall(sched):
-            print("Found '%s'." % path)
+            logging.debug(u"Found '{}'.".format(path))
             gname = '' if g[1] is None else g[1]
             fname = g[2]
             paths.append(path)
@@ -218,7 +218,6 @@ def register_cron_notebooks(paths, scheds):
     cron.remove_all('cron-ipynb')
 
     for i, path in enumerate(paths):
-        path = path.decode('utf8')
         sched = scheds[i]
         fname = os.path.basename(path)
         cmd = ' '.join(['python', '-m', 'wzdat.jobs run-notebook "%s"' % path,
