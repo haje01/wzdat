@@ -8,7 +8,7 @@ import imp
 from wzdat.make_config import make_config, ChangeDir
 from wzdat.ipynb_runner import update_notebook_by_run
 from wzdat.rundb import update_cache_info, update_finder_info, save_cron, \
-    save_cron_run, get_cron_notebooks
+    get_cron_notebooks
 from wzdat.util import gen_dummydata as _gen_dummydata
 
 
@@ -91,8 +91,7 @@ def run_notebook(path):
     path = path.decode('utf-8') if type(path) == str else path
     logging.debug(u'run_notebook {}'.format(path))
     st = time.time()
-    update_notebook_by_run(path, True)
-    save_cron_run(path, st, time.time() - st)
+    update_notebook_by_run(path)
 
 
 @argh.arg('-d', '--dir', help="target directory where dummy data will be"

@@ -108,7 +108,7 @@ body {
     font-family: Arial, sans-serif;
 }
 
-.nb-running {
+.nb-fail {
   background-color: #ffe0e0;
 }
 
@@ -157,4 +157,8 @@ pre.ds-err {
   margin-top: 10px;
   margin-right: 40px;
   color: red;
+}
+
+.popover {
+  max-width: 600px;
 }

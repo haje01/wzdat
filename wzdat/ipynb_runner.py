@@ -103,7 +103,7 @@ def _run_init(r, path):
             run_code(r, init)
 
 
-def update_notebook_by_run(path, save_error=False):
+def update_notebook_by_run(path):
     logging.debug(u'update_notebook_by_run {}'.format(path))
     # run common init
     nb = read(open(path.encode('utf-8')), 'json')
@@ -115,14 +115,15 @@ def update_notebook_by_run(path, save_error=False):
     # run cells
     cellcnt = r.cellcnt
     rundb.start_run(path, cellcnt)
+    err = None
     try:
         r.run_notebook(lambda cur: _progress_cell(path, cur))
     except NotebookError, err:
-        if save_error:
-            rundb.save_cron_error(path, str(err))
+        err = unicode(err)
     else:
         write(r.nb, open(path.encode('utf-8'), 'w'), 'json')
-        rundb.finish_run(path)
+    finally:
+        rundb.finish_run(path, err)
 
 
 def run_notebook_view_cell(rv, r, cell, cnt):

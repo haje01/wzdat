@@ -215,10 +215,11 @@ def _collect_gnbs(gnbs, gk, groups):
         out = _nb_output_to_html(path)
         ri = rundb.get_run_info(path)
         if ri is not None:
-            executed, elapsed = _get_run_time(ri)
+            start, elapsed = _get_run_time(ri)
             cur = ri[2]
             total = ri[3]
-            ri = (executed, elapsed, cur, total)
+            err = ri[4]
+            ri = (start, elapsed, cur, total, err)
         path = path.replace(notebook_dir, '')[1:]
         nbs.append((url, fname, out, ri, path))
     gnbs.append((gk, nbs))

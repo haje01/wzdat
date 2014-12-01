@@ -56,10 +56,10 @@ class Cursor(object):
 
 def create_db():
     with Cursor(RUNNER_DB_PATH) as cur:
-        # run notebook progress info
+        # view notebook info
         cur.execute('CREATE TABLE IF NOT EXISTS info '
-                    '(path TEXT PRIMARY KEY, start REAL, elapsed REAL, cur INT'
-                    ', total INT);')
+                    '(path TEXT PRIMARY KEY, start REAL, error TEXT, elapsed '
+                    'REAL, cur INT, total INT);')
         # remember latest file cache
         cur.execute('CREATE TABLE IF NOT EXISTS cache '
                     '(id INTEGER PRIMARY KEY, time REAL);')
@@ -69,8 +69,7 @@ def create_db():
                     ' TEXT);')
         # cron notebook info
         cur.execute('CREATE TABLE IF NOT EXISTS cron '
-                    '(path TEXT PRIMARY KEY, sched TEXT, error TEXT, start '
-                    'REAL, elapsed REAL);')
+                    '(path TEXT PRIMARY KEY, sched TEXT);')
 
 
 def destroy_db():
@@ -89,21 +88,21 @@ def start_run(path, total):
             cur.execute('INSERT INTO info(path, start, total) VALUES(?, ?, ?)',
                         (path, start, total))
         else:
-            cur.execute('UPDATE info SET start=?, elapsed=NULL, cur=0, total=?'
-                        ' WHERE path=?', (start, total, path))
+            cur.execute('UPDATE info SET error=NULL, start=?, elapsed=NULL, '
+                        'cur=0, total=? WHERE path=?', (start, total, path))
             cur.log_changes()
 
 
-def finish_run(path):
+def finish_run(path, err):
     with Cursor(RUNNER_DB_PATH) as cur:
         cur.execute('SELECT start, total FROM info WHERE path=?', (path,))
         rv = cur.fetchone()
         if rv is not None:
             start = rv[0]
             total = rv[1]
-            elapsed = time.time() - start
-            cur.execute('UPDATE info SET elapsed=?, cur=? WHERE path=?',
-                        (elapsed, total, path))
+            elapsed = time.time() - start if err is None else None
+            cur.execute('UPDATE info SET error=?, elapsed=?, cur=? WHERE '
+                        'path=?', (err, elapsed, total, path))
             cur.log_changes()
 
 
@@ -117,8 +116,8 @@ def update_run_info(path, curcell):
 
 def get_run_info(path):
     with Cursor(RUNNER_DB_PATH) as cur:
-        cur.execute('SELECT start, elapsed, cur, total FROM info WHERE path=?',
-                    (path,))
+        cur.execute('SELECT start, elapsed, cur, total, error FROM info WHERE '
+                    'path=?', (path,))
         return cur.fetchone()
 
 
@@ -158,9 +157,10 @@ def update_finder_info(info):
 
 def save_cron(paths, scheds):
     with Cursor(RUNNER_DB_PATH) as cur:
-        cur.execute('DELETE FROM cron')
-
         for i, path in enumerate(paths):
+            cur.execute('SELECT count(*) FROM cron WHERE path=?', (path,))
+            if cur.fetchone()[0] > 0:
+                continue
             sched = scheds[i]
             cur.execute('INSERT INTO cron (path, sched) VALUES (?, ?)',
                         (path, sched))
@@ -170,25 +170,6 @@ def get_cron_notebooks():
     with Cursor(RUNNER_DB_PATH) as cur:
         cur.execute('SELECT path FROM cron')
         return [r[0] for r in cur.fetchall()]
-
-
-def save_cron_run(path, start, elapsed):
-    logging.debug('save_cron_run')
-    with Cursor(RUNNER_DB_PATH) as cur:
-        cur.execute('UPDATE cron SET start=?, elapsed=?'
-                    ' WHERE path=?', (start, elapsed, path))
-        cur.log_changes()
-
-    #with Cursor(RUNNER_DB_PATH) as cur:
-        #cur.execute('SELECT * FROM cron')
-        #logging.debug(cur.fetchall())
-
-
-def save_cron_error(path, error):
-    logging.debug('save_cron_error')
-    with Cursor(RUNNER_DB_PATH) as cur:
-        cur.execute('UPDATE cron SET error=? WHERE path=?', (error, path))
-        cur.log_changes()
 
 
 def get_finder_info():

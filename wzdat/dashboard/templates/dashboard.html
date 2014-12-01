@@ -10,7 +10,7 @@
         <li class="nb-group">{{gnb[0]}}</li>
         {% endif %}
         {%for nb in gnb[1] %}
-        <li><a href="#nb-{{gnb[0]}}-{{loop.index}}" {%if nb[3] is not none %}{% if nb[3][1] is none%}class="nb-running"{%elif nb[3][1] == -1.0 %}class="nb-fail"{%endif%}{%endif%}>{{nb[1]}}</a></li>
+        <li><a href="#nb-{{gnb[0]}}-{{loop.index}}" {%if nb[3] is not none %}{% if nb[3][4] is not none%}class="nb-fail"{%endif%}{%endif%}>{{nb[1]}}</a></li>
         {% endfor %}
       </ul>
       {% endfor %}
@@ -19,21 +19,24 @@
       {% for gnb in notebooks %}
       {% for nb in gnb[1] %}
       <div id="nb-{{gnb[0]}}-{{loop.index}}" style="padding-top: 40px; margin-top: -40px">
-        <h3 class="nb-title {%if nb[3] is not none%}{% if nb[3][1] is none %}nb-running{% elif nb[3][1] == -1.0 %}nb-fail{%endif%}{% endif %}">
+        <h3 class="nb-title {%if nb[3] is not none%}{% if nb[3][4] is not none %}nb-fail{% elif nb[3][1] == -1.0 %}nb-fail{%endif%}{% endif %}">
           <span>{{nb[1]}}</span>
           <span class="nb_edit">
             <a href="{{nb[0]}}">code</a>
-          </span>
-        </h3>
-        <div class="pull-right">
-          {% if nb[3] is not none %}
-          <span class="nb_info">
-            {% if nb[3][0] is not none %}
-            <span>Cron {{nb[3][0]}} ago</span>{% if nb[3][1] is not none %}<span>, took {{nb[3][1]}}</span>{% else %}<span>, running {{nb[3][2]}}/{{nb[3][3]}} {% endif %}
-              {% endif %}
-            </span>
+            {% if nb[3][4] is not none%}
+            <button style="margin-left: 5px; margin-top: -6px" type="button" class="btn btn-xs btn-danger btn-error" data-placement="bottom" data-toggle="popover" data-html="true" data-content="<pre>{{nb[3][4]}}</pre>">Error</button> 
             {% endif %}
-        </div>
+          </span>
+          <div class="pull-right">
+            {% if nb[3] is not none %}
+            <span class="nb_info">
+              {% if nb[3][0] is not none %}
+              <span>Run {{nb[3][0]}} ago</span>{% if nb[3][1] is not none %}<span>, took {{nb[3][1]}}</span>{% elif nb[3][4] is not none %}<span>, stopped at {{nb[3][2]}}/{{nb[3][3]}} {% else %}, still running{% endif %}
+                {% endif %}
+              </span>
+              {% endif %}
+          </div>
+        </h3>
         <div nbpath="{{nb[4]}}">
           {{nb[2]|safe}}
         </div>
@@ -43,4 +46,9 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+
+{% block pagescript %}
+$('.btn-error').popover();
 {% endblock %}
