@@ -11,17 +11,17 @@ from subprocess import check_call
 from crontab import CronTab
 from markdown import markdown
 
-from wzdat.util import div, get_notebook_dir
+from wzdat.util import div, get_notebook_dir, remove_ansicolor
 from wzdat import rundb
-from wzdat.make_config import make_config
 
 
-CRON_PTRN = re.compile(r'\s*\[\s*((?:[^\s@]+\s+){4}[^\s@]+)?\s*(?:@(.+))?\s*\]\s*(.+)')
+CRON_PTRN =\
+    re.compile(r'\s*\[\s*((?:[^\s@]+\s+){4}[^\s@]+)?\s*(?:@(.+))?\s*\]\s*(.+)')
 IGNORE_DIRS = ('.ipynb_checkpoints', '.git')
 CRON_CMD = '/usr/bin/crontab'
 
 from IPython.nbformat.current import read, NotebookNode, write
-from wzdat.notebook_runner import NotebookRunner
+from wzdat.notebook_runner import NotebookRunner, NotebookError
 
 
 IPYTHON_STARTUP_PATH = "/root/.ipython/profile_default/startup/01-wzdat.py"
@@ -34,6 +34,7 @@ def run_code(runner, code):
     if status == 'error':
         traceback_text = 'Code raised uncaught exception: \n' + \
             '\n'.join(reply['content']['traceback'])
+        traceback_text = remove_ansicolor(traceback_text)
         logging.info(traceback_text)
     else:
         logging.info('Code returned')
@@ -102,7 +103,7 @@ def _run_init(r, path):
             run_code(r, init)
 
 
-def update_notebook_by_run(path):
+def update_notebook_by_run(path, save_error=False):
     logging.debug(u'update_notebook_by_run {}'.format(path))
     # run common init
     nb = read(open(path.encode('utf-8')), 'json')
@@ -114,9 +115,14 @@ def update_notebook_by_run(path):
     # run cells
     cellcnt = r.cellcnt
     rundb.start_run(path, cellcnt)
-    r.run_notebook(lambda cur: _progress_cell(path, cur))
-    write(r.nb, open(path.encode('utf-8'), 'w'), 'json')
-    rundb.finish_run(path)
+    try:
+        r.run_notebook(lambda cur: _progress_cell(path, cur))
+    except NotebookError, err:
+        if save_error:
+            rundb.save_cron_error(path, str(err))
+    else:
+        write(r.nb, open(path.encode('utf-8'), 'w'), 'json')
+        rundb.finish_run(path)
 
 
 def run_notebook_view_cell(rv, r, cell, cnt):
@@ -200,9 +206,7 @@ def _parse_notebook_name(paths, scheds, groups, fnames, path, pjob, static):
 
 
 def register_cron_notebooks(paths, scheds):
-    print 'Registering cron notebooks'
-    cfg = make_config()
-
+    logging.debug('register_cron_notebooks')
     # start new cron file with env vars
     filed, tpath = tempfile.mkstemp()
     fileh = os.fdopen(filed, 'wb')

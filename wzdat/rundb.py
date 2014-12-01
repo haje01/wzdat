@@ -50,6 +50,9 @@ class Cursor(object):
         assert self.cur is not None
         return self.cur.fetchall()
 
+    def log_changes(self):
+        logging.debug("changed rows {}".format(self.con.total_changes))
+
 
 def create_db():
     with Cursor(RUNNER_DB_PATH) as cur:
@@ -66,8 +69,8 @@ def create_db():
                     ' TEXT);')
         # cron notebook info
         cur.execute('CREATE TABLE IF NOT EXISTS cron '
-                    '(path TEXT PRIMARY KEY, sched TEXT, start REAL, '
-                    'elapsed REAL);')
+                    '(path TEXT PRIMARY KEY, sched TEXT, error TEXT, start '
+                    'REAL, elapsed REAL);')
 
 
 def destroy_db():
@@ -88,6 +91,7 @@ def start_run(path, total):
         else:
             cur.execute('UPDATE info SET start=?, elapsed=NULL, cur=0, total=?'
                         ' WHERE path=?', (start, total, path))
+            cur.log_changes()
 
 
 def finish_run(path):
@@ -100,6 +104,7 @@ def finish_run(path):
             elapsed = time.time() - start
             cur.execute('UPDATE info SET elapsed=?, cur=? WHERE path=?',
                         (elapsed, total, path))
+            cur.log_changes()
 
 
 def update_run_info(path, curcell):
@@ -167,11 +172,23 @@ def get_cron_notebooks():
         return [r[0] for r in cur.fetchall()]
 
 
-def update_cron_run(path, start, elapsed):
-    logging.debug('update_cron_run')
+def save_cron_run(path, start, elapsed):
+    logging.debug('save_cron_run')
     with Cursor(RUNNER_DB_PATH) as cur:
         cur.execute('UPDATE cron SET start=?, elapsed=?'
                     ' WHERE path=?', (start, elapsed, path))
+        cur.log_changes()
+
+    #with Cursor(RUNNER_DB_PATH) as cur:
+        #cur.execute('SELECT * FROM cron')
+        #logging.debug(cur.fetchall())
+
+
+def save_cron_error(path, error):
+    logging.debug('save_cron_error')
+    with Cursor(RUNNER_DB_PATH) as cur:
+        cur.execute('UPDATE cron SET error=? WHERE path=?', (error, path))
+        cur.log_changes()
 
 
 def get_finder_info():

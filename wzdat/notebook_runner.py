@@ -21,6 +21,8 @@ import os
 from IPython.nbformat.current import NotebookNode
 from IPython.kernel import KernelManager
 
+from wzdat.util import remove_ansicolor
+
 
 class NotebookError(Exception):
     pass
@@ -89,13 +91,14 @@ class NotebookRunner(object):
         '''
         Run a notebook cell and update the output of that cell in-place.
         '''
-        #logging.debug('Running cell:\n%s\n', cell.input)
+        # logging.debug('Running cell:\n%s\n', cell.input)
         self.shell.execute(cell.input)
         reply = self.shell.get_msg()
         status = reply['content']['status']
         if status == 'error':
             traceback_text = 'Cell raised uncaught exception: \n' + \
                 '\n'.join(reply['content']['traceback'])
+            traceback_text = remove_ansicolor(traceback_text)
             logging.error(traceback_text)
         else:
             logging.info('Cell returned')
@@ -149,7 +152,6 @@ class NotebookRunner(object):
                 out.ename = content['ename']
                 out.evalue = content['evalue']
                 out.traceback = content['traceback']
-
                 #logging.error('\n'.join(content['traceback']))
             elif msg_type == 'clear_output':
                 outs = list()

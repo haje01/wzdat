@@ -1,6 +1,7 @@
 """Utilities."""
 
 import os
+import re
 import sys
 import math
 import logging
@@ -520,3 +521,7 @@ class ChangeDir(object):
 
     def __exit__(self, atype, value, tb):
         os.chdir(self.cwd)
+
+
+def remove_ansicolor(text):
+        return re.sub(r'\x1b\[([0-9,A-Z]{1,2}(;[0-9]{1,2})?(;[0-9]{3})?)?[m|K]?', '', text)
