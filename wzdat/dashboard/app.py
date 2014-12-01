@@ -127,12 +127,13 @@ def poll_view(task_id):
         print task.state, task.status
         if task.state == 'PROGRESS':
             return 'PROGRESS:' + str(task.result)
+        outputs = task.get()
     except Exception:
         err = task.traceback
+        logging.error(err)
         err = ansi_escape.sub('', err)
         return Response('<div class="view"><pre class="ds-err">%s</pre></div>'
                         % err)
-    outputs = task.get()
     rv = []
     _nb_output_to_html_dashboard(div, rv, outputs, 'view')
     ret = '\n'.join(rv)
@@ -220,7 +221,6 @@ def _collect_gnbs(gnbs, gk, groups):
             total = ri[3]
             err = ri[4]
             ri = (start, elapsed, cur, total, err)
-        logging.debug('ri {}'.format(ri))
         path = path.replace(notebook_dir, '')[1:]
         nbs.append((url, fname, out, ri, path))
     gnbs.append((gk, nbs))

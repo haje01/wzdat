@@ -98,11 +98,11 @@
               .done(function(outputs) {
                 if (outputs.substring(0, 8) == 'PROGRESS') {
                   prog = parseFloat(outputs.split(':')[1]);
-                  console.log(prog);
                   l.setProgress(prog);
                 }
                 else {
                   control.after(outputs);
+                  //console.log(outputs);
                   l.stop();
                   clearInterval(tm);
                   console.log(ourl);
