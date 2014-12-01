@@ -220,6 +220,7 @@ def _collect_gnbs(gnbs, gk, groups):
             total = ri[3]
             err = ri[4]
             ri = (start, elapsed, cur, total, err)
+        logging.debug('ri {}'.format(ri))
         path = path.replace(notebook_dir, '')[1:]
         nbs.append((url, fname, out, ri, path))
     gnbs.append((gk, nbs))

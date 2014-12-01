@@ -19,12 +19,12 @@
       {% for gnb in notebooks %}
       {% for nb in gnb[1] %}
       <div id="nb-{{gnb[0]}}-{{loop.index}}" style="padding-top: 40px; margin-top: -40px">
-        <h3 class="nb-title {%if nb[3] is not none%}{% if nb[3][4] is not none %}nb-fail{% elif nb[3][1] == -1.0 %}nb-fail{%endif%}{% endif %}">
+        <h3 class="nb-title {%if nb[3] is not none%}{% if nb[3][4] is not none %}nb-fail{%endif%}{% endif %}">
           <span>{{nb[1]}}</span>
           <span class="nb_edit">
             <a href="{{nb[0]}}">code</a>
-            {% if nb[3][4] is not none%}
-            <button style="margin-left: 5px; margin-top: -6px" type="button" class="btn btn-xs btn-danger btn-error" data-placement="bottom" data-toggle="popover" data-html="true" data-content="<pre style='font-size: 10px'>{{nb[3][4]}}</pre>">Error</button> 
+            {% if nb[3] is not none and nb[3][4] is not none %}
+            <button style="margin-top: -3px" type="button" class="btn btn-xs btn-danger btn-error" data-placement="bottom" data-toggle="popover" data-html="true" data-content="<pre style='font-size: 10px'>{{nb[3][4]}}</pre>">error</button> 
             {% endif %}
           </span>
           <div class="pull-right">
