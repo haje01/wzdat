@@ -212,8 +212,11 @@ def register_cron_notebooks(paths, scheds):
     filed, tpath = tempfile.mkstemp()
     fileh = os.fdopen(filed, 'wb')
     assert 'WZDAT_CFG' in os.environ
+    assert 'WZDAT_HOST' in os.environ
     cfg_path = os.environ['WZDAT_CFG']
+    host = os.environ['WZDAT_HOST']
     fileh.write('WZDAT_CFG=%s\n' % cfg_path)
+    fileh.write('WZDAT_HOST=%s\n' % host)
     fileh.close()
     check_call([CRON_CMD, tpath])
     os.unlink(tpath)
