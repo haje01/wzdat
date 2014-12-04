@@ -1,5 +1,9 @@
 image: haje01/wzdat
 
+env:
+    - WZDAT_DIR=$(pwd) 
+    - WZDAT_CFG=tests/ws_mysol/myprj/config.yml 
+
 script:
     - pwd
     - pip freeze 
