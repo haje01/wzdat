@@ -13,5 +13,5 @@ def dummy():
     gen_dummydata(cfg['data_dir'])
 
 
-def test_dummy(dummy):
+def test_dummy():
     assert len(l.files) > 0

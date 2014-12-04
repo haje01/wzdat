@@ -1,0 +1,5 @@
+image: haje01/wzdat
+
+script:
+    - pwd
+    - pip freeze 
