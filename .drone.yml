@@ -5,7 +5,6 @@ env:
     - WZDAT_CFG=tests/ws_mysol/myprj/config.yml 
 
 script:
-    - pwd
-    - pip freeze 
+    - pip install pytest
     - python -m wzdat.jobs gen-dummydata
     - py.test --cov wzdat --cov-report xml tests/
