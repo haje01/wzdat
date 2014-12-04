@@ -7,3 +7,5 @@ env:
 script:
     - pwd
     - pip freeze 
+    - python -m wzdat.jobs gen-dummydata
+    - py.test --cov wzdat --cov-report xml tests/
