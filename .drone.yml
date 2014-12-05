@@ -9,3 +9,5 @@ script:
     - pip install pytest
     - python -m wzdat.jobs gen-dummydata
     - py.test
+    - coveralls
+
