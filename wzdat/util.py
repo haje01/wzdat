@@ -70,7 +70,11 @@ def remove_old_tmps(_dir, prefix, valid_hour):
             curpath = os.path.join(dirpath, filename)
             created = datetime.fromtimestamp(os.path.getctime(curpath))
             if datetime.now() - created > time_limit:
-                os.remove(curpath)
+                try:
+                    os.remove(curpath)
+                except OSError, e:
+                    logging.warning("Fail to remove old tmps: "
+                                    "{}".format(str(e)))
 
 
 def remove_empty_file(_files):
@@ -524,4 +528,5 @@ class ChangeDir(object):
 
 
 def remove_ansicolor(text):
-        return re.sub(r'\x1b\[([0-9,A-Z]{1,2}(;[0-9]{1,2})?(;[0-9]{3})?)?[m|K]?', '', text)
+    return re.sub(r'\x1b\[([0-9,A-Z]{1,2}(;[0-9]{1,2})?(;[0-9]{3})?)?[m|K]?',
+                  '', text)
