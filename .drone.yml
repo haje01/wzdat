@@ -7,7 +7,7 @@ env:
 
 script:
     - pip install -e .
-    - pip install pytest
+    - pip install pytest pytest-cov
     - python -m wzdat.jobs gen-dummydata
     - py.test --cov wzdat --cov-report xml
     - coveralls
