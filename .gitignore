@@ -1,3 +1,6 @@
+.cache/
+.tox/
+coverage.xml
 *.pyc
 *.ipynb
 !*test.ipynb
