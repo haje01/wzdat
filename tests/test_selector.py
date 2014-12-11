@@ -7,10 +7,12 @@ from ws_mysol.myprj import log as l
 cfg = make_config()
 
 
-@pytest.fixture(scope="session")
+@pytest.yield_fixture(scope="session")
 def dummy():
     from wzdat.util import gen_dummydata
     gen_dummydata(cfg['data_dir'])
+    yield
+    # TODO: del_dummydata
 
 
 def test_dummy():
