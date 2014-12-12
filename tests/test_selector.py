@@ -15,5 +15,11 @@ def dummy():
     # TODO: del_dummydata
 
 
-def test_dummy():
-    assert len(l.files) > 0
+def test_selector():
+    assert len(l.files) == 180
+    assert set(l.kinds) == set([l.kind.auth, l.kind.community])
+    assert set(l.nodes) == set([l.node.jp_node_1, l.node.jp_node_2,
+                                l.node.jp_node_3, l.node.kr_node_1,
+                                l.node.kr_node_2, l.node.kr_node_3,
+                                l.node.us_node_1, l.node.us_node_2,
+                                l.node.us_node_3])
