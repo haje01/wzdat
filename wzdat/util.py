@@ -419,7 +419,7 @@ def cap_call(cmd, _test=False):
 
 
 def get_convfile_path(path):
-    relpath = os.path.relpath(path, cfg['data-dir'])
+    relpath = os.path.relpath(path, cfg['data_dir'])
     conv_dir = cfg['conv_dir']
     return os.path.join(conv_dir, relpath)
 
