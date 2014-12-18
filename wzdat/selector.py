@@ -1049,9 +1049,9 @@ def _get_cache_path(ext):
 
 
 def _update_files_precalc(ctx, root_list):
-    nocache = True if 'no_cache' in cfg else False
+    use_cache = cfg['use_cache'] if 'use_cache' in cfg else True
     cpath = _get_cache_path(ctx.fileext)
-    if not nocache and os.path.isfile(cpath):
+    if use_cache and os.path.isfile(cpath):
         tstr = _get_found_time(cpath)
         msg = '\nusing file infos found %s ago.' % tstr
         with open(cpath, 'r') as f:
@@ -1067,8 +1067,8 @@ def find_files_and_save(startdir, ext, root_list=None):
     logging.debug('startdir: ' + str(startdir))
     if root_list is None:
         root_list = []
-    nocache = True if 'no_cache' in cfg else False
-    if not nocache:
+    use_cache = cfg['use_cache'] if 'use_cache' in cfg else True
+    if use_cache:
         cpath = _get_cache_path(ext)
     nprint('finding files and save info...')
     filecnt = 0
@@ -1083,7 +1083,7 @@ def find_files_and_save(startdir, ext, root_list=None):
         rfiles = sorted(rfiles)
         _root[1] = rfiles
     rv = sorted(root_list), filecnt
-    if not nocache:
+    if use_cache:
         with open(cpath, 'w') as f:
             pickle.dump(rv, f)
     return rv

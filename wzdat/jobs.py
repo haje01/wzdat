@@ -28,7 +28,7 @@ def cache_files():
         if 'file_types' not in cfg:
             logging.warning('no file_types in cfg. exit')
             return
-        old_nocache = cfg['no_cache']
+        old_use_cache = cfg['use_cache']
         prj = cfg['prj']
         print "Caching files for: %s" % prj
         datadir = cfg['data_dir']
@@ -40,7 +40,7 @@ def cache_files():
             cmd = ' '.join(cmd)
             exec(cmd)
         update_cache_info()
-        cfg['no_cache'] = old_nocache
+        cfg['use_cache'] = old_use_cache
 
 
 def cache_finder():
