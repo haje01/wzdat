@@ -1,0 +1,5 @@
+[run]
+source=wzdat
+
+[report]
+omit = *.html

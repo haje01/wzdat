@@ -1,4 +1,7 @@
 base_cfg: ../config.yml
 data_encoding: 'utf-8'
-file_types:
-    - log
+file_types: ['log']
+ipython_port: 8080
+host_ipython_port: 8080
+dashboard_port: 8085
+host_dashboard_port: 8085

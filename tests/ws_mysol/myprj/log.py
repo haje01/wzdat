@@ -19,9 +19,8 @@ def get_node(nfield, fileo):
     path_elms = fileo.path.split('/')
     region = path_elms[0]
     node = path_elms[1]
-    name = normalize_path_elms(region)[3:]
-    if name == 'TW':
-        name += '_' + node
+    name = '{}_{}'.format(region, node)
+    name = normalize_path_elms(name)
     part = os.path.join(region, node)
     obj = Value._instance(None, nfield, name, part, name)
 

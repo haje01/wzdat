@@ -1,3 +1,6 @@
+.cache/
+.tox/
+coverage.xml
 *.pyc
 *.ipynb
 !*test.ipynb
@@ -10,7 +13,6 @@ sample-logs/
 .DS_Store
 .coverage
 .python-version
-.coveragerc
 wzdat/tests/cache/
 document/
 htmlcov/
