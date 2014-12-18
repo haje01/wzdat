@@ -8,7 +8,6 @@ import codecs
 import zipfile
 import dateutil
 import time
-import socket
 import shutil
 from collections import defaultdict
 from subprocess import check_call, CalledProcessError
@@ -449,7 +448,8 @@ class Field(object):
         elif key not in ('__getstate__', '__setstate__'):
             return FailValue()
         else:
-            import pdb; pdb.set_trace()  # NOQA
+            import pdb
+            pdb.set_trace()  # NOQA
 
     def __getstate__(self):
         s = self.__dict__.copy()
@@ -985,7 +985,7 @@ def _update_files_root_vals(fieldcnt, fields, fileo, field_getter):
         fobj = fields[i]
         try:
             val = field_getter[i]()(fobj, fileo)
-        except Exception, e:
+        except Exception as e:
             field_errs.append((str(fobj) + str(e)))
             logging.error(traceback.format_exc())
             break
@@ -1155,7 +1155,7 @@ class DateField(Field):
         to_datevalue = self._value_fn()
         try:
             return to_datevalue(self, fileo)
-        except Exception, e:
+        except Exception as e:
             logging.error(str(e))
             logging.error(traceback.format_exc())
             raise
@@ -1297,7 +1297,7 @@ def update(mod, ext, subtype=None):
     cfg = make_config()
     _dir = cfg['data_dir']
     encoding = cfg["data_encoding"]
-    if subtype is not None and type(encoding) == dict:
+    if subtype is not None and isinstance(encoding, dict):
         encoding = encoding[subtype]
 
     if encoding.startswith('utf-16'):
@@ -1412,6 +1412,7 @@ class FileValue(SingleFile):
 
 
 class Slot(object):
+
     def __init__(self, ctx, path):
         self.ctx = ctx
         self.path = path
@@ -1432,6 +1433,7 @@ class Slot(object):
 
 
 class SlotMap(object):
+
     def __init__(self, ctx):
         self.ctx = ctx
         self._dict = dict()
