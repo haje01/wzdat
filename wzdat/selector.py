@@ -8,7 +8,6 @@ import codecs
 import zipfile
 import dateutil
 import time
-import socket
 import shutil
 from collections import defaultdict
 from subprocess import check_call, CalledProcessError
