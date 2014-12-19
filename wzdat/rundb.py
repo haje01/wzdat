@@ -71,6 +71,11 @@ def create_db():
         cur.execute('CREATE TABLE IF NOT EXISTS cron '
                     '(path TEXT PRIMARY KEY, sched TEXT);')
 
+        # event
+        cur.execute('CREATE TABLE IF NOT EXISTS event '
+                    '(id INTEGER PRIMARY KEY, type TEXT, info TEXT, raised '
+                    'REAL, handler TEXT, handled REAL);')
+
 
 def destroy_db():
     with Cursor(RUNNER_DB_PATH) as cur:
@@ -78,6 +83,7 @@ def destroy_db():
         cur.execute('DROP TABLE IF EXISTS cache;')
         cur.execute('DROP TABLE IF EXISTS finder;')
         cur.execute('DROP TABLE IF EXISTS cron;')
+        cur.execute('DROP TABLE IF EXISTS event;')
 
 
 def start_run(path, total):
