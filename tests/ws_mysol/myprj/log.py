@@ -65,7 +65,7 @@ def get_date(dfield, fileo):
     elms = filename.split('_')
     part = elms[1].split('.')[0]
     _date = part.split('-')
-    y, m, d = int(_date[0]), int(_date[1]), int(_date[2])
+    y, m, d = int(_date[0]), int(_date[1]), int(_date[2].split()[0])
     return DateValue._instance(dfield, y, m, d)
 
 

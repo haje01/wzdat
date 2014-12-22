@@ -15,17 +15,17 @@ log:
         level: DEBUG
         handlers: [console]
 
-# for WzDat
-no_cache: true
+# for WzDat Test
+use_cache: false
 data_dir: $WZDAT_DIR/tests/dummydata
-sol_dir: $WZDAT_DIR/tests/ws_mysol
+sol_dir: $WZDAT_DIR/tests
 sol_pkg: ws_mysol
 prj: myprj
 tmp_dir: $WZDAT_DIR/tests/tmp
 cache_dir: $WZDAT_DIR/tests/cache
 runner_db_path: $WZDAT_DIR/tests/runner.db
 
-# Common config for TEST(ws_mysol)
+# Common config for Test(ws_mysol)
 tmp_valid_hour: 24
 named_tmp_valid_hour: 720  # 24 * 30
 server_timezone: UTC
