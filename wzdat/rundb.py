@@ -2,6 +2,7 @@
     Database module for IPython Notebook Runner
 """
 
+import os
 import sys
 import time
 import logging
@@ -10,6 +11,7 @@ import sqlite3
 
 from wzdat.make_config import make_config
 
+assert 'WZDAT_DIR' in os.environ
 cfg = make_config()
 RUNNER_DB_PATH = cfg['runner_db_path']
 

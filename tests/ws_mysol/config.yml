@@ -24,6 +24,7 @@ prj: myprj
 tmp_dir: $WZDAT_DIR/tests/tmp
 cache_dir: $WZDAT_DIR/tests/cache
 runner_db_path: $WZDAT_DIR/tests/runner.db
+notebook_base_dir: $WZDAT_DIR/tests/__notes__
 
 # Common config for Test(ws_mysol)
 tmp_valid_hour: 24
