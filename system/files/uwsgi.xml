@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<uwsgi id="uwsgi-wzdat">
+    <module>wzdat.dashboard.app:app</module>
+    <socket>/tmp/uwsgi-wzdat.sock</socket>
+    <processes>4</processes>
+    <chdir>/solution/__notes__</chdir>
+    <pidfile>/tmp/uwsgi-wzdat.pid</pidfile>
+    <stats>/tmp/uwsgi-wzdat.stats</stats>
+    <log-format>%(addr) - %(user) [%(ltime)] "%(method) %(uri) %(proto)" %(status) %(size) "%(referer)" "%(uagent)"</log-format>
+    <chmod-socket>775</chmod-socket>
+    <disable-logging>true</disable-logging>
+</uwsgi>

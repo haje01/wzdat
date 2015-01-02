@@ -1,0 +1,71 @@
+FROM ubuntu:14.04
+MAINTAINER JeongJu Kim "haje01@gmail.com"
+
+RUN apt-get update
+RUN apt-get -y upgrade
+
+# Essentials
+RUN apt-get -qq -y install git build-essential wget
+RUN locale-gen en_US.UTF-8
+
+# Prerequisite for Pandas
+RUN apt-get -qq -y install libatlas-base-dev gfortran libpng-dev  libfreetype6-dev libxft-dev
+
+# Python & PIP
+RUN apt-get -qq -y install python-pip python-dev
+RUN pip install --upgrade pip
+
+# Prerequisites for IPython, WzDat
+RUN apt-get -qq -y install libhdf5-serial-dev
+RUN apt-get -qq -y install sqlite3 libsqlite3-dev
+RUN wget -qO- https://raw.github.com/PyTables/PyTables/develop/requirements.txt | xargs pip install
+RUN wget -qO- https://github.com/haje01/wzdat/raw/master/requirements.txt | xargs pip install
+
+# Dashboard & Web
+RUN pip install uwsgi
+RUN apt-get -qq -y install nginx
+RUN sed --in-place 's/user www-data/user root/' /etc/nginx/nginx.conf 
+
+# Celery
+RUN pip install Celery
+RUN apt-get -qq -y install redis-server
+RUN pip install redis
+ENV C_FORCE_ROOT true
+
+# SQLite
+RUN apt-get -qq -y install sqlite3 libsqlite3-dev
+
+# Prepare WzDat
+RUN mkdir -p /var/wzdat/hdf
+RUN mkdir -p /var/wzdat/conv
+RUN mkdir -p /var/wzdat/cache
+RUN mkdir -p /var/tmp/wzdat
+RUN chmod 1777 /var/wzdat/conv
+RUN chmod 1777 /var/wzdat/cache
+RUN chmod 1777 /var/tmp/wzdat
+RUN touch /var/wzdat/runner.db
+RUN touch /var/log/wzdat
+
+# Supervisor & SSH
+RUN apt-get -qq -y install supervisor
+RUN apt-get -qq -y install openssh-server
+RUN mkdir /var/run/sshd
+RUN echo 'root:docker' | chpasswd
+RUN sed --in-place=.bak 's/without-password/yes/' /etc/ssh/sshd_config
+RUN sed -ri 's/UsePAM yes/#UsePAM yes/g' /etc/ssh/sshd_config
+RUN sed -ri 's/#UsePAM no/UsePAM no/g' /etc/ssh/sshd_config
+
+# at & inotifytools
+RUN apt-get -qq -y install inotify-tools
+RUN apt-get -qq -y install at
+
+# Files
+ADD files/NanumGothic.ttf /usr/share/fonts/truetype/nanum/NanumGothic.ttf
+ADD files/supervisord.conf /etc/supervisor/conf.d/wzdat.conf
+
+# Test & Coverage Tools
+RUN pip install pytest
+RUN pip install python-coveralls
+
+# Update Bash
+RUN apt-get update && apt-get install --only-upgrade bash
