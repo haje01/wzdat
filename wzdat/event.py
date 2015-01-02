@@ -39,8 +39,9 @@ def mark_handled_events(handler, event_ids):
     with Cursor(RUNNER_DB_PATH) as cur:
         handled = time.time()
         eids = "({})".format(', '.join([str(i) for i in event_ids]))
+        shandler = handler if isinstance(handler, str) else handler.__name__
         cur.execute('UPDATE event SET handler=?, handled=? WHERE id in'
-                    '{}'.format(eids), (handler.__name__, handled))
+                    '{}'.format(eids), (shandler, handled))
         return cur.con.total_changes
 
 

@@ -19,8 +19,8 @@ def dummy():
 
 
 def test_selector_basic():
-    assert len(l.files) == 180
-    assert set(l.kinds) == set([l.kind.auth, l.kind.community])
+    assert len(l.files) == 450
+    assert set(l.kinds) == set([l.kind.auth, l.kind.community, l.kind.game])
     assert set(l.nodes) == set([l.node.jp_node_1, l.node.jp_node_2,
                                 l.node.jp_node_3, l.node.kr_node_1,
                                 l.node.kr_node_2, l.node.kr_node_3,

@@ -55,13 +55,13 @@ def test_event_inotify(db):
                                   ' .T_ActionLog20141219.csv.eK7Nkf')
     events = evt.get_events(evt.FILE_WRITE)
     assert len(events) == 1
-    assert events[0][3] == 'T_ActionLog20141219.csv'
+    assert events[0][3] == '/logdata/kr/login1/dblog/T_ActionLog20141219.csv'
 
     evt.register_event_by_inotify('/logdata/kr/login1/dblog/ DELETE'
                                   ' T_ActionLog20141219.csv')
     events = evt.get_events(evt.FILE_DELETE)
     assert len(events) == 1
-    assert events[0][3] == 'T_ActionLog20141219.csv'
+    assert events[0][3] == '/logdata/kr/login1/dblog/T_ActionLog20141219.csv'
 
 
 def my_handler(row):
