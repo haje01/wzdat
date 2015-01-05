@@ -7,7 +7,9 @@ env:
 
 script:
     - pip install -e .
+    - pip install fabric
     - pip install pytest pytest-cov
+    - curl -s https://get.docker.io/ubuntu/ | sudo sh
     - python -m wzdat.jobs gen-dummydata
     - cd system; fab launch:myprj
     - py.test tests/ system/tests/ --cov wzdat --cov-report xml
