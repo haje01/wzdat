@@ -1,4 +1,4 @@
-image: haje01/wzdat
+image: haje01/wzdat-dev
 
 env:
     - WZDAT_DIR=$(pwd) 
