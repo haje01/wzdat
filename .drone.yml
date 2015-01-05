@@ -9,12 +9,9 @@ env:
 
 script:
     - pip install -e .
-    - pip install fabric
-    - pip install pytest pytest-cov
-    - curl -s https://get.docker.io/ubuntu/ | sudo sh
     - python -m wzdat.jobs gen-dummydata
-    - cd system; fab launch:myprj
-    - py.test tests/ system/tests/ --cov wzdat --cov-report xml
+    - cd /var/cache/drone/src/github.com/haje01/wzdat/system; fab launch:myprj
+    - cd /var/cache/drone/src/github.com/haje01/wzdat; py.test tests/ system/tests/ --cov wzdat --cov-report xml
     - coveralls
     - cd system; fab rm:myprj
 

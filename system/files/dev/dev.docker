@@ -1,11 +1,12 @@
 FROM haje01/wzdat:latest
 MAINTAINER JeongJu Kim "haje01@gmail.com"
 
-# curl
+# for Testing & Dev
 RUN apt-get -qq -y install curl
-
-# vim
 RUN apt-get -qq -y install vim
+RUN pip install fabric
+RUN pip install pytest pytest-cov
+RUN curl -s https://get.docker.io/ubuntu/ | sudo sh
 
 # rsyncd (for system test)
 RUN apt-get -qq -y install rsync
