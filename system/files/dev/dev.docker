@@ -1,9 +1,8 @@
 FROM haje01/wzdat:latest
 MAINTAINER JeongJu Kim "haje01@gmail.com"
 
-# screen
-RUN apt-get -qq -y install screen
-RUN chmod 775 /var/run/screen
+# curl
+RUN apt-get -qq -y install curl
 
 # vim
 RUN apt-get -qq -y install vim
