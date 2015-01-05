@@ -84,14 +84,11 @@ def build():
     _build_dev()
 
 
-def ssh(_prj, wzdat_host=False):
+def ssh(_prj):
+    assert 'WZDAT_HOST' in os.environ
     for prj, port in _get_prj_and_ports():
         if prj == _prj:
-            if wzdat_host:
-                assert 'WZDAT_HOST' in os.environ
-                ip = os.environ['WZDAT_HOST']
-            else:
-                ip = '0.0.0.0'
+            ip = os.environ['WZDAT_HOST']
             local('ssh root@{ip} -p {port}'.format(ip=ip, port=port))
             return
     abort("Can't find project")

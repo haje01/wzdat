@@ -9,6 +9,8 @@ script:
     - pip install -e .
     - pip install pytest pytest-cov
     - python -m wzdat.jobs gen-dummydata
-    - py.test --cov wzdat --cov-report xml
+    - cd system; fab launch:myprj
+    - py.test tests/ system/tests/ --cov wzdat --cov-report xml
     - coveralls
+    - cd system; fab rm:myprj
 
