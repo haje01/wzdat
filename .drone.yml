@@ -4,12 +4,14 @@ env:
     - WZDAT_DIR=$(pwd) 
     - WZDAT_CFG=tests/ws_mysol/myprj/config.yml 
     - WZDAT_HOST=localhost
+    - WZDAT_SOL_DIR=$WZDAT_DIR/tests
+    - WZDAT_SOL_PKG=ws_mysol
 
 script:
     - pip install -e .
     - pip install fabric
     - pip install pytest pytest-cov
-    - curl -s https://get.docker.io/ubuntu/ | sudo sh
+    - apt-get install curl; curl -s https://get.docker.io/ubuntu/ | sudo sh
     - python -m wzdat.jobs gen-dummydata
     - cd system; fab launch:myprj
     - py.test tests/ system/tests/ --cov wzdat --cov-report xml
