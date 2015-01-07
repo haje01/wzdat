@@ -19,7 +19,6 @@ def rport():
 def test_system_dashboard():
     import urllib2
     url = 'http://{}:8085'.format(host)
-    print url
     f = urllib2.urlopen(url)
     r = f.read()
     assert 'WzDat MYPRJ Dashboard' in r
