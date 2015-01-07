@@ -14,7 +14,6 @@ script:
     - pip install -e .
     - python -m wzdat.jobs gen-dummydata
     - docker ps
-    - sudo docker rm -f wzdat_myprj  # remove previous container if exists
     - cd /var/cache/drone/src/github.com/haje01/wzdat/system; fab launch:myprj
     - sleep 7  # wait for initializing
     - cd /var/cache/drone/src/github.com/haje01/wzdat; py.test tests/ system/tests/ --cov wzdat --cov-report xml
