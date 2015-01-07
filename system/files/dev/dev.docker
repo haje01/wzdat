@@ -6,7 +6,8 @@ RUN apt-get -qq -y install curl
 RUN apt-get -qq -y install vim
 RUN pip install fabric
 RUN pip install pytest pytest-cov
-RUN curl -s https://get.docker.io/ubuntu/ | sudo sh
+RUN curl https://get.docker.io/builds/Linux/x86_64/docker-latest -o /usr/local/bin/docker;
+RUN chmod +x /usr/local/bin/docker 
 
 # rsyncd (for system test)
 RUN apt-get -qq -y install rsync
