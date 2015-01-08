@@ -143,6 +143,8 @@ def launch(prj, dbg=False):
         cmd = "bash"
     else:
         runopt = "-d"
+    if 'DOCKER_HOST' in os.environ:
+        runopt += ' -H {}'.format(os.environ['DOCKER_HOST'])
     cfgpath = os.path.join(wzsol, wzpkg, prj, 'config.yml')
     cfg = make_config(cfgpath)
     iport = cfg['host_ipython_port']
