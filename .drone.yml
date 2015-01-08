@@ -1,6 +1,4 @@
-image: haje01/wzdat-dev
-docker:
-    net: host
+image: haje01/wzdat
 
 env:
     - WZDAT_DIR=$(pwd) 
@@ -8,20 +6,9 @@ env:
     - WZDAT_HOST=localhost
     - WZDAT_SOL_DIR=$WZDAT_DIR/tests
     - WZDAT_SOL_PKG=ws_mysol
-    - DOCKER_HOST=0.0.0.0:4243
-    - DRON_PWD=$(pwd)
 
 script:
-    - echo $WZDAT_DIR
-    - echo $WZDAT_SOL_DIR
-    - echo $DRON_PWD
+    - pip install -e .
     - python -m wzdat.jobs gen-dummydata
-    - docker cp $(docker ps -ql):/var/cache/drone/src/github.com/haje01/wzdat/tests /tmp
-    - docker ps
-    - cd /var/cache/drone/src/github.com/haje01/wzdat/system; fab launch:myprj
-    - cd /var/cache/drone/src/github.com/haje01/wzdat/system; fab log:myprj
-    - cd /var/cache/drone/src/github.com/haje01/wzdat; py.test tests/ system/tests/ --cov wzdat --cov-report xml
-    # - cd /var/cache/drone/src/github.com/haje01/wzdat; py.test tests/ --cov wzdat --cov-report xml
+    - py.test tests/ --cov wzdat --cov-report xml
     - coveralls
-    - cd /var/cache/drone/src/github.com/haje01/wzdat/system; fab rm:myprj
-
