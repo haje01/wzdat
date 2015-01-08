@@ -12,3 +12,4 @@ script:
     - python -m wzdat.jobs gen-dummydata
     - py.test tests/ --cov wzdat --cov-report xml
     - coveralls
+
