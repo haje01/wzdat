@@ -2,7 +2,7 @@ import os
 
 from fabric.api import local, run, env, abort
 
-from make_config import make_config
+from wzdat.make_config import make_config
 
 env.password = 'docker'
 prj_map = {}
@@ -171,23 +171,4 @@ def launch(prj, dbg=False):
                                            wzpkg=wzpkg, wzhost=wzhost,
                                            iport=iport, dport=dport,
                                            datavol=datavol, cmd=cmd)
-    local(cmd)
-
-
-def test_run():
-    assert 'WZDAT_DIR' in os.environ
-    assert 'WZDAT_HOST' in os.environ
-    assert 'WZDAT_SOL_DIR' in os.environ
-    wzdat_dir = os.environ['WZDAT_DIR']
-    wzdat_host = os.environ['WZDAT_HOST']
-    cmd = 'docker run -t -i $runopt -p 8080:8090 \
-            -p 8085:80 --name "wzdat_test"\
-            -v {wzdir}/tests/ws_mysol:/solution\
-            -v {wzdir}/tests/dummydata/:/logdata\
-            -e WZDAT_SOL_DIR=/solution\
-            -e WZDAT_PRJ=myprj\
-            -e WZDAT_HOST={wzhost}\
-            -e WZDAT_CFG=/etc/wzdat/syscfg.yml\
-            -e HOME=/root\
-            haje01/wzdat-dev'.format(wzdir=wzdat_dir, wzhost=wzdat_host)
     local(cmd)
