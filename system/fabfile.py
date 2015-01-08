@@ -9,7 +9,7 @@ prj_map = {}
 
 
 def _get_prj_and_ports():
-    r = local('docker ps -a', capture=True)
+    r = local('sudo docker ps -a', capture=True)
     prjs = []
     for line in r.split('\n')[1:]:
         port = None
@@ -32,8 +32,8 @@ def hosts(prj=None):
 
 
 def push():
-    local('docker push haje01/wzdat-base')
-    local('docker push haje01/wzdat')
+    local('sudo docker push haje01/wzdat-base')
+    local('sudo docker push haje01/wzdat')
 
 
 def status():
@@ -41,40 +41,40 @@ def status():
 
 
 def ps():
-    local('docker ps -a')
+    local('sudo docker ps -a')
 
 
 def rm(prj):
-    local('docker rm -f wzdat_{prj}'.format(prj=prj))
+    local('sudo docker rm -f wzdat_{prj}'.format(prj=prj))
 
 
 def rm_all():
-    local('docker rm -f $(docker ps -aq)')
+    local('sudo docker rm -f $(docker ps -aq)')
 
 
 def _build_base():
     local('ln -fs files/base.docker Dockerfile')
-    local('docker build -t haje01/wzdat-base .')
+    local('sudo docker build -t haje01/wzdat-base .')
     local('rm -f Dockerfile')
 
 
 def _build():
-    r = local('docker images -q haje01/wzdat-base', capture=True)
+    r = local('sudo docker images -q haje01/wzdat-base', capture=True)
     if len(r) == 0:
         print "No local 'haje01/wzdat-base' image. Trying to find in the "\
             "docker hub."
     local('ln -fs files/self.docker Dockerfile')
-    local('docker build --no-cache -t haje01/wzdat .')
+    local('sudo docker build --no-cache -t haje01/wzdat .')
     local('rm -f Dockerfile')
 
 
 def _build_dev():
-    r = local('docker images -q haje01/wzdat', capture=True)
+    r = local('sudo docker images -q haje01/wzdat', capture=True)
     if len(r) == 0:
         print "No local 'haje01/wzdat' image. Trying to find in the docker"\
             " hub."
     local('ln -fs files/dev/dev.docker Dockerfile')
-    local('docker build --no-cache -t haje01/wzdat-dev .')
+    local('sudo docker build --no-cache -t haje01/wzdat-dev .')
     local('rm -f Dockerfile')
 
 
@@ -95,7 +95,7 @@ def ssh(_prj):
 
 
 def log(prj):
-    local('docker logs -f wzdat_{prj}'.format(prj=prj))
+    local('sudo docker logs -f wzdat_{prj}'.format(prj=prj))
 
 
 def _get_pkg():
@@ -151,7 +151,7 @@ def launch(prj, dbg=False):
         datavol = '-v {}:/logdata'.format(cfg['data_dir'])
     else:
         datavol = '/logdata/{}'.format(prj)
-    cmd = 'docker run {runopt} -p 22 -p {iport}:8090 -p {dport}:80\
+    cmd = 'sudo docker run {runopt} -p 22 -p {iport}:8090 -p {dport}:80\
             -p 873 --name "wzdat_{wzprj}"\
             -v {wzdir}:/wzdat -v {wzsol}:/solution\
             {datavol}\
@@ -180,7 +180,7 @@ def test_run():
     assert 'WZDAT_SOL_DIR' in os.environ
     wzdat_dir = os.environ['WZDAT_DIR']
     wzdat_host = os.environ['WZDAT_HOST']
-    cmd = 'docker run -t -i $runopt -p 8080:8090 \
+    cmd = 'sudo docker run -t -i $runopt -p 8080:8090 \
             -p 8085:80 --name "wzdat_test"\
             -v {wzdir}/tests/ws_mysol:/solution\
             -v {wzdir}/tests/dummydata/:/logdata\
