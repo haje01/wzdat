@@ -143,8 +143,6 @@ def launch(prj, dbg=False):
         cmd = "bash"
     else:
         runopt = "-d"
-    if 'DOCKER_HOST' in os.environ:
-        runopt += ' -H {}'.format(os.environ['DOCKER_HOST'])
     cfgpath = os.path.join(wzsol, wzpkg, prj, 'config.yml')
     cfg = make_config(cfgpath)
     iport = cfg['host_ipython_port']
@@ -153,7 +151,7 @@ def launch(prj, dbg=False):
         datavol = '-v {}:/logdata'.format(cfg['data_dir'])
     else:
         datavol = '/logdata/{}'.format(prj)
-    cmd = 'sudo docker run {runopt} -p 22 -p {iport}:8090 -p {dport}:80\
+    cmd = 'docker run {runopt} -p 22 -p {iport}:8090 -p {dport}:80\
             -p 873 --name "wzdat_{wzprj}"\
             -v {wzdir}:/wzdat -v {wzsol}:/solution\
             {datavol}\
