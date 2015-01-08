@@ -13,6 +13,8 @@ env:
 script:
     - pip install -e .
     - python -m wzdat.jobs gen-dummydata
+    - echo $WZDAT_DIR
+    - echo $WZDAT_SOL_DIR
     - docker ps
     - cd /var/cache/drone/src/github.com/haje01/wzdat/system; fab launch:myprj
     - cd /var/cache/drone/src/github.com/haje01/wzdat/system; fab log:myprj
