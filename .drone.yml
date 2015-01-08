@@ -15,6 +15,7 @@ script:
     - python -m wzdat.jobs gen-dummydata
     - docker ps
     - cd /var/cache/drone/src/github.com/haje01/wzdat/system; fab launch:myprj
+    - sleep 10  # wait for initializing
     - cd /var/cache/drone/src/github.com/haje01/wzdat; py.test tests/ system/tests/ --cov wzdat --cov-report xml
     # - cd /var/cache/drone/src/github.com/haje01/wzdat; py.test tests/ --cov wzdat --cov-report xml
     - coveralls
