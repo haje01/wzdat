@@ -31,7 +31,13 @@ def register_event(etype, info, prior=DEFAULT_PRIOR):
         return cur.con.total_changes
 
 
-def get_events(etype=None):
+def get_all():
+    with Cursor(RUNNER_DB_PATH) as cur:
+        cur.execute('SELECT * FROM event')
+        return cur.fetchall()
+
+
+def get_by_type(etype):
     with Cursor(RUNNER_DB_PATH) as cur:
         cur.execute('SELECT * FROM event WHERE type=?', (etype,))
         return cur.fetchall()

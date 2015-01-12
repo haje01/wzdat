@@ -19,7 +19,7 @@ def test_event(db):
     changed = evt.register_event(evt.FILE_DELETE, '/test/path')
     assert changed == 1
 
-    events = evt.get_events(evt.FILE_MOVE_TO)
+    events = evt.get_by_type(evt.FILE_MOVE_TO)
     assert len(events) == 1
     e = events[0]
     assert e[0] == 1
@@ -35,7 +35,7 @@ def test_event(db):
     evt.mark_handled_events('file_cache', (1,))
     events = evt.get_unhandled_events()
     assert len(events) == 1
-    events = evt.get_events(evt.FILE_MOVE_TO)
+    events = evt.get_by_type(evt.FILE_MOVE_TO)
     e = events[0]
     assert e[5] is not None  # event handler
     assert e[6] is not None  # event handled time

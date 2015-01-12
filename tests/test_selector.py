@@ -15,9 +15,11 @@ localhost = os.environ['WZDAT_HOST']
 @pytest.yield_fixture(scope="session")
 def dummy():
     from wzdat.util import gen_dummydata
+    ddir = cfg['data_dir']
     gen_dummydata(cfg['data_dir'])
     yield
-    # TODO: del_dummydata
+    import shutil
+    shutil.rmtree(ddir)
 
 
 def test_selector_basic():
