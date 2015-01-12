@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import logging
 from collections import defaultdict
@@ -13,7 +14,7 @@ DEFAULT_PRIOR = 2
 RUNNER_DB_PATH = cfg['runner_db_path']
 
 # WzDat Built-in Events
-FILE_WRITE = 'FILE_WRITE'
+FILE_MOVE_TO = 'FILE_MOVE_TO'
 FILE_DELETE = 'FILE_DELETE'
 
 handlers = []
@@ -22,6 +23,7 @@ for i in range(MAX_PRIOR):
 
 
 def register_event(etype, info, prior=DEFAULT_PRIOR):
+    logging.debug('register_event {} - {}'.format(etype, info))
     raised = time.time()
     with Cursor(RUNNER_DB_PATH) as cur:
         cur.execute('INSERT INTO event (prior, type, info, raised) VALUES (?,'
@@ -35,6 +37,12 @@ def get_events(etype=None):
         return cur.fetchall()
 
 
+def get_unhandled_events():
+    with Cursor(RUNNER_DB_PATH) as cur:
+        cur.execute('SELECT * FROM event WHERE handled is NULL')
+        return cur.fetchall()
+
+
 def mark_handled_events(handler, event_ids):
     with Cursor(RUNNER_DB_PATH) as cur:
         handled = time.time()
@@ -45,31 +53,33 @@ def mark_handled_events(handler, event_ids):
         return cur.con.total_changes
 
 
-def truncate_handled_events(oldsec=None):
+def remove_all():
     with Cursor(RUNNER_DB_PATH) as cur:
-        if oldsec is None:
-            cur.execute('DELETE FROM event WHERE raised is not NULL')
-        else:
-            old = time.time() - oldsec
-            cur.execute('DELETE FROM event WHERE raised < ?', (old,))
+        cur.execute('DELETE FROM event')
         return cur.con.total_changes
 
 
-def register_event_by_inotify(inotifymsg):
-    adir, events, afile = inotifymsg.split()
-    events = events.split(',')
-    ee = None
-    if 'CLOSE_WRITE' in events:
-        afile = '.'.join(afile.split('.')[1:-1])
-        path = os.path.join(adir, afile)
-        ee = FILE_WRITE
-    elif 'DELETE' in events:
-        path = os.path.join(adir, afile)
-        ee = FILE_DELETE
-    if ee is not None:
-        register_event(ee, path)
-    else:
-        logging.error('Unknown Event: {}'.format(ee))
+def remove_by_handled(agesec=None):
+    with Cursor(RUNNER_DB_PATH) as cur:
+        if agesec is None:
+            cur.execute('DELETE FROM event WHERE handled is not NULL')
+        else:
+            old = time.time() - agesec
+            cur.execute('DELETE FROM event WHERE handled < ?', (old,))
+        return cur.con.total_changes
+
+
+def remove_by_type(etype):
+    with Cursor(RUNNER_DB_PATH) as cur:
+        cur.execute('DELETE FROM event WHERE type = ?', (etype,))
+        return cur.con.total_changes
+
+
+def remove_by_raised(agesec):
+    with Cursor(RUNNER_DB_PATH) as cur:
+        old = time.time() - agesec
+        cur.execute('DELETE FROM event WHERE raised < ?', (old,))
+        return cur.con.total_changes
 
 
 def register_handler(etype, handler, prior=DEFAULT_PRIOR):
@@ -95,10 +105,36 @@ def dispatch_events(prior=DEFAULT_PRIOR):
     return 0
 
 
+def watch_files(target_dir):
+    logging.debug('watch_files')
+    import pyinotify
+
+    wm = pyinotify.WatchManager()
+    mask = pyinotify.IN_CREATE | pyinotify.IN_MOVED_TO | pyinotify.IN_DELETE
+
+    class FileEventHandler(pyinotify.ProcessEvent):
+        def process_IN_MOVED_TO(self, event):
+            register_event(FILE_MOVE_TO, event.pathname)
+
+        def process_IN_DELETE(self, event):
+            register_event(FILE_DELETE, event.pathname)
+
+    assert os.path.isdir(target_dir)
+
+    handler = FileEventHandler()
+    pyinotify.AsyncNotifier(wm, handler)
+
+    wm.add_watch(target_dir, mask, rec=True, auto_add=True)
+
+    import asyncore
+    asyncore.loop()
+
+
 # shortcut for shell command
 if __name__ == "__main__":
-    import sys
-    # read inotifywait output
-    inotify_output = sys.stdin.read()
-    logging.debug('register event by inoitywait: {}'.format(inotify_output))
-    register_event_by_inotify(inotify_output)
+    if len(sys.argv) < 2:
+        print "Usage: event.py {directory_to_watch}"
+        sys.exit(-1)
+
+    target_dir = sys.argv[1]
+    watch_files(target_dir)

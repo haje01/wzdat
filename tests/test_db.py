@@ -28,3 +28,4 @@ def test_db_create(db):
         assert is_table_exist('finder')
         assert is_table_exist('cron')
         assert is_table_exist('event')
+#

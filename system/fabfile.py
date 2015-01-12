@@ -7,6 +7,9 @@ from wzdat.make_config import make_config
 env.password = 'docker'
 prj_map = {}
 
+assert 'WZDAT_HOST' in os.environ
+wzhost = os.environ['WZDAT_HOST']
+
 
 def _get_prj_and_ports():
     r = local('docker ps -a', capture=True)
@@ -25,7 +28,7 @@ def hosts(prj=None):
     hosts = []
     for _prj, port in _get_prj_and_ports():
         if prj is None or prj == _prj:
-            host = 'root@0.0.0.0:%s' % port
+            host = 'root@{}:{}'.format(wzhost, port)
             hosts.append(host)
             prj_map[host] = _prj
     env.hosts = hosts
@@ -85,11 +88,9 @@ def build():
 
 
 def ssh(_prj):
-    assert 'WZDAT_HOST' in os.environ
     for prj, port in _get_prj_and_ports():
         if prj == _prj:
-            ip = os.environ['WZDAT_HOST']
-            local('ssh root@{ip} -p {port}'.format(ip=ip, port=port))
+            local('ssh root@{host} -p {port}'.format(host=wzhost, port=port))
             return
     abort("Can't find project")
 
@@ -121,9 +122,7 @@ def restart(prg):
 
 
 def runcron():
-    assert 'WZDAT_HOST' in os.environ
     for cfgex in _get_cfg_export():
-        wzhost = os.environ['WZDAT_HOST']
         run('WZDAT_HOST={} {} python -m wzdat.jobs run-all-cron-notebooks'.
             format(wzhost, cfgex))
 
@@ -131,11 +130,9 @@ def runcron():
 def launch(prj, dbg=False):
     assert 'WZDAT_DIR' in os.environ
     assert 'WZDAT_SOL_DIR' in os.environ
-    assert 'WZDAT_HOST' in os.environ
     wzpkg = _get_pkg()
     wzdir = os.environ['WZDAT_DIR']
     wzsol = os.environ['WZDAT_SOL_DIR']
-    wzhost = os.environ['WZDAT_HOST']
     runopt = ""
     cmd = ""
     if dbg:

@@ -58,6 +58,7 @@ RUN sed -ri 's/#UsePAM no/UsePAM no/g' /etc/ssh/sshd_config
 # at & inotifytools
 RUN apt-get -qq -y install inotify-tools
 RUN apt-get -qq -y install at
+RUN git clone https://github.com/seb-m/pyinotify.git && cd pyinotify && python setup.py install
 
 # Files
 ADD files/NanumGothic.ttf /usr/share/fonts/truetype/nanum/NanumGothic.ttf
