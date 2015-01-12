@@ -1,4 +1,5 @@
 import re
+import os
 
 import pytest
 
@@ -8,6 +9,7 @@ from ws_mysol.myprj import log as l
 
 
 cfg = make_config()
+localhost = os.environ['WZDAT_HOST']
 
 
 @pytest.yield_fixture(scope="session")
@@ -19,8 +21,8 @@ def dummy():
 
 
 def test_selector_basic():
-    assert len(l.files) == 180
-    assert set(l.kinds) == set([l.kind.auth, l.kind.community])
+    assert len(l.files) == 450
+    assert set(l.kinds) == set([l.kind.auth, l.kind.community, l.kind.game])
     assert set(l.nodes) == set([l.node.jp_node_1, l.node.jp_node_2,
                                 l.node.jp_node_3, l.node.kr_node_1,
                                 l.node.kr_node_2, l.node.kr_node_3,
@@ -53,10 +55,11 @@ def test_selector_value():
     assert f.kinds == [l.kind.auth]
     assert f.dates == [l.date.D2014_02_24]
 
-    assert f.link.data == '<a href="http://localhost:8085/file/jp/node-1/'\
-        'auth_2014-02-24.log">jp/node-1/auth_2014-02-24.log</a>'
-    zl = re.compile(r'<a href="http://localhost:\d+/tmp/(wzdat-[^"]+)">(\1)</a>')\
-        .search(f.zlink.data)
+    assert f.link.data == '<a href="http://{localhost}:8085/file/jp/node-1/'\
+        'auth_2014-02-24.log">jp/node-1/auth_2014-02-24.log</a>'.\
+        format(localhost=localhost)
+    zl = re.compile(r'<a href="http://{localhost}:\d+/tmp/(wzdat-[^"]+)">(\1)'
+                    r'</a>'.format(localhost=localhost)).search(f.zlink.data)
     assert zl is not None
 
     with open(l.files[0].abspath) as i:
@@ -91,10 +94,11 @@ def test_selector_fileselector():
     assert mf.nodes == [l.node.jp_node_1]
     assert mf.kinds == [l.kind.auth]
     assert mf.dates == [l.date.D2014_02_24, l.date.D2014_02_25]
-    assert mf.link.data == '<a href="http://localhost:8085/file/jp/node-1/'\
+    assert mf.link.data == '<a href="http://{localhost}:8085/file/jp/node-1/'\
         'auth_2014-02-24.log">jp/node-1/auth_2014-02-24.log</a><br/><a href='\
-        '"http://localhost:8085/file/jp/node-1/auth_2014-02-25.log">jp/node-1'\
-        '/auth_2014-02-25.log</a>'
-    rx = r'<a href="http://localhost:\d+/tmp/(wzdat-[^"]+\.zip)">(\1)</a>'
+        '"http://{localhost}:8085/file/jp/node-1/auth_2014-02-25.log">jp/node-1'\
+        '/auth_2014-02-25.log</a>'.format(localhost=localhost)
+    rx = r'<a href="http://{localhost}:\d+/tmp/(wzdat-[^"]+\.zip)">'\
+         r'(\1)</a>'.format(localhost=localhost)
     zl = re.compile(rx).search(mf.zlink.data)
     assert zl is not None

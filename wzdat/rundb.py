@@ -2,6 +2,7 @@
     Database module for IPython Notebook Runner
 """
 
+import os
 import sys
 import time
 import logging
@@ -9,7 +10,9 @@ import logging
 import sqlite3
 
 from wzdat.make_config import make_config
+from wzdat.util import ChangeDir
 
+assert 'WZDAT_DIR' in os.environ
 cfg = make_config()
 RUNNER_DB_PATH = cfg['runner_db_path']
 
@@ -71,6 +74,11 @@ def create_db():
         cur.execute('CREATE TABLE IF NOT EXISTS cron '
                     '(path TEXT PRIMARY KEY, sched TEXT);')
 
+        # event
+        cur.execute('CREATE TABLE IF NOT EXISTS event '
+                    '(id INTEGER PRIMARY KEY, prior INTEGER, type TEXT, info '
+                    'TEXT, raised REAL, handler TEXT, handled REAL);')
+
 
 def destroy_db():
     with Cursor(RUNNER_DB_PATH) as cur:
@@ -78,6 +86,7 @@ def destroy_db():
         cur.execute('DROP TABLE IF EXISTS cache;')
         cur.execute('DROP TABLE IF EXISTS finder;')
         cur.execute('DROP TABLE IF EXISTS cron;')
+        cur.execute('DROP TABLE IF EXISTS event;')
 
 
 def start_run(path, total):
@@ -205,3 +214,53 @@ if __name__ == "__main__":
             destroy_db()
         else:
             print "Unregistered command: " + cmd
+
+
+def cache_files():
+    logging.debug('cache_files')
+    with ChangeDir(cfg['sol_dir']):
+        # prevent using cache
+        if 'file_types' not in cfg:
+            logging.warning('no file_types in cfg. exit')
+            return
+        old_use_cache = cfg['use_cache']
+        prj = cfg['prj']
+        print "Caching files for: %s" % prj
+        datadir = cfg['data_dir']
+        pkg = cfg['sol_pkg']
+        ftypes = cfg['file_types']
+        for ftype in ftypes:
+            cmd = ['from %s.%s.%s import find_files_and_save; '
+                   'find_files_and_save("%s")' % (pkg, prj, ftype, datadir)]
+            cmd = ' '.join(cmd)
+            exec(cmd)
+        update_cache_info()
+        cfg['use_cache'] = old_use_cache
+
+
+def cache_finder():
+    import imp
+    # Make cache for file finder.
+    logging.debug('cache_finder')
+    with ChangeDir(cfg['sol_dir']):
+        if 'file_types' not in cfg:
+            logging.warning('no file_types in cfg. exit')
+            return
+        ret = []
+        if ret is None or len(ret) == 0:
+            pkg = cfg['sol_pkg']
+            prj = cfg['prj']
+            ftypes = cfg["file_types"]
+            sol_dir = cfg['sol_dir']
+            os.chdir(sol_dir)
+            ret = []
+            for ft in ftypes:
+                mpath = '%s/%s/%s.py' % (pkg, prj, ft)
+                mod = imp.load_source('%s' % ft,  mpath)
+                dates = [str(date) for date in mod.dates[:-15:-1]]
+                kinds = [str(kind) for kind in mod.kinds.group()]
+                nodes = [str(node) for node in mod.nodes]
+                info = ft, dates, kinds, nodes
+                ret.append(info)
+            update_finder_info(ret)
+        return ret
