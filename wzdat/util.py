@@ -405,9 +405,17 @@ def _get_dir(basedir, subdir, make):
     return vardir
 
 
-def get_var_dir(make=True):
+def get_data_dir(make=True):
     data_dir = cfg['data_dir']
-    return _get_dir(data_dir, '_var_', make)
+    if not os.path.isdir(data_dir) and make:
+        if os.path.isfile(data_dir):
+            os.remove(data_dir)
+        os.mkdir(data_dir)
+    return data_dir
+
+
+def get_var_dir(make=True):
+    return _get_dir(get_data_dir(), '_var_', make)
 
 
 def get_tmp_dir(make=True):
