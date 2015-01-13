@@ -104,3 +104,16 @@ def test_selector_fileselector():
          r'(\1)</a>'.format(localhost=localhost)
     zl = re.compile(rx).search(mf.zlink.data)
     assert zl is not None
+
+
+def test_selector_hdf():
+    from wzdat.util import HDF
+    mf = l.files[l.kind.auth][:2]
+    df = mf.to_frame()
+    with HDF('test') as hdf:
+        hdf.store['test_df'] = df
+
+    with HDF('test') as hdf:
+        sdf = hdf.store['test_df']
+
+    assert sdf.equals(df)

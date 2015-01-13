@@ -24,3 +24,4 @@ docs/_build
 dummydata/
 dump.rdb
 tests/tmp/
+*.h5
