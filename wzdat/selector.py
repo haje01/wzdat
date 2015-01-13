@@ -6,7 +6,6 @@ import types
 import fnmatch
 import codecs
 import zipfile
-import dateutil
 import time
 import shutil
 from collections import defaultdict
@@ -400,6 +399,7 @@ def _find_in_temp(ctx, tempo, word, options, include_header):
 
 
 def _to_frame_convert_line(tfp, fdate, line, hasna, smap):
+    import dateutil
     try:
         sdate = None
         if tfp.get_line_date is not None:
