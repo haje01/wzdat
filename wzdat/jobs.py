@@ -7,9 +7,19 @@ from wzdat.ipynb_runner import update_notebook_by_run
 from wzdat.rundb import get_cron_notebooks, cache_files, cache_finder,\
     save_cron
 from wzdat.util import gen_dummydata as _gen_dummydata
-
+from wzdat import event as evt
 
 cfg = make_config()
+
+
+def check_cache():
+    # TODO: remove when file-wise caching done
+    es = evt.get_unhandled_events()
+    logging.debug(str(es))
+    if len(es) > 0:
+        cache_all()
+    ids = [e[0] for e in es]
+    evt.mark_handled_events('check_cache', ids)
 
 
 def cache_all():
@@ -61,4 +71,4 @@ def register_event(**kwargs):
 if __name__ == "__main__":
     argh.dispatch_commands([cache_all, register_cron, run_notebook,
                             gen_dummydata, run_all_cron_notebooks,
-                            register_event])
+                            register_event, check_cache])

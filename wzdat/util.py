@@ -520,11 +520,13 @@ def _gen_dummy_lines(_dir, locale, node, kind, dates, procno):
 
 class ChangeDir(object):
     def __init__(self, *dirs):
-        self.cwd = os.getcwd
+        self.cwd = os.getcwd()
         self.path = os.path.join(*dirs)
 
     def __enter__(self):
         logging.info('change dir to %s', self.path)
+        assert os.path.isdir(self.path)
+        os.chdir(self.path)
 
     def __exit__(self, atype, value, tb):
         os.chdir(self.cwd)

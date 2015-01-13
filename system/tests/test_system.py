@@ -62,13 +62,38 @@ def test_system_file_event(docker):
     path = os.path.expandvars('$WZDAT_DIR/tests')
     assert os.path.isdir(os.path.join(path, 'dummydata'))
 
+    # sync all
     env['RSYNC_PASSWORD'] = 'test'
-    for l in ('kr', 'us', 'jp'):
-        cmd = ['rsync', '-azv', 'dummydata/{}'.format(l),
-               '--port={}'.format(rport),
-               'rsync-user@{}::rsync-data/test'.format(host)]
-        ret = check_output(cmd, env=env, cwd=path)
-        assert 'sent ' in ret
 
-    time.sleep(2)  # wait for all event registered
+    def sync(locals, delete=False):
+        _cmd = ['rsync']
+        if delete:
+            _cmd.append('--delete')
+        for l in locals:
+            cmd = _cmd + ['-azv', 'dummydata/{}'.format(l),
+                          '--port={}'.format(rport),
+                          'rsync-user@{}::rsync-data/test'.format(host)]
+            ret = check_output(cmd, env=env, cwd=path)
+            assert 'sent ' in ret
+            time.sleep(2)  # wait for all events registered
+
+    sync(('kr', 'us', 'jp'))
     assert 450 == len(evt.get_all())
+
+    # modify & sync
+    evt.remove_all()
+    fpath = os.path.join(path, 'dummydata/kr/node-1/game_2014-02-24 01.log')
+    with open(fpath, 'at') as f:
+        f.write('---')
+    sync(['kr'])
+    rv = evt.get_all()[0]
+    assert rv[2] == evt.FILE_MOVE_TO
+    assert 'game_2014-02-24 01.log' in rv[3]
+
+    # delete & sync
+    evt.remove_all()
+    os.remove(fpath)
+    sync(['kr'], True)
+    rv = evt.get_all()[0]
+    assert rv[2] == evt.FILE_DELETE
+    assert 'game_2014-02-24 01.log' in rv[3]
