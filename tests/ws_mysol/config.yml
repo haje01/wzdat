@@ -28,9 +28,6 @@ data_dir: $WZDAT_DIR/tests/dummydata
 sol_dir: $WZDAT_DIR/tests
 sol_pkg: ws_mysol
 prj: myprj
-hdf_dir: $WZDAT_DIR/tests/hdf
-tmp_dir: $WZDAT_DIR/tests/tmp
-cache_dir: $WZDAT_DIR/tests/cache
 runner_db_path: $WZDAT_DIR/tests/runner.db
 notebook_base_dir: $WZDAT_DIR/tests/__notes__
 

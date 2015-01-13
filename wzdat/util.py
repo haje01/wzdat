@@ -28,14 +28,14 @@ cfg = make_config()
 def unique_tmp_path(prefix, ext='.txt'):
     """Return temp file path with given extension."""
     uuid = prefix + str(_uuid.uuid4())
-    tmp_dir = cfg['tmp_dir']
+    tmp_dir = get_tmp_dir()
     return os.path.join(tmp_dir, uuid) + ext, uuid
 
 
 def named_tmp_path(userid, slotname, test=False):
     name = "{prefix}{user}-{slot}".format(prefix=NAMED_TMP_PREFIX, uid=userid,
                                           slot=slotname)
-    tmp_dir = cfg['tmp_dir']
+    tmp_dir = get_tmp_dir()
     return os.path.join(tmp_dir, name)
 
 
@@ -156,7 +156,7 @@ def nprint(*args):
 
 
 def hdf_path(name):
-    hdf_dir = cfg['hdf_dir']
+    hdf_dir = get_hdf_dir()
     path = os.path.join(hdf_dir, HDF_FILE_PREFIX) + name
     if path.split('.')[-1] != HDF_FILE_EXT:
         path += '.%s' % HDF_FILE_EXT
@@ -392,6 +392,40 @@ def get_notebook_dir():
     return os.path.join(base, prj)
 
 
+def _check_mkdir(adir, make):
+    if not os.path.isdir(adir) and make:
+        if os.path.isfile(adir):
+            os.remove(adir)
+        os.mkdir(adir)
+
+
+def _get_dir(basedir, subdir, make):
+    vardir = os.path.join(basedir, subdir)
+    _check_mkdir(vardir, make)
+    return vardir
+
+
+def get_var_dir(make=True):
+    data_dir = cfg['data_dir']
+    return _get_dir(data_dir, '_var_', make)
+
+
+def get_tmp_dir(make=True):
+    return _get_dir(get_var_dir(), 'tmp', make)
+
+
+def get_hdf_dir(make=True):
+    return _get_dir(get_var_dir(), 'hdf', make)
+
+
+def get_conv_dir(make=True):
+    return _get_dir(get_var_dir(), 'conv', make)
+
+
+def get_cache_dir(make=True):
+    return _get_dir(get_var_dir(), 'cache', make)
+
+
 def cap_call(cmd, _test=False):
     out = TemporaryFile()
     err = TemporaryFile()
@@ -420,7 +454,7 @@ def cap_call(cmd, _test=False):
 
 def get_convfile_path(path):
     relpath = os.path.relpath(path, cfg['data_dir'])
-    conv_dir = cfg['conv_dir']
+    conv_dir = get_conv_dir()
     return os.path.join(conv_dir, relpath)
 
 
