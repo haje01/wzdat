@@ -14,11 +14,14 @@ localhost = os.environ['WZDAT_HOST']
 def log():
     from wzdat.util import gen_dummydata
     ddir = cfg['data_dir']
+    # remove previous dummy data
+    import shutil
+    shutil.rmtree(ddir)
+
+    # generate new dummy data
     gen_dummydata(ddir)
     from ws_mysol.myprj import log
     yield log
-    import shutil
-    shutil.rmtree(ddir)
 
 
 def test_selector_basic(log):
