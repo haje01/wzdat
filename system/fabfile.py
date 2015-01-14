@@ -2,8 +2,6 @@ import os
 
 from fabric.api import local, run, env, abort
 
-from wzdat.make_config import make_config
-
 env.password = 'docker'
 prj_map = {}
 
@@ -140,8 +138,10 @@ def launch(prj, dbg=False):
         cmd = "bash"
     else:
         runopt = "-d"
+    import yaml
     cfgpath = os.path.join(wzsol, wzpkg, prj, 'config.yml')
-    cfg = make_config(cfgpath)
+    cfg = yaml.load(open(cfgpath, 'r'))
+    iport = cfg['host_ipython_port']
     iport = cfg['host_ipython_port']
     dport = cfg['host_dashboard_port']
     if 'data_dir' in cfg:
