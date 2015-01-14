@@ -5,6 +5,7 @@ from fabric.api import local, run, env, abort
 env.password = 'docker'
 prj_map = {}
 
+
 assert 'WZDAT_HOST' in os.environ
 wzhost = os.environ['WZDAT_HOST']
 
@@ -85,10 +86,11 @@ def build():
     _build_dev()
 
 
-def ssh(_prj):
+def ssh(_prj, use_host=True):
     for prj, port in _get_prj_and_ports():
         if prj == _prj:
-            local('ssh root@{host} -p {port}'.format(host=wzhost, port=port))
+            host = wzhost if use_host is True else '0.0.0.0'
+            local('ssh root@{host} -p {port}'.format(host=host, port=port))
             return
     abort("Can't find project")
 
@@ -133,7 +135,7 @@ def launch(prj, dbg=False):
     wzsol = os.environ['WZDAT_SOL_DIR']
     runopt = ""
     cmd = ""
-    if dbg:
+    if dbg is not False:
         runopt = "-ti"
         cmd = "bash"
     else:
@@ -145,13 +147,14 @@ def launch(prj, dbg=False):
     iport = cfg['host_ipython_port']
     dport = cfg['host_dashboard_port']
     if 'data_dir' in cfg:
-        datavol = '{}:/logdata'.format(cfg['data_dir'])
+        datavol = '{}'.format(cfg['data_dir'])
     else:
+        # for service systems, project logdata dir is  /logdata/{prj}
         datavol = '/logdata/{}'.format(prj)
     cmd = 'docker run {runopt} -p 22 -p {iport}:8090 -p {dport}:80\
             -p 873 --name "wzdat_{wzprj}"\
             -v {wzdir}:/wzdat -v {wzsol}:/solution\
-            -v {datavol}\
+            -v {datavol}:/logdata\
             -v $HOME/.vimrc:/root/.vimrc\
             -v $HOME/.vim/:/root/.vim\
             -v $HOME/.gitconfig:/root/.gitconfig\
