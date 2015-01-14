@@ -91,15 +91,19 @@ def destroy_db():
 
 def start_run(path, total):
     with Cursor(RUNNER_DB_PATH) as cur:
-        cur.execute('SELECT * FROM info WHERE path=?', (path,))
-        start = time.time()
-        if cur.fetchone() is None:
-            cur.execute('INSERT INTO info(path, start, total) VALUES(?, ?, ?)',
-                        (path, start, total))
-        else:
-            cur.execute('UPDATE info SET error=NULL, start=?, elapsed=NULL, '
-                        'cur=0, total=? WHERE path=?', (start, total, path))
-            cur.log_changes()
+        _start_run(cur, path, total)
+
+
+def _start_run(cur, path, total):
+    cur.execute('SELECT * FROM info WHERE path=?', (path,))
+    start = time.time()
+    if cur.fetchone() is None:
+        cur.execute('INSERT INTO info(path, start, total) VALUES(?, ?, ?)',
+                    (path, start, total))
+    else:
+        cur.execute('UPDATE info SET error=NULL, start=?, elapsed=NULL, '
+                    'cur=0, total=? WHERE path=?', (start, total, path))
+        cur.log_changes()
 
 
 def finish_run(path, err):
@@ -117,10 +121,11 @@ def finish_run(path, err):
 
 def update_run_info(path, curcell):
     with Cursor(RUNNER_DB_PATH) as cur:
-        cur.execute('SELECT start FROM info WHERE path=?', (path,))
-        rv = cur.fetchone()
-        if rv is not None:
-            cur.execute('UPDATE info SET cur=? WHERE path=?', (curcell, path))
+        _update_run_info(cur, path, curcell)
+
+
+def _update_run_info(cur, path, curcell):
+    cur.execute('UPDATE info SET cur=? WHERE path=?', (curcell, path))
 
 
 def get_run_info(path):
@@ -133,10 +138,14 @@ def get_run_info(path):
 def update_cache_info():
     logging.debug('update_cache_info')
     with Cursor(RUNNER_DB_PATH) as cur:
-        cur.execute('INSERT INTO cache (time) VALUES (?)', (time.time(),))
-        # trim old
-        cur.execute('DELETE FROM cache WHERE ID NOT IN (SELECT id FROM Cache '
-                    'ORDER BY id DESC limit 10)')
+        _update_cache_info(cur)
+
+
+def _update_cache_info(cur):
+    cur.execute('INSERT INTO cache (time) VALUES (?)', (time.time(),))
+    # trim old
+    cur.execute('DELETE FROM cache WHERE ID NOT IN (SELECT id FROM Cache '
+                'ORDER BY id DESC limit 10)')
 
 
 def get_cache_info():
