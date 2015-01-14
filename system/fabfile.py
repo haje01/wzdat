@@ -145,13 +145,13 @@ def launch(prj, dbg=False):
     iport = cfg['host_ipython_port']
     dport = cfg['host_dashboard_port']
     if 'data_dir' in cfg:
-        datavol = '-v {}:/logdata'.format(cfg['data_dir'])
+        datavol = '{}:/logdata'.format(cfg['data_dir'])
     else:
         datavol = '/logdata/{}'.format(prj)
     cmd = 'docker run {runopt} -p 22 -p {iport}:8090 -p {dport}:80\
             -p 873 --name "wzdat_{wzprj}"\
             -v {wzdir}:/wzdat -v {wzsol}:/solution\
-            {datavol}\
+            -v {datavol}\
             -v $HOME/.vimrc:/root/.vimrc\
             -v $HOME/.vim/:/root/.vim\
             -v $HOME/.gitconfig:/root/.gitconfig\
