@@ -43,20 +43,17 @@ def get_cols(path):
 
 def get_line_date(line):
     """Return date part of a line which conform python dateutil."""
-    import pdb; pdb.set_trace()  # XXX BREAKPOINT
-    return line[:20]
+    return line[:16]
 
 
-def get_line_type(line):
-    """Return type part of a line."""
-    import pdb; pdb.set_trace()  # XXX BREAKPOINT
-    return line[21:24]
+def get_line_kind(line):
+    """Return type kind of a line."""
+    return line.split()[2][1:-1]
 
 
 def get_line_msg(line):
     """Return message part of a line."""
-    import pdb; pdb.set_trace()  # XXX BREAKPOINT
-    return line[28:].replace('\r\r\n', '')
+    return line.split()[-1]
 
 
 def get_date(dfield, fileo):
@@ -65,7 +62,7 @@ def get_date(dfield, fileo):
     elms = filename.split('_')
     part = elms[1].split('.')[0]
     _date = part.split('-')
-    y, m, d = int(_date[0]), int(_date[1]), int(_date[2])
+    y, m, d = int(_date[0]), int(_date[1]), int(_date[2].split()[0])
     return DateValue._instance(dfield, y, m, d)
 
 

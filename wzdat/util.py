@@ -28,14 +28,14 @@ cfg = make_config()
 def unique_tmp_path(prefix, ext='.txt'):
     """Return temp file path with given extension."""
     uuid = prefix + str(_uuid.uuid4())
-    tmp_dir = cfg['tmp_dir']
+    tmp_dir = get_tmp_dir()
     return os.path.join(tmp_dir, uuid) + ext, uuid
 
 
 def named_tmp_path(userid, slotname, test=False):
     name = "{prefix}{user}-{slot}".format(prefix=NAMED_TMP_PREFIX, uid=userid,
                                           slot=slotname)
-    tmp_dir = cfg['tmp_dir']
+    tmp_dir = get_tmp_dir()
     return os.path.join(tmp_dir, name)
 
 
@@ -156,7 +156,7 @@ def nprint(*args):
 
 
 def hdf_path(name):
-    hdf_dir = cfg['hdf_dir']
+    hdf_dir = get_hdf_dir()
     path = os.path.join(hdf_dir, HDF_FILE_PREFIX) + name
     if path.split('.')[-1] != HDF_FILE_EXT:
         path += '.%s' % HDF_FILE_EXT
@@ -392,6 +392,48 @@ def get_notebook_dir():
     return os.path.join(base, prj)
 
 
+def _check_mkdir(adir, make):
+    if not os.path.isdir(adir) and make:
+        if os.path.isfile(adir):
+            os.remove(adir)
+        os.mkdir(adir)
+
+
+def _get_dir(basedir, subdir, make):
+    vardir = os.path.join(basedir, subdir)
+    _check_mkdir(vardir, make)
+    return vardir
+
+
+def get_data_dir(make=True):
+    data_dir = cfg['data_dir']
+    if not os.path.isdir(data_dir) and make:
+        if os.path.isfile(data_dir):
+            os.remove(data_dir)
+        os.mkdir(data_dir)
+    return data_dir
+
+
+def get_var_dir(make=True):
+    return _get_dir(get_data_dir(), '_var_', make)
+
+
+def get_tmp_dir(make=True):
+    return _get_dir(get_var_dir(), 'tmp', make)
+
+
+def get_hdf_dir(make=True):
+    return _get_dir(get_var_dir(), 'hdf', make)
+
+
+def get_conv_dir(make=True):
+    return _get_dir(get_var_dir(), 'conv', make)
+
+
+def get_cache_dir(make=True):
+    return _get_dir(get_var_dir(), 'cache', make)
+
+
 def cap_call(cmd, _test=False):
     out = TemporaryFile()
     err = TemporaryFile()
@@ -420,7 +462,7 @@ def cap_call(cmd, _test=False):
 
 def get_convfile_path(path):
     relpath = os.path.relpath(path, cfg['data_dir'])
-    conv_dir = cfg['conv_dir']
+    conv_dir = get_conv_dir()
     return os.path.join(conv_dir, relpath)
 
 
@@ -520,11 +562,13 @@ def _gen_dummy_lines(_dir, locale, node, kind, dates, procno):
 
 class ChangeDir(object):
     def __init__(self, *dirs):
-        self.cwd = os.getcwd
+        self.cwd = os.getcwd()
         self.path = os.path.join(*dirs)
 
     def __enter__(self):
         logging.info('change dir to %s', self.path)
+        assert os.path.isdir(self.path)
+        os.chdir(self.path)
 
     def __exit__(self, atype, value, tb):
         os.chdir(self.cwd)

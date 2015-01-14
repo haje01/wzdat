@@ -56,7 +56,7 @@ def cfg_path():
 def make_config(cfgpath=None, usecache=True):
     """Make config object for project and return it."""
     global _cfg, _cfgpath
-    logging.debug('make_config ' + str(cfgpath))
+    # logging.debug('make_config ' + str(cfgpath))
 
     if _cfg is not None and usecache:
         return _cfg

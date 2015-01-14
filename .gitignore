@@ -13,7 +13,8 @@ sample-logs/
 .DS_Store
 .coverage
 .python-version
-wzdat/tests/cache/
+tests/cache/
+tests/tmp/
 document/
 htmlcov/
 build/
@@ -22,3 +23,5 @@ dist/
 docs/_build
 dummydata/
 dump.rdb
+tests/tmp/
+*.h5

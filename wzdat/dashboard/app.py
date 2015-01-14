@@ -268,11 +268,15 @@ def _select_files(ftype, data):
 
     # convert string to object
     start_dt = end_dt = None
+    grab_end = False
     for date in m.dates:
+        if grab_end:
+            end_dt = date
+            break
         if str(date) == _start_dt:
             start_dt = date
         if str(date) == _end_dt:
-            end_dt = date
+            grab_end = True
     nodes = []
     for node in m.nodes:
         if str(node) in _nodes:

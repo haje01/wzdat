@@ -1,0 +1,17 @@
+FROM haje01/wzdat:latest
+MAINTAINER JeongJu Kim "haje01@gmail.com"
+
+RUN apt-get -qq -y install vim
+
+# rsyncd (for system test)
+RUN apt-get -qq -y install rsync
+RUN sed --in-place 's/RSYNC_ENABLE=false/RSYNC_ENABLE=inetd/' /etc/default/rsync 
+ADD files/dev/rsync /etc/xinetd.d/rsync
+RUN apt-get -qq -y install xinetd
+ADD files/dev/rsyncd.conf /etc/rsyncd.conf
+ADD files/dev/rsyncd.secrets /etc/rsyncd.secrets
+RUN chmod 600 /etc/rsyncd.secrets
+RUN mkdir -p /logdata/test
+
+EXPOSE 22 873 8090 8095
+CMD ["/root/start.sh"]

@@ -11,21 +11,27 @@ log:
             formatter: simpleFormatter
             level: DEBUG
             stream: ext://sys.stdout
+        file:
+            class : logging.handlers.RotatingFileHandler
+            formatter: simpleFormatter
+            level: DEBUG
+            filename: /tmp/wzdat
+            maxBytes: 10485760
+            backupCount: 3
     root:
         level: DEBUG
-        handlers: [console]
+        handlers: [console, file]
 
-# for WzDat
-no_cache: true
+# for WzDat Test
+use_cache: false
 data_dir: $WZDAT_DIR/tests/dummydata
-sol_dir: $WZDAT_DIR/tests/ws_mysol
+sol_dir: $WZDAT_DIR/tests
 sol_pkg: ws_mysol
 prj: myprj
-tmp_dir: $WZDAT_DIR/tests/tmp
-cache_dir: $WZDAT_DIR/tests/cache
 runner_db_path: $WZDAT_DIR/tests/runner.db
+notebook_base_dir: $WZDAT_DIR/tests/__notes__
 
-# Common config for TEST(ws_mysol)
+# Common config for Test(ws_mysol)
 tmp_valid_hour: 24
 named_tmp_valid_hour: 720  # 24 * 30
 server_timezone: UTC
