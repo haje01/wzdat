@@ -89,7 +89,7 @@ def build():
 def ssh(_prj):
     for prj, port in _get_prj_and_ports():
         if prj == _prj:
-            host = os.environ['WZDAT_B2DHOST'] if 'WZDAT_B2D_HOST' in\
+            host = os.environ['WZDAT_B2DHOST'] if 'WZDAT_B2DHOST' in\
                 os.environ else '0.0.0.0'
             local('ssh root@{host} -p {port}'.format(host=host, port=port))
             return
