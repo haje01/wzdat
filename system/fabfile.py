@@ -86,10 +86,11 @@ def build():
     _build_dev()
 
 
-def ssh(_prj, use_host=True):
+def ssh(_prj):
     for prj, port in _get_prj_and_ports():
         if prj == _prj:
-            host = wzhost if use_host is True else '0.0.0.0'
+            host = os.environ['WZDAT_B2DHOST'] if 'WZDAT_B2D_HOST' in\
+                os.environ else wzhost
             local('ssh root@{host} -p {port}'.format(host=host, port=port))
             return
     abort("Can't find project")
@@ -127,6 +128,19 @@ def runcron():
             format(wzhost, cfgex))
 
 
+class _ChangeDir(object):
+    def __init__(self, *dirs):
+        self.cwd = os.getcwd()
+        self.path = os.path.join(*dirs)
+
+    def __enter__(self):
+        assert os.path.isdir(self.path)
+        os.chdir(self.path)
+
+    def __exit__(self, atype, value, tb):
+        os.chdir(self.cwd)
+
+
 def _make_config(cfgpath):
     """Make config object for project and return it."""
     import yaml
@@ -141,18 +155,6 @@ def _make_config(cfgpath):
             dic[k] = os.path.expandvars(v)
         return dic
 
-    class ChangeDir(object):
-        def __init__(self, *dirs):
-            self.cwd = os.getcwd()
-            self.path = os.path.join(*dirs)
-
-        def __enter__(self):
-            assert os.path.isdir(self.path)
-            os.chdir(self.path)
-
-        def __exit__(self, atype, value, tb):
-            os.chdir(self.cwd)
-
     _cfg = {}
     if cfgpath is None:
         assert 'WZDAT_CFG' in os.environ
@@ -161,7 +163,7 @@ def _make_config(cfgpath):
     adir = os.path.dirname(cfgpath)
     afile = os.path.basename(cfgpath)
 
-    with ChangeDir(adir):
+    with _ChangeDir(adir):
         loaded = yaml.load(open(afile, 'r'))
         loaded = _expand_var(loaded)
         if 'base_cfg' in loaded:
