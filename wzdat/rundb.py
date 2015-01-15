@@ -140,13 +140,13 @@ def update_cache_info():
     with Cursor(RUNNER_DB_PATH) as cur:
         cur.execute('INSERT INTO cache (time) VALUES (?)', (time.time(),))
         # trim old
-        cur.execute('DELETE FROM cache WHERE ID NOT IN (SELECT id FROM Cache '
+        cur.execute('DELETE FROM cache WHERE ID NOT IN (SELECT id FROM cache '
                     'ORDER BY id DESC limit 10)')
 
 
 def get_cache_info():
     with Cursor(RUNNER_DB_PATH) as cur:
-        cur.execute('SELECT time from cache ORDER BY id DESC LIMIT 1')
+        cur.execute('SELECT time FROM cache ORDER BY id DESC LIMIT 1')
         return cur.fetchone()
 
 
