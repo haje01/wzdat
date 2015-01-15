@@ -3,7 +3,7 @@ import time
 import pytest
 import sqlite3
 
-from wzdat.rundb import create_db, destroy_db, Cursor, _update_run_info,\
+from wzdat.rundb import reset_db, Cursor, _update_run_info,\
     _update_cache_info
 from wzdat.make_config import make_config
 
@@ -15,8 +15,7 @@ TEST_DB_LOCK = False
 
 @pytest.yield_fixture(scope='module')
 def fxdb():
-    destroy_db()
-    create_db()
+    reset_db()
     yield
 
 

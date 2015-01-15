@@ -8,7 +8,7 @@ from subprocess import check_output
 import pytest
 
 from wzdat import event as evt
-from wzdat.rundb import create_db, remove_db_file
+from wzdat.rundb import reset_db
 from wzdat.make_config import make_config
 
 WEB_RESTART = False
@@ -18,25 +18,23 @@ dashboard_url = 'http://{}:8085'.format(host)
 env = os.environ.copy()
 
 
-@pytest.yield_fixture(scope='module')
-def fxdb():
-    remove_db_file()
-    create_db()
-    yield
-
-
-@pytest.yield_fixture(scope="module")
-def fxlog():
-    from wzdat.util import gen_dummydata
+def _reset_data():
+    from wzdat.util import gen_dummydata, get_var_dir
     cfg = make_config()
     ddir = cfg['data_dir']
+
     # remove previous dummy data
-    import shutil
-    shutil.rmtree(ddir)
+    if os.path.isdir(ddir):
+        import shutil
+        shutil.rmtree(ddir)
 
     # generate new dummy data
     gen_dummydata(ddir)
-    yield
+    # make _var_ dir
+    get_var_dir()
+
+    # reset db
+    reset_db()
 
 
 @pytest.yield_fixture(scope='session')
@@ -45,10 +43,6 @@ def fxdocker():
     path = os.path.expandvars('$WZDAT_DIR/tests/dummydata')
     if os.path.isdir(path):
         shutil.rmtree(path)
-
-    # gen dummy data
-    from wzdat.util import gen_dummydata
-    gen_dummydata(path)
 
     cid = check_output(['docker', 'ps', '-q', 'wzdat_myprj']).strip()
     path = os.path.expandvars('$WZDAT_DIR/system')
@@ -63,11 +57,11 @@ def fxdocker():
             except urllib2.URLError:
                 time.sleep(2)
     else:
+        _reset_data()
         # restart uWSGI
         if WEB_RESTART:
             ret = check_output(['fab', 'hosts:myprj', 'restart:uwsgi'],
                                cwd=path)
-
     yield
 
 
@@ -77,7 +71,7 @@ def test_system_dashboard(fxdocker):
     assert 'WzDat MYPRJ Dashboard' in r
 
 
-def test_system_file_event(fxdocker, fxlog, fxdb):
+def test_system_file_event(fxdocker):
     evt.remove_all()
 
     ret = check_output(['docker', 'ps'])
@@ -122,6 +116,6 @@ def test_system_file_event(fxdocker, fxlog, fxdb):
     assert 'game_2014-02-24 01.log' in rv[3]
 
 
-def test_system_download():
+def test_system_download(fxdocker):
     # TODO: implement temporary file download test here
     pass

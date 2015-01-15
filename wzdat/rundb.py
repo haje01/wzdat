@@ -57,6 +57,12 @@ class Cursor(object):
         logging.debug("changed rows {}".format(self.con.total_changes))
 
 
+def reset_db():
+    remove_db_file()
+    open(RUNNER_DB_PATH, 'a').close()  # touch
+    create_db()
+
+
 def create_db():
     with Cursor(RUNNER_DB_PATH) as cur:
         # view notebook info
