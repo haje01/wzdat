@@ -35,14 +35,14 @@ def test_db_create(fxdb):
         assert is_table_exist('event')
 
 
-@pytest.mark.skipif(not TEST_DB_LOCK)
+@pytest.mark.skipif(not TEST_DB_LOCK, reason="No DBLock Test")
 def test_db_start_run(initdb):
     with Cursor(RUNNER_DB_PATH) as cur:
         for i in range(5000000):
             _update_cache_info(cur)
 
 
-@pytest.mark.skipif(not TEST_DB_LOCK)
+@pytest.mark.skipif(not TEST_DB_LOCK, reason="No DBLock Test")
 def test_db_update_run():
     with Cursor(RUNNER_DB_PATH) as cur:
         for i in range(5000000):
