@@ -127,7 +127,7 @@ def runcron():
             format(wzhost, cfgex))
 
 
-def _make_config(cfgpath=None, usecache=True):
+def _make_config(cfgpath):
     """Make config object for project and return it."""
     import yaml
 
@@ -166,10 +166,11 @@ def _make_config(cfgpath=None, usecache=True):
         loaded = _expand_var(loaded)
         if 'base_cfg' in loaded:
             bcfgpath = loaded['base_cfg']
-            bcfg = _make_config(bcfgpath, False)
-            del loaded['base_cfg']
-            bcfg.update(loaded)
-            loaded = bcfg
+            if os.path.isfile(bcfgpath):
+                bcfg = _make_config(bcfgpath)
+                del loaded['base_cfg']
+                bcfg.update(loaded)
+                loaded = bcfg
     _cfg.update(loaded)
     return _cfg
 
@@ -187,7 +188,8 @@ def launch(prj, dbg=False):
         cmd = "bash"
     else:
         runopt = "-d"
-    cfg = _make_config()
+    cfg_path = os.path.join(wzsol, wzpkg, prj, 'config.yml')
+    cfg = _make_config(cfg_path)
     iport = cfg['host_ipython_port']
     iport = cfg['host_ipython_port']
     dport = cfg['host_dashboard_port']
