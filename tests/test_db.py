@@ -9,10 +9,10 @@ RUNNER_DB_PATH = cfg['runner_db_path']
 
 
 @pytest.yield_fixture(scope='module')
-def db():
+def fxdb():
+    destroy_db()
     create_db()
     yield
-    destroy_db()
 
 
 def is_table_exist(tbname):
@@ -22,7 +22,7 @@ def is_table_exist(tbname):
         return rv[0] == 1
 
 
-def test_db_create(db):
+def test_db_create(fxdb):
         assert is_table_exist('info')
         assert is_table_exist('cache')
         assert is_table_exist('finder')

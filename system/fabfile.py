@@ -127,6 +127,53 @@ def runcron():
             format(wzhost, cfgex))
 
 
+def _make_config(cfgpath=None, usecache=True):
+    """Make config object for project and return it."""
+    import yaml
+
+    def _expand_var(dic):
+        assert type(dic) == dict
+        # expand vars
+        for k, v in dic.iteritems():
+            typ = type(v)
+            if typ != str and typ != unicode:
+                continue
+            dic[k] = os.path.expandvars(v)
+        return dic
+
+    class ChangeDir(object):
+        def __init__(self, *dirs):
+            self.cwd = os.getcwd()
+            self.path = os.path.join(*dirs)
+
+        def __enter__(self):
+            assert os.path.isdir(self.path)
+            os.chdir(self.path)
+
+        def __exit__(self, atype, value, tb):
+            os.chdir(self.cwd)
+
+    _cfg = {}
+    if cfgpath is None:
+        assert 'WZDAT_CFG' in os.environ
+        cfgpath = os.environ['WZDAT_CFG']
+
+    adir = os.path.dirname(cfgpath)
+    afile = os.path.basename(cfgpath)
+
+    with ChangeDir(adir):
+        loaded = yaml.load(open(afile, 'r'))
+        loaded = _expand_var(loaded)
+        if 'base_cfg' in loaded:
+            bcfgpath = loaded['base_cfg']
+            bcfg = _make_config(bcfgpath, False)
+            del loaded['base_cfg']
+            bcfg.update(loaded)
+            loaded = bcfg
+    _cfg.update(loaded)
+    return _cfg
+
+
 def launch(prj, dbg=False):
     assert 'WZDAT_DIR' in os.environ
     assert 'WZDAT_SOL_DIR' in os.environ
@@ -140,9 +187,7 @@ def launch(prj, dbg=False):
         cmd = "bash"
     else:
         runopt = "-d"
-    import yaml
-    cfgpath = os.path.join(wzsol, wzpkg, prj, 'config.yml')
-    cfg = yaml.load(open(cfgpath, 'r'))
+    cfg = _make_config()
     iport = cfg['host_ipython_port']
     iport = cfg['host_ipython_port']
     dport = cfg['host_dashboard_port']

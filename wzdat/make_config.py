@@ -78,10 +78,8 @@ def make_config(cfgpath=None, usecache=True):
         loaded = _expand_var(loaded)
         if 'base_cfg' in loaded:
             bcfgpath = loaded['base_cfg']
-            bcfg = make_config(bcfgpath, False)
-            del loaded['base_cfg']
-            bcfg.update(loaded)
-    _cfg.update(loaded)
+            make_config(bcfgpath, False)
+    _cfg.update(loaded)  # overwrite previous config
     return _cfg
 
 

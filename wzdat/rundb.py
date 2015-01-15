@@ -89,6 +89,11 @@ def destroy_db():
         cur.execute('DROP TABLE IF EXISTS event;')
 
 
+def remove_db_file():
+    if os.path.isfile(RUNNER_DB_PATH):
+        os.remove(RUNNER_DB_PATH)
+
+
 def start_run(path, total):
     with Cursor(RUNNER_DB_PATH) as cur:
         cur.execute('SELECT * FROM info WHERE path=?', (path,))
