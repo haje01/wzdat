@@ -1,7 +1,8 @@
 #!/bin/bash
 /etc/init.d/atd start     # to detect file changes
 /etc/init.d/xinetd start  # for rsync test
-echo $WZDAT_CFG
+echo "export WZDAT_CFG=$WZDAT_CFG" > ~/.bash_profile
+echo "export WZDAT_DIR=$WZDAT_DIR" >> ~/.bash_profile
 cd /wzdat
 pip install -e .
 # Re-install of requirements to apply changes after base image build.
