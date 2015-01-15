@@ -48,8 +48,4 @@ host_dashboard_port: 80
 
 # Common config for Docker based Service
 data_dir: /logdata
-conv_dir: /var/wzdat/conv
-hdf_dir: /var/wzdat/hdf
-cache_dir: /var/wzdat/cache
-tmp_dir: /var/tmp/wzdat
 notebook_base_dir: /solution/__notes__

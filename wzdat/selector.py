@@ -6,7 +6,6 @@ import types
 import fnmatch
 import codecs
 import zipfile
-import dateutil
 import time
 import shutil
 from collections import defaultdict
@@ -30,7 +29,7 @@ from wzdat.value import ValueList, FailValue, Value, check_date_slice
 from wzdat.util import unique_tmp_path, sizeof_fmt, unique_list, \
     remove_empty_file, Property, remove_old_tmps, get_line_count, \
     get_slice_idx, ProgressBar, nprint, Context, convert_data_file,\
-    get_convfile_path
+    get_convfile_path, get_tmp_dir, get_cache_dir, get_conv_dir
 from wzdat.lineinfo import LineInfo, LineInfoImpl_Count, LineInfoImpl_Array
 
 qmode = 'files'
@@ -400,6 +399,7 @@ def _find_in_temp(ctx, tempo, word, options, include_header):
 
 
 def _to_frame_convert_line(tfp, fdate, line, hasna, smap):
+    import dateutil
     try:
         sdate = None
         if tfp.get_line_date is not None:
@@ -1044,7 +1044,7 @@ def _get_found_time(cpath):
 
 
 def _get_cache_path(ext):
-    cache_dir = cfg['cache_dir']
+    cache_dir = get_cache_dir()
     return os.path.join(cache_dir, '%s_found_files.pkl' % (ext))
 
 
@@ -1073,7 +1073,8 @@ def find_files_and_save(startdir, ext, root_list=None):
     nprint('finding files and save info...')
     filecnt = 0
     assert os.path.isdir(startdir)
-    for root, _, filenames in os.walk(startdir):
+    for root, dirs, filenames in os.walk(startdir):
+        dirs[:] = [d for d in dirs if d not in ('_var_',)]
         _root = [os.path.abspath(root), None]
         root_list.append(_root)
         rfiles = []
@@ -1281,7 +1282,7 @@ def _find_in_fileo_grep_call(ctx, word, idx, _file, fileno, _options, out,
 def _remove_old():
     nprint('deleting old files...')
     cfg = make_config()
-    tmp_dir = cfg["tmp_dir"]
+    tmp_dir = get_tmp_dir()
     remove_old_tmps(tmp_dir, TMP_PREFIX, cfg["tmp_valid_hour"])
     remove_old_tmps(tmp_dir, NAMED_TMP_PREFIX, cfg["named_tmp_valid_hour"])
 
@@ -1301,7 +1302,7 @@ def update(mod, ext, subtype=None):
         encoding = encoding[subtype]
 
     if encoding.startswith('utf-16'):
-        _dir = cfg['conv_dir']
+        _dir = get_conv_dir()
     ctx = Context(mod, _dir, encoding, ext)
     date = DateField(ctx)
     kind = KindField(ctx)
@@ -1441,9 +1442,8 @@ class SlotMap(object):
     def __call__(self, userid, slotname):
         key = userid, slotname
         if key not in self._dict:
-            cfg = make_config()
             name = NAMED_TMP_PREFIX + userid + '-' + slotname
-            tmp_dir = cfg["tmp_dir"]
+            tmp_dir = get_tmp_dir()
             self._dict[key] = Slot(self.ctx, os.path.join(tmp_dir, name))
         return self._dict[key]
 

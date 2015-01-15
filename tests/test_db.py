@@ -10,10 +10,11 @@ from wzdat.make_config import make_config
 cfg = make_config()
 
 RUNNER_DB_PATH = cfg['runner_db_path']
+TEST_DB_LOCK = False
 
 
 @pytest.yield_fixture(scope='module')
-def initdb():
+def fxdb():
     destroy_db()
     create_db()
     yield
@@ -26,7 +27,7 @@ def is_table_exist(tbname):
         return rv[0] == 1
 
 
-def test_db_create(testdb):
+def test_db_create(fxdb):
         assert is_table_exist('info')
         assert is_table_exist('cache')
         assert is_table_exist('finder')
@@ -34,12 +35,14 @@ def test_db_create(testdb):
         assert is_table_exist('event')
 
 
+@pytest.mark.skipif(not TEST_DB_LOCK)
 def test_db_start_run(initdb):
     with Cursor(RUNNER_DB_PATH) as cur:
         for i in range(5000000):
             _update_cache_info(cur)
 
 
+@pytest.mark.skipif(not TEST_DB_LOCK)
 def test_db_update_run():
     with Cursor(RUNNER_DB_PATH) as cur:
         for i in range(5000000):

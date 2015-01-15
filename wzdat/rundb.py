@@ -89,6 +89,11 @@ def destroy_db():
         cur.execute('DROP TABLE IF EXISTS event;')
 
 
+def remove_db_file():
+    if os.path.isfile(RUNNER_DB_PATH):
+        os.remove(RUNNER_DB_PATH)
+
+
 def start_run(path, total):
     with Cursor(RUNNER_DB_PATH) as cur:
         _start_run(cur, path, total)
@@ -150,7 +155,7 @@ def _update_cache_info(cur):
 
 def get_cache_info():
     with Cursor(RUNNER_DB_PATH) as cur:
-        cur.execute('SELECT time from cache ORDER BY id DESC LIMIT 1')
+        cur.execute('SELECT time FROM cache ORDER BY id DESC LIMIT 1')
         return cur.fetchone()
 
 

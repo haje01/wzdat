@@ -2,6 +2,7 @@ import logging
 
 import argh
 
+from wzdat.const import FORWARDER_LOG_PREFIX
 from wzdat.make_config import make_config
 from wzdat.ipynb_runner import update_notebook_by_run
 from wzdat.rundb import get_cron_notebooks, cache_files, cache_finder,\
@@ -12,14 +13,18 @@ from wzdat import event as evt
 cfg = make_config()
 
 
+def _remove_forwarder_file(es):
+    return [e for e in es if FORWARDER_LOG_PREFIX not in e[3]]
+
+
 def check_cache():
     # TODO: remove when file-wise caching done
-    es = evt.get_unhandled_events()
+    es = _remove_forwarder_file(evt.get_unhandled_events())
     logging.debug(str(es))
     if len(es) > 0:
         cache_all()
-    ids = [e[0] for e in es]
-    evt.mark_handled_events('check_cache', ids)
+        ids = [e[0] for e in es]
+        evt.mark_handled_events('check_cache', ids)
 
 
 def cache_all():

@@ -6,7 +6,7 @@ import logging
 import logging.config
 
 from wzdat.make_config import make_config
-from wzdat.selector import FileSelector, Selector, update as _update, SlotMap
+from wzdat.selector import update as _update
 
 update = _update
 
@@ -21,6 +21,7 @@ if 'WZDAT_NOLOG' not in os.environ and 'log' in cfg:
 
 
 def make_selectors(ctx, all_files):
+    from wzdat.selector import FileSelector, Selector, SlotMap
     """Make selectors and return them."""
     _files = FileSelector(ctx, all_files, 'file')
     kinds = Selector(_files, 'kind')

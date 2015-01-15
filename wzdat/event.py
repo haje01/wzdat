@@ -6,6 +6,7 @@ from collections import defaultdict
 
 from wzdat.rundb import Cursor
 from wzdat.make_config import make_config
+from wzdat.const import FORWARDER_LOG_PREFIX
 
 cfg = make_config()
 
@@ -23,6 +24,9 @@ for i in range(MAX_PRIOR):
 
 
 def register_event(etype, info, prior=DEFAULT_PRIOR):
+    # skip forwarder files
+    if FORWARDER_LOG_PREFIX in info:
+        return
     logging.debug('register_event {} - {}'.format(etype, info))
     raised = time.time()
     with Cursor(RUNNER_DB_PATH) as cur:
