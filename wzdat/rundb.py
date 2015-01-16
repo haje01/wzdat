@@ -12,7 +12,6 @@ import sqlite3
 from wzdat.make_config import make_config
 from wzdat.util import ChangeDir
 
-assert 'WZDAT_DIR' in os.environ
 cfg = make_config()
 RUNNER_DB_PATH = cfg['runner_db_path']
 
