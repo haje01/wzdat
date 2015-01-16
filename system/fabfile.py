@@ -27,7 +27,7 @@ def hosts(prj=None):
     hosts = []
     for _prj, port in _get_prj_and_ports():
         if prj is None or prj == _prj:
-            host = 'root@{}:{}'.format(wzhost, port)
+            host = 'root@{}:{}'.format(_get_host(), port)
             hosts.append(host)
             prj_map[host] = _prj
     env.hosts = hosts
@@ -86,12 +86,15 @@ def build():
     _build_dev()
 
 
+def _get_host():
+    return os.environ['WZDAT_B2DHOST'] if 'WZDAT_B2DHOST' in os.environ else\
+        '0.0.0.0'
+
+
 def ssh(_prj):
     for prj, port in _get_prj_and_ports():
         if prj == _prj:
-            host = os.environ['WZDAT_B2DHOST'] if 'WZDAT_B2DHOST' in\
-                os.environ else '0.0.0.0'
-            local('ssh root@{host} -p {port}'.format(host=host, port=port))
+            local('ssh root@{host} -p {port}'.format(host=_get_host(), port=port))
             return
     abort("Can't find project")
 
@@ -105,17 +108,8 @@ def _get_pkg():
     return os.environ['WZDAT_SOL_PKG']
 
 
-def _get_cfg_export():
-    pkg = _get_pkg()
-    assert len(prj_map) > 0, "No host is designated!!"
-    for _, prj in prj_map.iteritems():
-        yield 'WZDAT_CFG=/solution/{pkg}/{prj}/config.yml'.format(pkg=pkg,
-                                                                  prj=prj)
-
-
 def cache():
-    for cfgex in _get_cfg_export():
-        run('cd /solution && {} python -m wzdat.jobs cache-all'.format(cfgex))
+    run('python -m wzdat.jobs cache-all')
 
 
 def restart(prg):
@@ -123,9 +117,7 @@ def restart(prg):
 
 
 def runcron():
-    for cfgex in _get_cfg_export():
-        run('WZDAT_HOST={} {} python -m wzdat.jobs run-all-cron-notebooks'.
-            format(wzhost, cfgex))
+    run('python -m wzdat.jobs run-all-cron-notebooks')
 
 
 class _ChangeDir(object):
