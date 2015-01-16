@@ -16,14 +16,14 @@ log:
             class : logging.handlers.RotatingFileHandler
             formatter: simpleFormatter
             level: DEBUG
-            filename: /var/log/wzdat
+            filename: /logdata/_var_/wzdat.log
             maxBytes: 10485760
             backupCount: 3
     root:
         level: DEBUG
         handlers: [console, file]
 
-runner_db_path: /var/wzdat/runner.db
+runner_db_path: /logdata/_var_/runner.db
 
 ## for System Test, shall be overriden by real solution cfg
 # TODO: Remove 

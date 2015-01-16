@@ -43,8 +43,6 @@ RUN mkdir -p /var/tmp/wzdat
 RUN chmod 1777 /var/wzdat/conv
 RUN chmod 1777 /var/wzdat/cache
 RUN chmod 1777 /var/tmp/wzdat
-RUN touch /var/wzdat/runner.db
-RUN touch /var/log/wzdat
 
 # Supervisor & SSH
 RUN apt-get -qq -y install supervisor

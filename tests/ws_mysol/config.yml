@@ -15,7 +15,7 @@ log:
             class : logging.handlers.RotatingFileHandler
             formatter: simpleFormatter
             level: DEBUG
-            filename: /tmp/wzdat
+            filename: /tmp/wzdat.log
             maxBytes: 10485760
             backupCount: 3
     root:
@@ -28,7 +28,7 @@ data_dir: $WZDAT_DIR/tests/dummydata
 sol_dir: $WZDAT_DIR/tests
 sol_pkg: ws_mysol
 prj: myprj
-runner_db_path: $WZDAT_DIR/tests/runner.db
+runner_db_path: $WZDAT_DIR/tests/dummydata/_var_/runner.db
 notebook_base_dir: $WZDAT_DIR/tests/__notes__
 
 # Common config for Test(ws_mysol)

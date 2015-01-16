@@ -2,8 +2,6 @@
 .tox/
 coverage.xml
 *.pyc
-*.ipynb
-!*test.ipynb
 .*.swp
 *.db
 *.pkl
