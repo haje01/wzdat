@@ -13,7 +13,8 @@ from wzdat.make_config import make_config
 
 WEB_RESTART = False
 
-host = os.environ['WZDAT_HOST']
+host = os.environ['WZDAT_HOST'] if 'WZDAT_B2DHOST' not in os.environ else\
+    os.environ['WZDAT_B2DHOST']
 dashboard_url = 'http://{}:8085'.format(host)
 env = os.environ.copy()
 
@@ -92,7 +93,7 @@ def test_system_file_event(fxdocker):
                           'rsync-user@{}::rsync-data/test'.format(host)]
             ret = check_output(cmd, env=env, cwd=path)
             assert 'sent ' in ret
-            time.sleep(3)  # wait for all events registered
+            time.sleep(2)  # wait for all events registered
 
     sync(('kr', 'us', 'jp'))
     assert 450 == len(evt.get_all())

@@ -118,6 +118,9 @@ def dispatch_events(prior=DEFAULT_PRIOR):
 def watch_files(target_dir):
     logging.debug('watch_files')
     import pyinotify
+    excl_lst = [
+        '/logdata/_var_',
+    ]
 
     wm = pyinotify.WatchManager()
     mask = pyinotify.IN_CREATE | pyinotify.IN_MOVED_TO | pyinotify.IN_DELETE
@@ -134,7 +137,9 @@ def watch_files(target_dir):
     handler = FileEventHandler()
     pyinotify.AsyncNotifier(wm, handler)
 
-    wm.add_watch(target_dir, mask, rec=True, auto_add=True)
+    excl = pyinotify.ExcludeFilter(excl_lst)
+    wm.add_watch(target_dir, mask, rec=True, auto_add=True,
+                 exclude_filter=excl)
 
     import asyncore
     asyncore.loop()
