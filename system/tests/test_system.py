@@ -93,7 +93,7 @@ def test_system_file_event(fxdocker):
                           'rsync-user@{}::rsync-data/test'.format(host)]
             ret = check_output(cmd, env=env, cwd=path)
             assert 'sent ' in ret
-            time.sleep(2)  # wait for all events registered
+            time.sleep(3)  # wait for all events registered
 
     sync(('kr', 'us', 'jp'))
     assert 450 == len(evt.get_all())

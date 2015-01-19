@@ -1,10 +1,13 @@
 import os
+import time
+import datetime
 
 import pytest
 
 from wzdat.make_config import make_config, invalidate_config
 from wzdat.util import ChangeDir, get_var_dir, get_tmp_dir, get_hdf_dir,\
-    get_cache_dir, get_conv_dir
+    get_cache_dir, get_conv_dir, get_htimestamp, parse_htimestamp,\
+    convert_server_time_to_client
 
 
 @pytest.yield_fixture(scope='module')
@@ -83,3 +86,16 @@ def test_common_config(fxcfg):
     cfgenv1 = os.path.join(cp, 'test_cfg')
     assert cfg['env0'] == cfgenv0
     assert cfg['env1'] == cfgenv1
+
+
+def test_common_datetime():
+    ts = time.time()
+    dts = datetime.datetime.fromtimestamp(ts)
+    hts = get_htimestamp(ts)
+    assert dts.replace(microsecond=0) == parse_htimestamp(hts)
+
+    import pytz
+    sdt = datetime.datetime(2015, 1, 1, 0, 0, 0, 0)
+    cdt = convert_server_time_to_client(sdt, pytz.UTC,
+                                        pytz.timezone('Asia/Seoul'))
+    assert '2015-01-01 09:00:00' == cdt.strftime('%Y-%m-%d %H:%M:%S')

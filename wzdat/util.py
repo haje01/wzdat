@@ -476,14 +476,14 @@ def convert_data_file(srcpath, encoding, dstpath):
     return dstpath
 
 
-def convert_server_time_to_client(dt):
+def convert_server_time_to_client(dt, stz=None, ctz=None):
     import pytz
 
     def get_tz(tz):
         return pytz.UTC if tz == 'UTC' else pytz.timezone(tz)
 
-    stz = get_tz(cfg['server_timezone'])
-    ctz = get_tz(cfg['client_timezone'])
+    stz = get_tz(cfg['server_timezone']) if stz is None else stz
+    ctz = get_tz(cfg['client_timezone']) if ctz is None else ctz
     sdt = stz.localize(dt)
     return sdt.astimezone(ctz)
 
@@ -577,3 +577,14 @@ class ChangeDir(object):
 def remove_ansicolor(text):
     return re.sub(r'\x1b\[([0-9,A-Z]{1,2}(;[0-9]{1,2})?(;[0-9]{3})?)?[m|K]?',
                   '', text)
+
+
+def get_htimestamp(ts=None):
+    if ts is None:
+        ts = time.time()
+    return datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+
+
+def parse_htimestamp(ts):
+    from dateutil.parser import parse
+    return parse(ts)

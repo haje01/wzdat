@@ -82,7 +82,7 @@ def create_db():
         # event
         cur.execute('CREATE TABLE IF NOT EXISTS event '
                     '(id INTEGER PRIMARY KEY, prior INTEGER, type TEXT, info '
-                    'TEXT, raised REAL, handler TEXT, handled REAL);')
+                    'TEXT, raised TEXT, handler TEXT, handled TEXT);')
 
 
 def destroy_db():

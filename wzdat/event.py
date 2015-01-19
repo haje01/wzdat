@@ -7,6 +7,7 @@ from collections import defaultdict
 from wzdat.rundb import Cursor
 from wzdat.make_config import make_config
 from wzdat.const import FORWARDER_LOG_PREFIX
+from wzdat.util import get_htimestamp
 
 cfg = make_config()
 
@@ -28,7 +29,7 @@ def register_event(etype, info, prior=DEFAULT_PRIOR):
     if FORWARDER_LOG_PREFIX in info:
         return
     logging.debug('register_event {} - {}'.format(etype, info))
-    raised = time.time()
+    raised = get_htimestamp()
     with Cursor(RUNNER_DB_PATH) as cur:
         cur.execute('INSERT INTO event (prior, type, info, raised) VALUES (?,'
                     '?, ?, ?)', (prior, etype, info, raised))
@@ -55,7 +56,7 @@ def get_unhandled_events():
 
 def mark_handled_events(handler, event_ids):
     with Cursor(RUNNER_DB_PATH) as cur:
-        handled = time.time()
+        handled = get_htimestamp()
         eids = "({})".format(', '.join([str(i) for i in event_ids]))
         shandler = handler if isinstance(handler, str) else handler.__name__
         cur.execute('UPDATE event SET handler=?, handled=? WHERE id in'
@@ -74,7 +75,7 @@ def remove_by_handled(agesec=None):
         if agesec is None:
             cur.execute('DELETE FROM event WHERE handled is not NULL')
         else:
-            old = time.time() - agesec
+            old = get_htimestamp(time.time() - agesec)
             cur.execute('DELETE FROM event WHERE handled < ?', (old,))
         return cur.con.total_changes
 
@@ -87,7 +88,7 @@ def remove_by_type(etype):
 
 def remove_by_raised(agesec):
     with Cursor(RUNNER_DB_PATH) as cur:
-        old = time.time() - agesec
+        old = get_htimestamp(time.time() - agesec)
         cur.execute('DELETE FROM event WHERE raised < ?', (old,))
         return cur.con.total_changes
 

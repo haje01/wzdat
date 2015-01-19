@@ -2,14 +2,13 @@ import time
 
 import pytest
 
-from wzdat.rundb import create_db, destroy_db
+from wzdat.rundb import reset_db
 from wzdat import event as evt
 
 
 @pytest.yield_fixture(scope='function')
 def db():
-    destroy_db()
-    create_db()
+    reset_db()
     yield
 
 
