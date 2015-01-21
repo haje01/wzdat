@@ -18,6 +18,9 @@ RUN pip install --upgrade pip
 # Prerequisites for IPython, WzDat
 RUN apt-get -qq -y install libhdf5-serial-dev
 RUN apt-get -qq -y install sqlite3 libsqlite3-dev
+RUN pip install numpy==1.9.1
+RUN pip install numexpr==2.4
+RUN pip install cython==0.21.1
 RUN wget -qO- https://raw.github.com/PyTables/PyTables/develop/requirements.txt | xargs pip install
 RUN wget -qO- https://github.com/haje01/wzdat/raw/master/requirements.txt | xargs pip install
 
