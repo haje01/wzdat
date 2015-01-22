@@ -529,33 +529,48 @@ def _gen_dummy_dump(_dir, locale, node, dates):
     pass
 
 
+def _gen_dummy_level(_levels):
+    i = 0
+    while True:
+        yield _levels[i]
+        i += 1
+        if i >= len(_levels):
+            i = 0
+
+
+def _gen_dummy_msg(_msgs):
+    i = 0
+    while True:
+        yield _msgs[i]
+        i += 1
+        if i >= len(_msgs):
+            i = 0
+
+
 def _gen_dummy_exlog_lines(_dir, locale, node, dates):
-    pass
+
+    def write_lines(fname, date):
+        lgen = _gen_dummy_level(['DBG', 'WARN', 'ERR'])
+        mgen = _gen_dummy_msg(['Send', 'Receive', 'Exit', 'Enter', 'Failed'])
+        with open(fname, 'w') as f:
+            dts = [date + _datetime.timedelta(seconds=x * 60 * 60) for x in
+                   range(0, 24)]
+            for dt in dts:
+                sdt = dt.strftime('%Y%m%d-%H:%M')
+                f.write('%s %s %s\n' % (sdt, lgen.next(), mgen.next()))
+
+    for date in dates:
+        sdate = date.strftime('%Y%m%d')
+        path = os.path.join(_dir, 'ExLog-%s.log' % sdate)
+        write_lines(path, date)
 
 
 def _gen_dummy_log_lines(_dir, locale, node, kind, dates, procno):
 
-    def gen_level():
-        i = 0
-        _levels = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
-        while True:
-            yield _levels[i]
-            i += 1
-            if i >= len(_levels):
-                i = 0
-
-    def gen_msg():
-        i = 0
-        _msgs = ['Alloc', 'Move', 'Mismatch', 'Async', 'Failed']
-        while True:
-            yield _msgs[i]
-            i += 1
-            if i >= len(_msgs):
-                i = 0
-
     def write_lines(fname, date):
-        lgen = gen_level()
-        mgen = gen_msg()
+        lgen = _gen_dummy_level(['DEBUG', 'INFO', 'WARNING', 'ERROR',
+                                 'CRITICAL'])
+        mgen = _gen_dummy_msg(['Alloc', 'Move', 'Mismatch', 'Async', 'Failed'])
         with open(fname, 'w') as f:
             dts = [date + _datetime.timedelta(seconds=x * 60 * 60) for x in
                    range(0, 24)]

@@ -25,6 +25,8 @@ def log():
 
 
 def test_selector_basic(log):
+    update_err = wzdat.selector.get_update_errors()
+    assert len(update_err) == 0
     assert len(log.files) == 450
     assert set(log.kinds) == set([log.kind.auth, log.kind.community,
                                   log.kind.game])

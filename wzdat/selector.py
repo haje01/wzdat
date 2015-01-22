@@ -35,6 +35,8 @@ from wzdat.lineinfo import LineInfo, LineInfoImpl_Count, LineInfoImpl_Array
 qmode = 'files'
 cfg = make_config()
 
+_update_errors = []
+
 
 def get_urls():
     assert 'WZDAT_HOST' in os.environ
@@ -1016,6 +1018,7 @@ def _update_files_root(ctx, _root, filecnt, fileno, pg):
 
         vals, field_errs = _update_files_root_vals(fieldcnt, fields, fileo,
                                                    field_getter)
+        # remove incompatible files
         if len(field_errs) > 0:
             errs += field_errs
             continue
@@ -1062,16 +1065,18 @@ def _update_files_precalc(ctx, root_list):
                                root_list), None
 
 
-def _filter_fmt_files(filenames, filecnt, fmt, ffilter):
+def _filter_fmt_files(adir, filenames, filecnt, fmt, ffilter):
+    """
+    Filter files by format(extions or filter function) then returns matching
+    files and cumulated count.
+    """
     if ffilter is None:
         # if no file filter is exist, use format name as file extension
-        rfiles = []
-        for filename in fnmatch.filter(filenames, ('*.' + fmt)):
-            rfiles.append(filename)
-            filecnt += 1
+        rfiles = fnmatch.filter(filenames, ('*.' + fmt))
+        filecnt += len(rfiles)
     else:
-        rfiles, cnt = ffilter(filenames)
-        filecnt += cnt
+        rfiles = ffilter(adir, filenames)
+        filecnt += len(rfiles)
     return rfiles, filecnt
 
 
@@ -1088,11 +1093,13 @@ def find_files_and_save(startdir, fmt, ffilter, root_list=None):
     assert os.path.isdir(startdir)
     for root, dirs, filenames in os.walk(startdir):
         dirs[:] = [d for d in dirs if d not in ('_var_',)]
-        _root = [os.path.abspath(root), None]
+        _root = [os.path.abspath(root), []]
         root_list.append(_root)
-        rfiles, filecnt = _filter_fmt_files(filenames, filecnt, fmt, ffilter)
-        rfiles = sorted(rfiles)
-        _root[1] = rfiles
+        if len(filenames) > 0:
+            rfiles, filecnt = _filter_fmt_files(root, filenames, filecnt, fmt,
+                                                ffilter)
+            rfiles = sorted(rfiles)
+            _root[1] = rfiles
     rv = sorted(root_list), filecnt
     if use_cache:
         with open(cpath, 'w') as f:
@@ -1101,6 +1108,7 @@ def find_files_and_save(startdir, fmt, ffilter, root_list=None):
 
 
 def _update_files(ctx):
+    global _update_files, _update_errors
     root_list = []
     rv, msg = _update_files_precalc(ctx, root_list)
     root_list, filecnt = rv
@@ -1119,8 +1127,14 @@ def _update_files(ctx):
 
     if msg is not None:
         nprint(msg)
+
+    _update_errors = errors
     if len(errors) > 0:
         nprint(errors[-4:])
+
+
+def get_update_errors():
+    return _update_errors
 
 
 class KindField(Field):
