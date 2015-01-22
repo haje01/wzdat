@@ -1043,14 +1043,14 @@ def _get_found_time(cpath):
         return '%d minute %d seconds' % (m, s)
 
 
-def _get_cache_path(ext):
+def _get_cache_path(fmt):
     cache_dir = get_cache_dir()
-    return os.path.join(cache_dir, '%s_found_files.pkl' % (ext))
+    return os.path.join(cache_dir, '%s_found_files.pkl' % (fmt))
 
 
 def _update_files_precalc(ctx, root_list):
     use_cache = cfg['use_cache'] if 'use_cache' in cfg else True
-    cpath = _get_cache_path(ctx.fileext)
+    cpath = _get_cache_path(ctx.logfmt)
     if use_cache and os.path.isfile(cpath):
         tstr = _get_found_time(cpath)
         msg = '\nusing file infos found %s ago.' % tstr
@@ -1058,18 +1058,31 @@ def _update_files_precalc(ctx, root_list):
             root_list, filecnt = pickle.load(f)
             if filecnt > 0:
                 return (root_list, filecnt), msg
-    return find_files_and_save(ctx.startdir, ctx.fileext, root_list),\
-        None
+    return find_files_and_save(ctx.startdir, ctx.logfmt, ctx.ffilter,
+                               root_list), None
 
 
-def find_files_and_save(startdir, ext, root_list=None):
+def _filter_fmt_files(filenames, filecnt, fmt, ffilter):
+    if ffilter is None:
+        # if no file filter is exist, use format name as file extension
+        rfiles = []
+        for filename in fnmatch.filter(filenames, ('*.' + fmt)):
+            rfiles.append(filename)
+            filecnt += 1
+    else:
+        rfiles, cnt = ffilter(filenames)
+        filecnt += cnt
+    return rfiles, filecnt
+
+
+def find_files_and_save(startdir, fmt, ffilter, root_list=None):
     logging.debug('find_files_and_save')
     logging.debug('startdir: ' + str(startdir))
     if root_list is None:
         root_list = []
     use_cache = cfg['use_cache'] if 'use_cache' in cfg else True
     if use_cache:
-        cpath = _get_cache_path(ext)
+        cpath = _get_cache_path(fmt)
     nprint('finding files and save info...')
     filecnt = 0
     assert os.path.isdir(startdir)
@@ -1077,10 +1090,7 @@ def find_files_and_save(startdir, ext, root_list=None):
         dirs[:] = [d for d in dirs if d not in ('_var_',)]
         _root = [os.path.abspath(root), None]
         root_list.append(_root)
-        rfiles = []
-        for filename in fnmatch.filter(filenames, ('*.' + ext)):
-            rfiles.append(filename)
-            filecnt += 1
+        rfiles, filecnt = _filter_fmt_files(filenames, filecnt, fmt, ffilter)
         rfiles = sorted(rfiles)
         _root[1] = rfiles
     rv = sorted(root_list), filecnt
@@ -1287,7 +1297,7 @@ def _remove_old():
     remove_old_tmps(tmp_dir, NAMED_TMP_PREFIX, cfg["named_tmp_valid_hour"])
 
 
-def update(mod, ext, subtype=None):
+def update(mod, fmt, subtype=None, ffilter=None):
     """Update file information.
 
     Remove temp files when necessary.
@@ -1303,7 +1313,7 @@ def update(mod, ext, subtype=None):
 
     if encoding.startswith('utf-16'):
         _dir = get_conv_dir()
-    ctx = Context(mod, _dir, encoding, ext)
+    ctx = Context(mod, _dir, encoding, fmt, ffilter)
     date = DateField(ctx)
     kind = KindField(ctx)
     node = NodeField(ctx)

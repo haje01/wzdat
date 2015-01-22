@@ -110,21 +110,22 @@ class Context(Property):
     def load(path):
         pass
 
-    def __init__(self, mod, startdir, encoding, fileext):
+    def __init__(self, mod, startdir, encoding, logfmt, ffilter):
         super(Context, self).__init__()
         self.mod = mod
         self.files = mod['all_files']
         self.fields = mod['fields']
         self.startdir = startdir
         self.encoding = codecs.lookup(encoding).name
-        self.fileext = fileext
+        self.logfmt = logfmt
+        self.ffilter = ffilter
 
     def save(self, path):
         pass
 
     @property
     def isdblog(self):
-        return self.fileext.lower() == 'csv'
+        return self.logfmt.lower() == 'csv'
 
 
 def get_kernel_id(cfile):
@@ -392,16 +393,16 @@ def get_notebook_dir():
     return os.path.join(base, prj)
 
 
-def _check_mkdir(adir, make):
+def _check_makedir(adir, make):
     if not os.path.isdir(adir) and make:
         if os.path.isfile(adir):
             os.remove(adir)
-        os.mkdir(adir)
+        os.makedirs(adir)
 
 
 def _get_dir(basedir, subdir, make):
     vardir = os.path.join(basedir, subdir)
-    _check_mkdir(vardir, make)
+    _check_makedir(vardir, make)
     return vardir
 
 
@@ -410,7 +411,7 @@ def get_data_dir(make=True):
     if not os.path.isdir(data_dir) and make:
         if os.path.isfile(data_dir):
             os.remove(data_dir)
-        os.mkdir(data_dir)
+        os.makedirs(data_dir)
     return data_dir
 
 
@@ -469,8 +470,8 @@ def get_convfile_path(path):
 def convert_data_file(srcpath, encoding, dstpath):
     encoding = encoding.replace('-le', '')
     _dir = os.path.dirname(dstpath)
-    cmd = ['mkdir', '-p', _dir]
-    check_call(cmd)
+    if not os.path.exists(_dir):
+        os.makedirs(_dir)
     cmd = ['iconv', '-f', encoding, '-t', 'utf-8', '-o', dstpath, srcpath]
     check_call(cmd)
     return dstpath
@@ -492,7 +493,8 @@ def gen_dummydata(td=None, date_cnt=10):
     if os.path.isdir(td):
         import shutil
         shutil.rmtree(td)
-    os.mkdir(td)
+    if not os.path.exists(td):
+        os.makedirs(td)
 
     half_date = int(date_cnt * 0.5)
     start = _datetime.datetime(2014, 3, 1, 0, 0, 0)
@@ -506,17 +508,32 @@ def _gen_dummy_files(td, dates):
     # file path style; kr/node-01/game_01.log'
     locales = ('kr', 'jp', 'us')
     nodes = ('node-1', 'node-2', 'node-3')
-    kinds = ('game', 'auth', 'community')
-    processes = {'game': 3, 'auth': 1, 'community': 1}
+    log_kinds = ('game', 'auth', 'community')
+    processes = {'game': 3}
     for locale in locales:
         for node in nodes:
-            for kind in kinds:
-                procno = processes[kind]
-                _dir = os.path.join(td, locale, node)
-                _gen_dummy_lines(_dir, locale, node, kind, dates, procno)
+            bdir = os.path.join(td, locale, node)
+            _dir = _get_dir(bdir, 'log', True)  # check dir exist
+            for lkind in log_kinds:
+                procno = processes.get(lkind, 1)
+                _gen_dummy_log_lines(_dir, locale, node, lkind, dates, procno)
+
+            _dir = _get_dir(bdir, 'dump', True)  # check dir exist
+            _gen_dummy_dump(_dir, locale, node, dates)
+
+            _dir = _get_dir(bdir, 'exlog', True)  # check dir exist
+            _gen_dummy_exlog_lines(_dir, locale, node, dates)
 
 
-def _gen_dummy_lines(_dir, locale, node, kind, dates, procno):
+def _gen_dummy_dump(_dir, locale, node, dates):
+    pass
+
+
+def _gen_dummy_exlog_lines(_dir, locale, node, dates):
+    pass
+
+
+def _gen_dummy_log_lines(_dir, locale, node, kind, dates, procno):
 
     def gen_level():
         i = 0
@@ -546,8 +563,6 @@ def _gen_dummy_lines(_dir, locale, node, kind, dates, procno):
                 sdt = dt.strftime('%Y-%m-%d %H:%M')
                 f.write('%s [%s] - %s\n' % (sdt, lgen.next(), mgen.next()))
 
-    if not os.path.isdir(_dir):
-        os.makedirs(_dir)
     for date in dates:
         sdate = date.strftime('%Y-%m-%d')
         if procno == 1:

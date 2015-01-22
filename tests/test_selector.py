@@ -43,7 +43,7 @@ def test_selector_basic(log):
 def test_selector_value(log):
     f = log.files[0]
     assert isinstance(f, wzdat.selector.FileValue)
-    assert f.path == 'jp/node-1/auth_2014-02-24.log'
+    assert f.path == 'jp/node-1/log/auth_2014-02-24.log'
     assert f.node == log.node.jp_node_1
     assert f.kind == log.kind.auth
     assert f.date == log.date.D2014_02_24
@@ -56,7 +56,7 @@ def test_selector_value(log):
     assert f.dates == [log.date.D2014_02_24]
 
     assert f.link.data == '<a href="http://{localhost}:8085/file/jp/node-1/'\
-        'auth_2014-02-24.log">jp/node-1/auth_2014-02-24.log</a>'.\
+        'log/auth_2014-02-24.log">jp/node-1/log/auth_2014-02-24.log</a>'.\
         format(localhost=localhost)
     zl = re.compile(r'<a href="http://{localhost}:\d+/tmp/(wzdat-[^"]+)">(\1)'
                     r'</a>'.format(localhost=localhost)).search(f.zlink.data)
@@ -77,7 +77,7 @@ def test_selector_value(log):
 
 
 def test_selector_fileselector(log):
-    # log.files[0] == jp/node-1/auth_2014-02-24.log
+    # log.files[0] == jp/node-1/log/auth_2014-02-24.log
     mf = log.files[0:2]
     assert isinstance(mf, wzdat.selector.FileSelector)
 
@@ -94,10 +94,11 @@ def test_selector_fileselector(log):
     assert mf.nodes == [log.node.jp_node_1]
     assert mf.kinds == [log.kind.auth]
     assert mf.dates == [log.date.D2014_02_24, log.date.D2014_02_25]
-    assert mf.link.data == '<a href="http://{localhost}:8085/file/jp/node-1/'\
-        'auth_2014-02-24.log">jp/node-1/auth_2014-02-24.log</a><br/><a href='\
-        '"http://{localhost}:8085/file/jp/node-1/auth_2014-02-25.log">jp/node-1'\
-        '/auth_2014-02-25.log</a>'.format(localhost=localhost)
+    assert mf.link.data ==\
+        '<a href="http://{localhost}:8085/file/jp/node-1/log/auth_2014-02-24.log">'\
+        'jp/node-1/log/auth_2014-02-24.log</a><br/><a href="http://{localhost}:8085'\
+        '/file/jp/node-1/log/auth_2014-02-25.log">jp/node-1/log/auth_2014-02-25.log</a>'\
+        .format(localhost=localhost)
     rx = r'<a href="http://{localhost}:\d+/tmp/(wzdat-[^"]+\.zip)">'\
          r'(\1)</a>'.format(localhost=localhost)
     zl = re.compile(rx).search(mf.zlink.data)
