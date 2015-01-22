@@ -1080,7 +1080,7 @@ def _filter_fmt_files(adir, filenames, filecnt, fmt, ffilter):
     return rfiles, filecnt
 
 
-def find_files_and_save(startdir, fmt, ffilter, root_list=None):
+def find_files_and_save(startdir, fmt, ffilter=None, root_list=None):
     logging.debug('find_files_and_save')
     logging.debug('startdir: ' + str(startdir))
     if root_list is None:

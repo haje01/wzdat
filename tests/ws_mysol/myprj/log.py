@@ -4,7 +4,8 @@ import os
 
 from wzdat.value import DateValue
 from wzdat import ALL_EXPORT, make_selectors
-from wzdat.selector import update as _update, Value
+from wzdat.selector import update as _update, Value, find_files_and_save as\
+    _find_files_and_save
 from wzdat.util import normalize_path_elms
 
 __all__ = ALL_EXPORT
@@ -75,6 +76,10 @@ def update():
 
     ctx, date, kind, node = _update(globals(), 'log', None, ffilter)
     files, kinds, dates, nodes, slot = make_selectors(ctx, all_files)
+
+
+def find_files_and_save(startdir):
+    _find_files_and_save(startdir, 'log')
 
 
 def ffilter(adir, filenames):
