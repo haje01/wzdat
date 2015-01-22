@@ -11,7 +11,7 @@ localhost = os.environ['WZDAT_HOST']
 
 
 @pytest.yield_fixture(scope="session")
-def log():
+def logs():
     from wzdat.util import gen_dummydata
     ddir = cfg['data_dir']
     # remove previous dummy data
@@ -21,10 +21,13 @@ def log():
     # generate new dummy data
     gen_dummydata(ddir)
     from ws_mysol.myprj import log
-    yield log
+    from ws_mysol.myprj import exlog
+    yield log, exlog
 
 
-def test_selector_basic(log):
+def test_selector_basic(logs):
+    # Log
+    log = logs[0]
     update_err = wzdat.selector.get_update_errors()
     assert len(update_err) == 0
     assert len(log.files) == 450
@@ -40,9 +43,21 @@ def test_selector_basic(log):
                                   log.date.D2014_02_28, log.date.D2014_03_01,
                                   log.date.D2014_03_02, log.date.D2014_03_03,
                                   log.date.D2014_03_04, log.date.D2014_03_05])
+    f = log.files[0]
+    df = f.to_frame()
+    assert len(df.columns) == 4
+
+    # ExLog
+    log = logs[1]
+    assert len(log.files) == 90
+    f = log.files[0]
+    assert 'ExLog' in f.path
+    df = f.to_frame()
+    assert len(df.columns) == 4
 
 
-def test_selector_value(log):
+def test_selector_value(logs):
+    log = logs[0]
     f = log.files[0]
     assert isinstance(f, wzdat.selector.FileValue)
     assert f.path == 'jp/node-1/log/auth_2014-02-24.log'
@@ -78,7 +93,8 @@ def test_selector_value(log):
     2014-02-24 23:00 [ERROR] - Async'''
 
 
-def test_selector_fileselector(log):
+def test_selector_fileselector(logs):
+    log = logs[0]
     # log.files[0] == jp/node-1/log/auth_2014-02-24.log
     mf = log.files[0:2]
     assert isinstance(mf, wzdat.selector.FileSelector)
@@ -107,7 +123,8 @@ def test_selector_fileselector(log):
     assert zl is not None
 
 
-def test_selector_hdf(log):
+def test_selector_hdf(logs):
+    log = logs[0]
     from wzdat.util import HDF
     mf = log.files[log.kind.auth][:2]
     df = mf.to_frame()

@@ -41,6 +41,11 @@ def get_cols(path):
     return ['datetime', 'type', 'msg']
 
 
+def get_line_type(line):
+    """Return type of a line."""
+    return line.split()[2][1:-1]
+
+
 def get_line_date(line):
     """Return date part of a line which conform python dateutil."""
     return line[:16]
@@ -83,7 +88,8 @@ def find_files_and_save(startdir):
 
 
 def ffilter(adir, filenames):
-    return [fn for fn in filenames if 'ExLog' not in fn]
+    return [fn for fn in filenames if fn.endswith('.log') and 'ExLog' not in
+            fn]
 
 
 update()
