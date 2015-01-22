@@ -19,6 +19,7 @@ import pandas as pd
 from IPython.display import HTML
 from pandas import DataFrame
 from pandas import HDFStore
+import dateutil
 
 from wzdat.base import Listable, Representable, ISearchable, ILineAttr, \
     IFramable, IPathable, IFilterable, IMergeable
@@ -401,19 +402,19 @@ def _find_in_temp(ctx, tempo, word, options, include_header):
 
 
 def _to_frame_convert_line(tfp, fdate, line, hasna, smap):
-    import dateutil
     try:
         sdate = None
         if tfp.get_line_date is not None:
             sdate = tfp.get_line_date(line)
         elif tfp.get_line_time is not None:
             sdate = "%s %s" % (fdate, tfp.get_line_time(line))
+
         if sdate in smap:
             _date = smap[sdate]
         else:
             _date = dateutil.parser.parse(sdate)
             smap[sdate] = _date
-    except TypeError:
+    except (TypeError, ValueError):
         level = None
         msg = None
         hasna = True
