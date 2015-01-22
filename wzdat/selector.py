@@ -408,13 +408,12 @@ def _to_frame_convert_line(tfp, fdate, line, hasna, smap):
             sdate = tfp.get_line_date(line)
         elif tfp.get_line_time is not None:
             sdate = "%s %s" % (fdate, tfp.get_line_time(line))
-
         if sdate in smap:
             _date = smap[sdate]
         else:
             _date = dateutil.parser.parse(sdate)
             smap[sdate] = _date
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, IndexError):
         level = None
         msg = None
         hasna = True
