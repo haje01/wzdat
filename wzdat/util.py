@@ -24,6 +24,8 @@ from wzdat.const import NAMED_TMP_PREFIX, HDF_FILE_PREFIX, HDF_FILE_EXT
 
 cfg = make_config()
 
+LOG_KINDS = ('game', 'auth', 'community')
+PROCESSES = {'game': 3}
 
 def unique_tmp_path(prefix, ext='.txt'):
     """Return temp file path with given extension."""
@@ -508,14 +510,12 @@ def _gen_dummy_files(td, dates):
     # file path style; kr/node-01/game_01.log'
     locales = ('kr', 'jp', 'us')
     nodes = ('node-1', 'node-2', 'node-3')
-    log_kinds = ('game', 'auth', 'community')
-    processes = {'game': 3}
     for locale in locales:
         for node in nodes:
             bdir = os.path.join(td, locale, node)
             _dir = _get_dir(bdir, 'log', True)  # check dir exist
-            for lkind in log_kinds:
-                procno = processes.get(lkind, 1)
+            for lkind in LOG_KINDS:
+                procno = PROCESSES.get(lkind, 1)
                 _gen_dummy_log_lines(_dir, locale, node, lkind, dates, procno)
 
             _dir = _get_dir(bdir, 'dump', True)  # check dir exist
@@ -526,7 +526,18 @@ def _gen_dummy_files(td, dates):
 
 
 def _gen_dummy_dump(_dir, locale, node, dates):
-    pass
+    import random
+    random.shuffle(dates)
+    for i, kind in enumerate(LOG_KINDS):
+        d = dates[i]
+        procno = PROCESSES.get(kind, 1)
+        procno = '' if PROCESSES.get(kind, 1) == 1 else\
+            '-{}'.format(random.randint(1, procno))
+        fn = "{}-{:02d}{:02d}{:02d}{}.dmp".format(kind, d.year, d.month, d.day,
+                                                  procno)
+        path = os.path.join(_dir, fn)
+        with open(path, 'at') as f:
+            f.write('dump data')
 
 
 def _gen_dummy_level(_levels):

@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
-"""Sample log adapter"""
-import os
+"""Sample exlog adapter"""
 
 from wzdat.value import DateValue
 from wzdat import ALL_EXPORT, make_selectors
 from wzdat.selector import update as _update, Value, find_files_and_save as\
     _find_files_and_save
-from wzdat.util import normalize_path_elms
 from ws_mysol.myprj import get_node as _get_node
 
 get_node = _get_node
@@ -19,45 +17,43 @@ files = kinds = dates = nodes = slot = None
 
 def get_kind(sfield, fileo):
     """Return kinds value from file object."""
-    filename = fileo.filename
-    elms = filename.split('_')
-    name = elms[0]
-    obj = Value._instance(None, sfield, name, name, name)
+    part = 'ExLog'
+    obj = Value._instance(None, sfield, part, part, part)
     return obj
 
 
 def get_cols(path):
-    return ['datetime', 'type', 'msg']
-
-
-def get_line_type(line):
-    """Return type of a line."""
-    return line.split()[2][1:-1]
+    return ['datetime', 'node', 'kind', 'level', 'msg']
 
 
 def get_line_date(line):
     """Return date part of a line which conform python dateutil."""
-    return line[:16]
+    return line[:14]
 
 
-def get_line_kind(line):
-    """Return type kind of a line."""
-    return line.split()[2][1:-1]
+def get_line_type(line):
+    """Return type of a line."""
+    return line.split()[1]
 
 
 def get_line_msg(line):
     """Return message part of a line."""
-    return line.split()[-1]
+    return line.split()[2]
 
 
 def get_date(dfield, fileo):
     """Return date value from file object."""
     filename = fileo.filename
-    elms = filename.split('_')
-    part = elms[1].split('.')[0]
-    _date = part.split('-')
-    y, m, d = int(_date[0]), int(_date[1]), int(_date[2].split()[0])
+    _date = filename.split('-')[1].split('.')[0]
+    y, m, d = _date[:4], _date[4:6], _date[6:8]
+    y, m, d = int(y), int(m), int(d)
     return DateValue._instance(dfield, y, m, d)
+
+
+def ffilter(adir, filenames):
+    if 'exlog' not in adir:
+        return []
+    return [fn for fn in filenames if fn.endswith('.log')]
 
 
 def update():
@@ -73,12 +69,7 @@ def update():
 
 
 def find_files_and_save(startdir):
-    _find_files_and_save(startdir, 'log')
-
-
-def ffilter(adir, filenames):
-    return [fn for fn in filenames if fn.endswith('.log') and 'ExLog' not in
-            fn]
+    _find_files_and_save(startdir, 'log', ffilter)
 
 
 update()

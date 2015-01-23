@@ -22,7 +22,8 @@ def logs():
     gen_dummydata(ddir)
     from ws_mysol.myprj import log
     from ws_mysol.myprj import exlog
-    yield log, exlog
+    from ws_mysol.myprj import dump
+    yield log, exlog, dump
 
 
 def test_selector_basic(logs):
@@ -54,6 +55,11 @@ def test_selector_basic(logs):
     assert 'ExLog' in f.path
     df = f.to_frame()
     assert len(df.columns) == 4
+
+    # Dump
+    dump = logs[2]
+    assert len(dump.files) == 27
+    assert len(dump.kinds) == 3
 
 
 def test_selector_value(logs):
