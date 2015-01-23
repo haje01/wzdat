@@ -94,7 +94,8 @@ def _get_host():
 def ssh(_prj):
     for prj, port in _get_prj_and_ports():
         if prj == _prj:
-            local('ssh root@{host} -p {port}'.format(host=_get_host(), port=port))
+            local('ssh root@{host} -p {port}'.format(host=_get_host(),
+                                                     port=port))
             return
     abort("Can't find project")
 
@@ -167,6 +168,12 @@ def _make_config(cfgpath):
                 loaded = bcfg
     _cfg.update(loaded)
     return _cfg
+
+
+def relaunch(prj):
+    rm(prj)
+    launch(prj)
+    log(prj)
 
 
 def launch(prj, dbg=False):
