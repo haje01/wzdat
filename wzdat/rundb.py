@@ -277,8 +277,8 @@ def cache_finder():
                 mpath = '%s/%s/%s.py' % (pkg, prj, ft)
                 mod = imp.load_source('%s' % ft,  mpath)
                 dates = [str(date) for date in mod.dates[:-15:-1]]
-                kinds = [str(kind) for kind in mod.kinds.group()]
-                nodes = [str(node) for node in mod.nodes]
+                kinds = sorted([str(kind) for kind in mod.kinds.group()])
+                nodes = sorted([str(node) for node in mod.nodes])
                 info = ft, dates, kinds, nodes
                 ret.append(info)
             update_finder_info(ret)
