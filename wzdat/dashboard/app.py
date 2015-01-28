@@ -4,9 +4,7 @@ import json
 import time
 import re
 from datetime import timedelta, datetime
-import imp
 import logging
-from urlparse import parse_qs
 
 from flask import Flask, render_template, request, Response, redirect, url_for
 from markdown import markdown
@@ -252,49 +250,11 @@ def finder():
                            file_types=file_types)
 
 
-def _select_files(ftype, data):
-    logging.debug("_select_files")
-    qs = parse_qs(data)
-    _start_dt = qs['start_dt'][0]
-    _end_dt = qs['end_dt'][0]
-    _nodes = qs['nodes[]']
-    _kinds = qs['kinds[]']
-
-    os.chdir('/solution')
-    pkg = cfg['sol_pkg']
-    prj = cfg['prj']
-    mpath = '%s/%s/%s.py' % (pkg, prj, ftype)
-    m = imp.load_source('%s' % ftype,  mpath)
-
-    # convert string to object
-    start_dt = end_dt = None
-    grab_end = False
-    for date in m.dates:
-        if grab_end:
-            end_dt = date
-            break
-        if str(date) == _start_dt:
-            start_dt = date
-        if str(date) == _end_dt:
-            grab_end = True
-    nodes = []
-    for node in m.nodes:
-        if str(node) in _nodes:
-            nodes.append(node)
-    kinds = []
-    for kind in m.kinds.group():
-        if str(kind) in _kinds:
-            kinds.append(kind)
-
-    print start_dt, end_dt, nodes, kinds
-    files = m.files[start_dt:end_dt][nodes][kinds]
-    return files
-
-
 @app.route('/finder_search/<ftype>', methods=['POST'])
 def finder_search(ftype):
+    from wzdat.dashboard.tasks import select_files
     logging.debug("finder_search")
-    files = _select_files(ftype, request.data)
+    files = select_files(ftype, request.data)
     sfiles = str(files)
     if 'size: ' not in sfiles:
         sfiles += '\nsize: ' + files.hsize
@@ -304,8 +264,30 @@ def finder_search(ftype):
 @app.route('/finder_request_download/<ftype>', methods=['POST'])
 def finder_request_download(ftype):
     logging.debug("finder_request_download")
-    files = _select_files(ftype, request.data)
-    return Response(files.zlink.data)
+    from wzdat.dashboard.tasks import select_and_zip_files
+    task = select_and_zip_files.delay(ftype, request.data)
+    return Response(task.task_id)
+
+
+@app.route('/finder_poll_request_download/<task_id>', methods=['POST'])
+def finder_poll_request_download(task_id):
+    logging.debug("finder_poll_request_download")
+    from wzdat.dashboard.tasks import select_and_zip_files
+
+    try:
+        task = select_and_zip_files.AsyncResult(task_id)
+        state = task.state
+        if state == 'PENDING':
+            return 'PROGRESS:0'
+        print task.state, task.status
+        if task.state == 'PROGRESS':
+            return 'PROGRESS:' + str(task.result)
+        outputs = task.get()
+        logging.debug('SUCCESS: ' + str(outputs))
+    except Exception:
+        err = task.traceback
+        logging.error(err)
+    return Response(outputs)
 
 
 @app.route('/notebooks')

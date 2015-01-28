@@ -184,7 +184,7 @@ $('.searchBtn').click(function(e) {
       if(msg.lastIndexOf("\n") > 0) {
         msg = msg.substring(0, msg.lastIndexOf("\n"));
       }
-      $('#search_result-' + ft).html('<hr/><h4>Search Result</h4><pre>' + msg + '</pre><b>Total ' + hsize + '</b><form class="form-horizontal" style="margin-top: 20px"><div class="form-group"><div class="col-md-offset-1"><button id="request_download-' + ft + '" class="btn btn-default">Request Download</button></div></div></form><div id="download_result-' + ft + '"></div>');
+      $('#search_result-' + ft).html('<hr/><h4>Search Result</h4><pre>' + msg + '</pre><b>Total ' + hsize + '</b><form class="form-horizontal" style="margin-top: 20px"><div class="form-group"><div class="col-md-offset-1"><button id="request_download-' + ft + '" class="btn btn-primary ladda-button" data-style="expand-right" data-size="s"><span class="ladda-label">Request Download</span></button></div></div></form><div id="download_result-' + ft + '"></div>');
       attachRequestHandler(ft);
     }
     }).fail(function() {
@@ -199,18 +199,14 @@ $('.searchBtn').click(function(e) {
 
 function attachRequestHandler(ft) {
   $('#request_download-' + ft).click(function(e) {
+    e.preventDefault();
     clearDownloadResults();
     var data = getFormData(ft);
-    $('body').addClass('wait');
     $('#request_download-' + ft).attr('disabled', 'disabled');
-    $.post('/finder_request_download/' + ft, data, function(msg) {
-      $('#download_result-' + ft).html('<b>Click to download: </b>' + msg)
-    }).fail(function() {
-      alert('Request Download Failed');
-    }).always(function() {
-      $('body').removeClass('wait');
-    });
-    e.preventDefault();
+    request_task(this, 'download_button', '/finder_request_download/' + ft, '/finder_poll_request_download/', data, 'html', function(result) {
+      $('#download_result-' + ft).html('<b>Click to download: </b>' + result)
+    })
+    return false;
   });
 }
 

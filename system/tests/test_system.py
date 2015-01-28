@@ -66,12 +66,6 @@ def fxdocker():
     yield
 
 
-def test_system_dashboard(fxdocker):
-    f = urllib2.urlopen(dashboard_url)
-    r = f.read()
-    assert 'WzDat MYPRJ Dashboard' in r
-
-
 def test_system_file_event(fxdocker):
     evt.remove_all()
 
@@ -115,6 +109,57 @@ def test_system_file_event(fxdocker):
     rv = evt.get_all()[0]
     assert rv[2] == evt.FILE_DELETE
     assert 'game_2014-02-24 01.log' in rv[3]
+
+
+def test_system_finder():
+    import requests
+
+    # test finder home
+    r = requests.get('{}/finder'.format(dashboard_url))
+    assert r.status_code == 200
+    assert 'D2014_03_05' in r.content
+    assert 'D2014_02_24' in r.content
+
+    data = "start_dt=D2014_03_04&end_dt=D2014_03_05&kinds%5B%5D=auth&"\
+           "kinds%5B%5D=game&nodes%5B%5D=jp_node_1&nodes%5B%5D=kr_node_1"
+    tmpl = '{}/{}/log'
+
+    # test file select
+    sub = 'finder_search'
+    r = requests.post(tmpl.format(dashboard_url, sub), data=data)
+    assert r.status_code == 200
+    assert r.text.split('\n')[:-1] == [
+        u'jp/node-1/log/auth_2014-03-04.log',
+        u'jp/node-1/log/auth_2014-03-05.log',
+        u'jp/node-1/log/game_2014-03-04 01.log',
+        u'jp/node-1/log/game_2014-03-04 02.log',
+        u'jp/node-1/log/game_2014-03-04 03.log',
+        u'jp/node-1/log/game_2014-03-05 01.log',
+        u'jp/node-1/log/game_2014-03-05 02.log',
+        u'jp/node-1/log/game_2014-03-05 03.log',
+        u'kr/node-1/log/auth_2014-03-04.log',
+        u'kr/node-1/log/auth_2014-03-05.log',
+        u'kr/node-1/log/game_2014-03-04 01.log',
+        u'kr/node-1/log/game_2014-03-04 02.log',
+        u'kr/node-1/log/game_2014-03-04 03.log',
+        u'kr/node-1/log/game_2014-03-05 01.log',
+        u'kr/node-1/log/game_2014-03-05 02.log',
+        u'kr/node-1/log/game_2014-03-05 03.log']
+
+    # test request download
+    sub = 'finder_request_download'
+    r = requests.post(tmpl.format(dashboard_url, sub), data=data)
+    assert r.status_code == 200
+    task_id = r.text
+
+    def poll():
+        sub = 'finder_poll_request_download'
+        r = requests.post('{}/{}/{}'.format(dashboard_url, sub, task_id))
+        return r.text
+
+    time.sleep(3)
+    rv = poll()
+    assert '.zip' in rv
 
 
 def test_system_download(fxdocker):
