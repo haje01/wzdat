@@ -20,13 +20,14 @@ env = os.environ.copy()
 
 
 def _reset_data():
+    print 'reset data'
     from wzdat.util import gen_dummydata, get_var_dir
     cfg = make_config()
     ddir = cfg['data_dir']
 
     # remove previous dummy data
     if os.path.isdir(ddir):
-        import shutil
+        print 'remove datadir'
         shutil.rmtree(ddir)
 
     # generate new dummy data
@@ -38,17 +39,15 @@ def _reset_data():
     reset_db()
 
 
-@pytest.yield_fixture(scope='session')
+@pytest.yield_fixture()
 def fxdocker():
-    # remove previous test resource
-    path = os.path.expandvars('$WZDAT_DIR/tests/dummydata')
-    if os.path.isdir(path):
-        shutil.rmtree(path)
+    print 'fxdocker'
 
     cid = check_output(['docker', 'ps', '-q', 'wzdat_myprj']).strip()
     path = os.path.expandvars('$WZDAT_DIR/system')
     if not cid:
         # launch container
+        print 'launch docker'
         ret = check_output(['fab', 'launch:myprj'], cwd=path)
         assert 'Done' in ret
         while True:
@@ -90,7 +89,7 @@ def test_system_file_event(fxdocker):
             time.sleep(3)  # wait for all events registered
 
     sync(('kr', 'us', 'jp'))
-    assert 450 == len(evt.get_all())
+    assert 567 == len(evt.get_all())  # logs, exlogs, dumps
 
     # modify & sync
     evt.remove_all()
@@ -111,7 +110,7 @@ def test_system_file_event(fxdocker):
     assert 'game_2014-02-24 01.log' in rv[3]
 
 
-def test_system_finder():
+def test_system_finder(fxdocker):
     import requests
 
     # test finder home
