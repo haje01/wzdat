@@ -1147,7 +1147,8 @@ class KindField(Field):
         super(KindField, self).__init__(ctx)
 
     def _match(self, oval, fileo):
-        return oval._part in fileo.filename
+        target = fileo.path if hasattr(oval, 'match_path') else fileo.filename
+        return oval._part in target
 
     def _value(self, fileo):
         to_value = self._value_fn()
