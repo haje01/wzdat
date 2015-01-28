@@ -4,7 +4,7 @@ import pytest
 import sqlite3
 
 from wzdat.rundb import reset_db, Cursor, _update_run_info,\
-    _update_cache_info
+    _update_cache_info, destroy_table, destroy_db, create_db
 from wzdat.make_config import make_config
 
 cfg = make_config()
@@ -17,6 +17,7 @@ TEST_DB_LOCK = False
 def fxdb():
     reset_db()
     yield
+    create_db()  # restore destroyed tables
 
 
 def is_table_exist(tbname):
@@ -32,6 +33,18 @@ def test_db_create(fxdb):
         assert is_table_exist('finder')
         assert is_table_exist('cron')
         assert is_table_exist('event')
+
+
+def test_db_destroy(fxdb):
+    destroy_table('event')
+    assert not is_table_exist('event')
+    assert is_table_exist('info')
+
+    destroy_db()
+    assert not is_table_exist('cron')
+    assert not is_table_exist('cache')
+    assert not is_table_exist('finder')
+    assert not is_table_exist('info')
 
 
 @pytest.mark.skipif(not TEST_DB_LOCK, reason="No DBLock Test")

@@ -6,7 +6,7 @@ from wzdat.const import FORWARDER_LOG_PREFIX
 from wzdat.make_config import make_config
 from wzdat.ipynb_runner import update_notebook_by_run
 from wzdat.rundb import get_cron_notebooks, cache_files, cache_finder,\
-    save_cron
+    save_cron, destroy_table as _destroy_table
 from wzdat.util import gen_dummydata as _gen_dummydata
 from wzdat import event as evt
 
@@ -56,6 +56,12 @@ def run_notebook(path):
     update_notebook_by_run(path)
 
 
+@argh.arg('tbname', help="table name to destroy")
+def destroy_table(tbname):
+    """Destroy DB table if exists."""
+    _destroy_table(tbname)
+
+
 @argh.arg('-d', '--dir', help="target directory where dummy data will be"
           "written into. if skipped, cfg['data_dir'] will be chosen.")
 def gen_dummydata(**kwargs):
@@ -76,4 +82,4 @@ def register_event(**kwargs):
 if __name__ == "__main__":
     argh.dispatch_commands([cache_all, register_cron, run_notebook,
                             gen_dummydata, run_all_cron_notebooks,
-                            register_event, check_cache])
+                            register_event, check_cache, destroy_table])

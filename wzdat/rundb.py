@@ -94,6 +94,11 @@ def destroy_db():
         cur.execute('DROP TABLE IF EXISTS event;')
 
 
+def destroy_table(tbname):
+    with Cursor(RUNNER_DB_PATH) as cur:
+        cur.execute('DROP TABLE IF EXISTS {};'.format(tbname))
+
+
 def remove_db_file():
     if os.path.isfile(RUNNER_DB_PATH):
         os.remove(RUNNER_DB_PATH)
