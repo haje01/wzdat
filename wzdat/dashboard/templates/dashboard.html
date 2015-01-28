@@ -51,4 +51,20 @@
 
 {% block pagescript %}
 $('.btn-error').popover();
+
+$(function() {
+  $('button.view').click(function(e) {
+    e.preventDefault();
+    var nbpath = $(this).closest('div[nbpath]').attr('nbpath');
+    var control = $(this).closest('div.control');
+    var form = $(this).closest('form');
+    $(control).siblings('div.view').remove()
+    var data = JSON.stringify(form.serializeArray());
+    request_task(this, 'view_button', '/start_view/' + nbpath, '/poll_view/', data, 'json', function(result) {
+      control.after(result);
+    })
+    return false;
+  });
+
+});
 {% endblock %}

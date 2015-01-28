@@ -63,6 +63,7 @@ def reset_db():
 
 
 def create_db():
+    """Create DB tables if not exist."""
     with Cursor(RUNNER_DB_PATH) as cur:
         # view notebook info
         cur.execute('CREATE TABLE IF NOT EXISTS info '

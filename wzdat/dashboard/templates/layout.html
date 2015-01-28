@@ -78,49 +78,8 @@
         $.ajaxSetup({
           contentType: "application/json; charset=utf-8"
         });
-
-        $('button.view').click(function(e) {
-          e.preventDefault();
-          var l = Ladda.create(this);
-          l.start();
-          var nbpath = $(this).closest('div[nbpath]').attr('nbpath');
-          var control = $(this).closest('div.control');
-          var form = $(this).closest('form');
-          $(control).siblings('div.view').remove()
-          var data = JSON.stringify(form.serializeArray());
-          url = '/start_view/' + nbpath;
-          var ourl = url;
-          $.post(url, data, 'json')
-          .done(function(task_id) {
-            var tm = setInterval(function() {
-              var url = '/poll_view/' + task_id;
-              $.post(url, {})
-              .done(function(outputs) {
-                if (outputs.substring(0, 8) == 'PROGRESS') {
-                  prog = parseFloat(outputs.split(':')[1]);
-                  l.setProgress(prog);
-                }
-                else {
-                  control.after(outputs);
-                  //console.log(outputs);
-                  l.stop();
-                  clearInterval(tm);
-                  console.log(ourl);
-                  ga('send', 'event', 'view_button', 'click', ourl);
-                }
-              })
-              .fail(function() {
-                l.stop();
-                clearInterval(tm);
-            }); }, 1000);
-          })
-          .fail(function() {
-            l.stop();
-            clearInterval(tm);
-          });
-          return false;
-        });
       });
+
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
           (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
         m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
@@ -128,6 +87,43 @@
 
       ga('create', 'UA-52693848-1', 'auto');
       ga('send', 'pageview');
+
+      function request_task(ctrl, name, start_url, poll_url, data, fmt, handler) {
+        var lad = Ladda.create(ctrl);
+        lad.start();
+        function handle_failed() {
+          lad.remove();
+          clearInterval(tm);
+          alert('Request Failed.');
+        }
+        $.post(start_url, data, fmt)
+        .done(function(task_id) {
+          var tm = setInterval(function() {
+            var url = poll_url + task_id;
+            $.post(url, {})
+            .done(function(result) {
+              console.log(result);
+              if (result.substring(0, 8) == 'PROGRESS') {
+                prog = parseFloat(result.split(':')[1]);
+                lad.setProgress(prog);
+              }
+              else {
+                handler(result)
+                //console.log(result);
+                lad.stop();
+                clearInterval(tm);
+                console.log(start_url);
+                ga('send', 'event', name, 'click', start_url)
+              }
+            })
+            .fail(function() {
+              handle_failed();
+          }); }, 1000);
+        })
+        .fail(function() {
+          handle_failed();
+        });
+      }
 
       {% block pagescript %}
       {% endblock %}
