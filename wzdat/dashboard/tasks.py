@@ -72,7 +72,13 @@ def _select_files_dates(m, _start_dt, _end_dt):
     return start_dt, end_dt
 
 
-def _select_files_condition(m, data):
+def _select_files_condition(data, ftype):
+    os.chdir('/solution')
+    pkg = cfg['sol_pkg']
+    prj = cfg['prj']
+    mpath = '%s/%s/%s.py' % (pkg, prj, ftype)
+    m = imp.load_source('%s' % ftype,  mpath)
+
     qs = parse_qs(data)
     _start_dt = qs['start_dt'][0]
     _end_dt = qs['end_dt'][0]
@@ -88,37 +94,55 @@ def _select_files_condition(m, data):
     for kind in m.kinds.group():
         if str(kind) in _kinds:
             kinds.append(kind)
-    return start_dt, end_dt, nodes, kinds
+    return m, start_dt, end_dt, nodes, kinds
 
 
+def _progress(task_fn, prog, total):
+    print '_progress', prog/total
+    task_fn.update_state(state='PROGRESS', meta=prog/total)
+
+
+@app.task()
 def select_files(ftype, data):
-    os.chdir('/solution')
-    pkg = cfg['sol_pkg']
-    prj = cfg['prj']
-    mpath = '%s/%s/%s.py' % (pkg, prj, ftype)
-    m = imp.load_source('%s' % ftype,  mpath)
-
-    # convert string to object
-    start_dt, end_dt, nodes, kinds = _select_files_condition(m, data)
-
-    return m.files[start_dt:end_dt][nodes][kinds]
+    """Asynchronously select files."""
+    print('select_files')
+    m, start_dt, end_dt, nodes, kinds = _select_files_condition(data, ftype)
+    total = float(3 + 1)
+    _progress(select_files, 1, total)
+    files = m.files[start_dt:end_dt]
+    _progress(select_files, 2, total)
+    files = files[nodes]
+    _progress(select_files, 3, total)
+    files = files[kinds]
+    _progress(select_files, 4, total)
+    return str(files)
 
 
 @app.task()
 def select_and_zip_files(ftype, data):
-    files = select_files(ftype, data)
-    total = float(len(files) + 1)
-    select_and_zip_files.update_state(state='PROGRESS', meta=1 / total)
+
+    m, start_dt, end_dt, nodes, kinds = _select_files_condition(data, ftype)
+    total = float(3 + 6 + 1)  # select step + zip step + 1
+    prog = 1
+    _progress(select_and_zip_files, prog, total)
+    files = m.files[start_dt:end_dt]
+    prog += 1
+    _progress(select_and_zip_files, prog, total)
+    files = files[nodes]
+    prog += 1
+    _progress(select_and_zip_files, prog, total)
+    files = files[kinds]
+    prog += 1
+    _progress(select_and_zip_files, prog, total)
 
     tmp_file, _ = unique_tmp_path(TMP_PREFIX, '.zip')
     with zipfile.ZipFile(tmp_file, 'w', zipfile.ZIP_DEFLATED) as zf:
-        cnt = 0
         for _file in files:
-            cnt += 1
+            prog += 6.0 / len(files)
             _add_zip_flat(zf, _file.abspath)
-            print (cnt+1) / total
-            select_and_zip_files.update_state(state='PROGRESS',
-                                              meta=(cnt+1) / total)
+            print prog / total
+            _progress(select_and_zip_files, prog, total)
+
     filename = tmp_file.split(os.path.sep)[-1]
     _, TMP_URL = get_urls()
     return TMP_URL % (filename, filename)

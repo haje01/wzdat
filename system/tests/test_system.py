@@ -123,11 +123,19 @@ def test_system_finder(fxdocker):
            "kinds%5B%5D=game&nodes%5B%5D=jp_node_1&nodes%5B%5D=kr_node_1"
     tmpl = '{}/{}/log'
 
+    def poll_task(sub, task_id):
+        r = requests.post('{}/{}/{}'.format(dashboard_url, sub, task_id))
+        return r.text
+
     # test file select
     sub = 'finder_search'
     r = requests.post(tmpl.format(dashboard_url, sub), data=data)
     assert r.status_code == 200
-    assert r.text.split('\n')[:-1] == [
+    task_id = r.text
+
+    time.sleep(3)
+    rv = poll_task('finder_poll_search', r.text)
+    assert rv.split('\n') == [
         u'jp/node-1/log/auth_2014-03-04.log',
         u'jp/node-1/log/auth_2014-03-05.log',
         u'jp/node-1/log/game_2014-03-04 01.log',
@@ -151,13 +159,8 @@ def test_system_finder(fxdocker):
     assert r.status_code == 200
     task_id = r.text
 
-    def poll():
-        sub = 'finder_poll_request_download'
-        r = requests.post('{}/{}/{}'.format(dashboard_url, sub, task_id))
-        return r.text
-
     time.sleep(3)
-    rv = poll()
+    rv = poll_task('finder_poll_request_download', task_id)
     assert '.zip' in rv
 
 

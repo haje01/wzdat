@@ -250,15 +250,42 @@ def finder():
                            file_types=file_types)
 
 
+def _response_task_status(task_fn, task_id):
+    try:
+        logging.debug('1')
+        task = task_fn.AsyncResult(task_id)
+        state = task.state
+        logging.debug('2')
+        if state == 'PENDING':
+            return 'PROGRESS:0'
+        print task.state, task.status
+        logging.debug('3')
+        if task.state == 'PROGRESS':
+            return 'PROGRESS:' + str(task.result)
+        logging.debug('4')
+        outputs = task.get()
+        logging.debug('SUCCESS: ' + str(outputs))
+        logging.debug('5')
+    except Exception, e:
+        err = task.traceback
+        logging.error(err)
+        outputs = "Error: {}".format(str(e))
+    return Response(outputs)
+
+
 @app.route('/finder_search/<ftype>', methods=['POST'])
 def finder_search(ftype):
     from wzdat.dashboard.tasks import select_files
     logging.debug("finder_search")
-    files = select_files(ftype, request.data)
-    sfiles = str(files)
-    if 'size: ' not in sfiles:
-        sfiles += '\nsize: ' + files.hsize
-    return Response(sfiles)
+    task = select_files.delay(ftype, request.data)
+    return Response(task.task_id)
+
+
+@app.route('/finder_poll_search/<task_id>', methods=['POST'])
+def finder_poll_search(task_id):
+    logging.debug("finder_poll_search")
+    from wzdat.dashboard.tasks import select_files
+    return _response_task_status(select_files, task_id)
 
 
 @app.route('/finder_request_download/<ftype>', methods=['POST'])
@@ -273,21 +300,7 @@ def finder_request_download(ftype):
 def finder_poll_request_download(task_id):
     logging.debug("finder_poll_request_download")
     from wzdat.dashboard.tasks import select_and_zip_files
-
-    try:
-        task = select_and_zip_files.AsyncResult(task_id)
-        state = task.state
-        if state == 'PENDING':
-            return 'PROGRESS:0'
-        print task.state, task.status
-        if task.state == 'PROGRESS':
-            return 'PROGRESS:' + str(task.result)
-        outputs = task.get()
-        logging.debug('SUCCESS: ' + str(outputs))
-    except Exception:
-        err = task.traceback
-        logging.error(err)
-    return Response(outputs)
+    return _response_task_status(select_and_zip_files, task_id)
 
 
 @app.route('/notebooks')

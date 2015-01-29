@@ -66,7 +66,7 @@ body.wait *, body.wait
           </div>
           <div class="form-group" style="margin-top: 20px">
             <div class="col-md-offset-1">
-              <button id="search-{{ft[0]}}" ftype="{{ft[0]}}" class="searchBtn btn btn-default" disabled>Search</button>
+              <button id="search-{{ft[0]}}" ftype="{{ft[0]}}" class="searchBtn btn btn-default btn-info ladda-button" data-style="expand-right" disabled><span class="ladda-label">Search</span></button>
             </div>
           </div>
         </form>
@@ -121,16 +121,17 @@ function clearSearchResults() {
 }
 
 
-function clearDownloadResults() {
+function clearDownloadResults(ft) {
   {% for ft in file_types %}
-  $('#download_result-{{ft[0]}}').html('');
+  $('#download_result-{{ft[0]}}').html('')
+  $('#request_download-' + ft).removeAttr('disabled');
   {% endfor %}
 }
 
 
 function checkSearchCondition(ft) {
   clearSearchResults();
-  clearDownloadResults();
+  clearDownloadResults(ft);
 
   var sdt = $('#start_dt-' + ft).text();
   var edt = $('#end_dt-' + ft).text();
@@ -169,45 +170,43 @@ function getFormData(ft) {
 
 
 $('.searchBtn').click(function(e) {
+  e.preventDefault();
   clearSearchResults();
 
   var ft = $(this).attr('ftype');
-  var data = getFormData(ft);
-  $('body').addClass('wait');
   $('#search-' + ft).attr('disabled', 'disabled');
-  $.post('/finder_search/' + ft, data, function(msg) {
-    if (msg.indexOf('file count: 0') > -1) {
-      $('#search_result-' + ft).html('<hr/><h4>Search Result</h4><b>No files found</b>');
-    } else {
-      var splited = msg.split('\n');
-      var hsize = splited[splited.length -1];
-      if(msg.lastIndexOf("\n") > 0) {
-        msg = msg.substring(0, msg.lastIndexOf("\n"));
+  var data = getFormData(ft);
+  request_task(this, 'select_files', '/finder_search/' + ft, '/finder_poll_search/', data, 'html', function(msg) 
+    {
+      if (msg.indexOf('file count: 0') > -1) {
+        $('#search_result-' + ft).html('<hr/><h4>Search Result</h4><b>No files found</b>');
+      } else {
+        var splited = msg.split('\n');
+        var hsize = splited[splited.length -1];
+        <!--if(msg.lastIndexOf("\n") > 0) {-->
+          <!--msg = msg.substring(0, msg.lastIndexOf("\n"));-->
+        <!--}-->
+        $('#search_result-' + ft).html('<hr/><h4>Search Result</h4><pre>' + msg + '</pre><b>Total ' + hsize + '</b><form class="form-horizontal" style="margin-top: 20px"><div class="form-group"><div class="col-md-offset-1"><button id="request_download-' + ft + '" class="btn btn-primary ladda-button" data-style="expand-right" data-size="s"><span class="ladda-label">Request Download</span></button></div></div></form><div id="download_result-' + ft + '"></div>');
+        attachRequestHandler(ft);
       }
-      $('#search_result-' + ft).html('<hr/><h4>Search Result</h4><pre>' + msg + '</pre><b>Total ' + hsize + '</b><form class="form-horizontal" style="margin-top: 20px"><div class="form-group"><div class="col-md-offset-1"><button id="request_download-' + ft + '" class="btn btn-primary ladda-button" data-style="expand-right" data-size="s"><span class="ladda-label">Request Download</span></button></div></div></form><div id="download_result-' + ft + '"></div>');
-      attachRequestHandler(ft);
-    }
-    }).fail(function() {
-        alert('Search Failed');
-    }).always(function() {
-      $('body').removeClass('wait');
-      $('#search-' + ft).removeAttr('disabled');
+    }, function() {
+        $('#search-' + ft).removeAttr('disabled');
     });
-  e.preventDefault();
 });
 
 
 function attachRequestHandler(ft) {
-  $('#request_download-' + ft).click(function(e) {
+  cid = '#request_download-' + ft
+  $(cid).click(function(e) {
     e.preventDefault();
-    clearDownloadResults();
+    clearDownloadResults(ft);
     var data = getFormData(ft);
-    $('#request_download-' + ft).attr('disabled', 'disabled');
+    $(cid).attr('disabled', 'disabled');
     request_task(this, 'download_button', '/finder_request_download/' + ft, '/finder_poll_request_download/', data, 'html', function(result) {
-      $('#download_result-' + ft).html('<b>Click to download: </b>' + result)
-    })
+        $('#download_result-' + ft).html('<b>Click to download: </b>' + result);
+      });
     return false;
-  });
+    });
 }
 
 {% endblock %}

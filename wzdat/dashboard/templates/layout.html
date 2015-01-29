@@ -74,6 +74,10 @@
     <script src="../../static/js/spin.min.js"></script>
     <script src="../../static/js/ladda.min.js"></script>
     <script>
+      function isFunctionA(object) {
+         return object && getClass.call(object) == '[object Function]';
+       }
+
       $(function() {
         $.ajaxSetup({
           contentType: "application/json; charset=utf-8"
@@ -88,7 +92,7 @@
       ga('create', 'UA-52693848-1', 'auto');
       ga('send', 'pageview');
 
-      function request_task(ctrl, name, start_url, poll_url, data, fmt, handler) {
+      function request_task(ctrl, name, start_url, poll_url, data, fmt, handler, always_fn) {
         var lad = Ladda.create(ctrl);
         lad.start();
         function handle_failed() {
@@ -122,6 +126,11 @@
         })
         .fail(function() {
           handle_failed();
+        })
+        .always(function() {
+          if (always_fn !== undefined) {
+            always_fn();
+          }
         });
       }
 
