@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 """Sample log adapter"""
-import os
-
 from wzdat.value import DateValue
 from wzdat import ALL_EXPORT, make_selectors
 from wzdat.selector import update as _update, Value, find_files_and_save as\
     _find_files_and_save
-from wzdat.util import normalize_path_elms
 from ws_mysol.myprj import get_node as _get_node
 
 get_node = _get_node

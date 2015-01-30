@@ -27,6 +27,7 @@ cfg = make_config()
 LOG_KINDS = ('game', 'auth', 'community')
 PROCESSES = {'game': 3}
 
+
 def unique_tmp_path(prefix, ext='.txt'):
     """Return temp file path with given extension."""
     uuid = prefix + str(_uuid.uuid4())

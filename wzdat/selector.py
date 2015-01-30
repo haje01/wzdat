@@ -1007,6 +1007,8 @@ def _update_files_root(ctx, _root, filecnt, fileno, pg):
         if FORWARDER_LOG_PREFIX in filename:
             continue
         pg.animate(fileno)
+        if 'progress_cb' in ctx.dict:
+            ctx.dict['progress_cb'](pg.prev_pct)
         abspath = os.path.join(root, filename)
         if ctx.encoding.startswith('utf-16'):
             convfile = get_convfile_path(abspath)

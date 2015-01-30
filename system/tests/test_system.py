@@ -135,7 +135,8 @@ def test_system_finder(fxdocker):
 
     time.sleep(3)
     rv = poll_task('finder_poll_search', r.text)
-    assert rv.split('\n') == [
+    rv = rv.split('\n')[:-1]
+    assert rv == [
         u'jp/node-1/log/auth_2014-03-04.log',
         u'jp/node-1/log/auth_2014-03-05.log',
         u'jp/node-1/log/game_2014-03-04 01.log',
@@ -155,7 +156,7 @@ def test_system_finder(fxdocker):
 
     # test request download
     sub = 'finder_request_download'
-    r = requests.post(tmpl.format(dashboard_url, sub), data=data)
+    r = requests.post(tmpl.format(dashboard_url, sub), data='\n'.join(rv))
     assert r.status_code == 200
     task_id = r.text
 

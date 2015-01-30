@@ -17,6 +17,7 @@ from wzdat.selector import get_urls
 app = Celery('wdtask', backend='redis://localhost', broker='redis://localhost')
 cfg = make_config()
 sol_dir = cfg['sol_dir']
+data_dir = cfg['data_dir']
 
 
 @app.task()
@@ -53,7 +54,7 @@ def run_view_cell(nbpath, formname, kwargs):
 def _add_zip_flat(zf, abspath):
     odir = os.getcwd()
     _dir, filename = os.path.split(abspath)
-    os.chdir(_dir)
+    os.chdir(os.path.join(data_dir, _dir))
     zf.write(filename, abspath)
     os.chdir(odir)
 
@@ -97,9 +98,9 @@ def _select_files_condition(data, ftype):
     return m, start_dt, end_dt, nodes, kinds
 
 
-def _progress(task_fn, prog, total):
-    print '_progress', prog/total
-    task_fn.update_state(state='PROGRESS', meta=prog/total)
+def _progress(task_fn, rate):
+    print '_progress', rate
+    task_fn.update_state(state='PROGRESS', meta=rate)
 
 
 @app.task()
@@ -107,41 +108,27 @@ def select_files(ftype, data):
     """Asynchronously select files."""
     print('select_files')
     m, start_dt, end_dt, nodes, kinds = _select_files_condition(data, ftype)
-    total = float(3 + 1)
-    _progress(select_files, 1, total)
-    files = m.files[start_dt:end_dt]
-    _progress(select_files, 2, total)
-    files = files[nodes]
-    _progress(select_files, 3, total)
-    files = files[kinds]
-    _progress(select_files, 4, total)
-    return str(files)
+    files = m.files[start_dt:end_dt][nodes][kinds]
+    sfiles = str(files)
+    if 'size: ' not in sfiles:
+        sfiles += '\nsize: ' + files.hsize
+    return sfiles
 
 
 @app.task()
 def select_and_zip_files(ftype, data):
-
-    m, start_dt, end_dt, nodes, kinds = _select_files_condition(data, ftype)
-    total = float(3 + 6 + 1)  # select step + zip step + 1
+    print 'select_and_zip_files'
+    print data
+    files = data.split('\n')
+    total = len(files) + 1
     prog = 1
-    _progress(select_and_zip_files, prog, total)
-    files = m.files[start_dt:end_dt]
-    prog += 1
-    _progress(select_and_zip_files, prog, total)
-    files = files[nodes]
-    prog += 1
-    _progress(select_and_zip_files, prog, total)
-    files = files[kinds]
-    prog += 1
-    _progress(select_and_zip_files, prog, total)
-
     tmp_file, _ = unique_tmp_path(TMP_PREFIX, '.zip')
     with zipfile.ZipFile(tmp_file, 'w', zipfile.ZIP_DEFLATED) as zf:
         for _file in files:
-            prog += 6.0 / len(files)
-            _add_zip_flat(zf, _file.abspath)
+            prog += 1
+            _add_zip_flat(zf, _file)
             print prog / total
-            _progress(select_and_zip_files, prog, total)
+            _progress(select_and_zip_files, prog/total)
 
     filename = tmp_file.split(os.path.sep)[-1]
     _, TMP_URL = get_urls()

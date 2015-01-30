@@ -1,3 +1,5 @@
+test: true  # test mode
+
 # for Test common Log settings
 log:
     version: 1

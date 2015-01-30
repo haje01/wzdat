@@ -252,20 +252,15 @@ def finder():
 
 def _response_task_status(task_fn, task_id):
     try:
-        logging.debug('1')
         task = task_fn.AsyncResult(task_id)
         state = task.state
-        logging.debug('2')
         if state == 'PENDING':
             return 'PROGRESS:0'
         print task.state, task.status
-        logging.debug('3')
         if task.state == 'PROGRESS':
             return 'PROGRESS:' + str(task.result)
-        logging.debug('4')
         outputs = task.get()
         logging.debug('SUCCESS: ' + str(outputs))
-        logging.debug('5')
     except Exception, e:
         err = task.traceback
         logging.error(err)
@@ -293,6 +288,7 @@ def finder_request_download(ftype):
     logging.debug("finder_request_download")
     from wzdat.dashboard.tasks import select_and_zip_files
     task = select_and_zip_files.delay(ftype, request.data)
+    logging.debug(request.data)
     return Response(task.task_id)
 
 
