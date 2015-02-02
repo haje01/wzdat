@@ -282,6 +282,7 @@ def cache_finder():
             for ft in ftypes:
                 mpath = '%s/%s/%s.py' % (pkg, prj, ft)
                 mod = imp.load_source('%s' % ft,  mpath)
+                mod.load_info()
                 dates = [str(date) for date in mod.dates[:-15:-1]]
                 kinds = sorted([str(kind) for kind in mod.kinds.group()])
                 nodes = sorted([str(node) for node in mod.nodes])

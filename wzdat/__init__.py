@@ -6,11 +6,11 @@ import logging
 import logging.config
 
 from wzdat.make_config import make_config
-from wzdat.selector import update as _update
+from wzdat.selector import load_info as _load_info
 
-update = _update
+load_info = _load_info
 
-ALL_EXPORT = ['files', 'kinds', 'dates', 'dates', 'nodes', 'update', 'node',
+ALL_EXPORT = ['files', 'kinds', 'dates', 'dates', 'nodes', 'load_info', 'node',
               'kind', 'date', 'slot']
 
 

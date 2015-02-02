@@ -3,7 +3,7 @@
 
 from wzdat.value import DateValue
 from wzdat import ALL_EXPORT, make_selectors
-from wzdat.selector import update as _update, Value, find_files_and_save as\
+from wzdat.selector import load_info as _load_info, Value, find_files_and_save as\
     _find_files_and_save
 from ws_mysol.myprj import get_node as _get_node
 
@@ -56,7 +56,7 @@ def ffilter(adir, filenames):
     return [fn for fn in filenames if fn.endswith('.log')]
 
 
-def update():
+def load_info():
     """Initilize global variables."""
     global all_files, fields, ctx, date, kind, node
     global files, kinds, dates, nodes, slot
@@ -64,12 +64,9 @@ def update():
     all_files = []
     fields = {}
 
-    ctx, date, kind, node = _update(globals(), 'log', None, ffilter)
+    ctx, date, kind, node = _load_info(globals(), 'log', None, ffilter)
     files, kinds, dates, nodes, slot = make_selectors(ctx, all_files)
 
 
 def find_files_and_save(startdir):
     _find_files_and_save(startdir, 'log', ffilter)
-
-
-update()

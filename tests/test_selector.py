@@ -21,15 +21,26 @@ def logs():
     # generate new dummy data
     gen_dummydata(ddir)
     from ws_mysol.myprj import log
+    assert log.files is None
+    assert log.dates is None
+    assert log.nodes is None
+    assert log.kinds is None
+    assert log.date is None
+    assert log.node is None
+    assert log.kind is None
+
+    log.load_info()
     from ws_mysol.myprj import exlog
+    exlog.load_info()
     from ws_mysol.myprj import dump
+    dump.load_info()
     yield log, exlog, dump
 
 
 def test_selector_basic(logs):
     # Log
     log = logs[0]
-    update_err = wzdat.selector.get_update_errors()
+    update_err = wzdat.selector.get_load_errors()
     assert len(update_err) == 0
     assert len(log.files) == 450
     assert set(log.kinds) == set([log.kind.auth, log.kind.community,

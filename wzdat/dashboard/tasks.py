@@ -79,6 +79,7 @@ def _select_files_condition(data, ftype):
     prj = cfg['prj']
     mpath = '%s/%s/%s.py' % (pkg, prj, ftype)
     m = imp.load_source('%s' % ftype,  mpath)
+    m.load_info()
 
     qs = parse_qs(data)
     _start_dt = qs['start_dt'][0]

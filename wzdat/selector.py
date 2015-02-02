@@ -36,7 +36,7 @@ from wzdat.lineinfo import LineInfo, LineInfoImpl_Count, LineInfoImpl_Array
 qmode = 'files'
 cfg = make_config()
 
-_update_errors = []
+_load_errors = []
 
 
 def get_urls():
@@ -980,7 +980,7 @@ class Selector(Representable, Listable):
         return self.count
 
 
-def _update_files_root_vals(fieldcnt, fields, fileo, field_getter):
+def _load_files_root_vals(fieldcnt, fields, fileo, field_getter):
     field_errs = []
     vals = set()
     for i in range(fieldcnt):
@@ -996,7 +996,7 @@ def _update_files_root_vals(fieldcnt, fields, fileo, field_getter):
     return vals, field_errs
 
 
-def _update_files_root(ctx, _root, filecnt, fileno, pg):
+def _load_files_root(ctx, _root, filecnt, fileno, pg):
     root = _root[0]
     fields = ctx.fields.values()
     fieldcnt = len(fields)
@@ -1018,8 +1018,8 @@ def _update_files_root(ctx, _root, filecnt, fileno, pg):
             abspath = convfile
         fileo = FileValue(ctx, abspath)
 
-        vals, field_errs = _update_files_root_vals(fieldcnt, fields, fileo,
-                                                   field_getter)
+        vals, field_errs = _load_files_root_vals(fieldcnt, fields, fileo,
+                                                 field_getter)
         # remove incompatible files
         if len(field_errs) > 0:
             errs += field_errs
@@ -1053,7 +1053,7 @@ def _get_cache_path(fmt):
     return os.path.join(cache_dir, '%s_found_files.pkl' % (fmt))
 
 
-def _update_files_precalc(ctx, root_list):
+def _load_files_precalc(ctx, root_list):
     use_cache = cfg['use_cache'] if 'use_cache' in cfg else True
     cpath = _get_cache_path(ctx.logfmt)
     if use_cache and os.path.isfile(cpath):
@@ -1109,17 +1109,17 @@ def find_files_and_save(startdir, fmt, ffilter=None, root_list=None):
     return rv
 
 
-def _update_files(ctx):
-    global _update_files, _update_errors
+def _load_files_info(ctx):
+    global _load_errors
     root_list = []
-    rv, msg = _update_files_precalc(ctx, root_list)
+    rv, msg = _load_files_precalc(ctx, root_list)
     root_list, filecnt = rv
 
     fileno = 0
     pg = ProgressBar('collecting file info', filecnt)
     errors = []
     for _root in root_list:
-        fileno, errs = _update_files_root(ctx, _root, filecnt, fileno, pg)
+        fileno, errs = _load_files_root(ctx, _root, filecnt, fileno, pg)
         if len(errs) > 0:
             errors += errs
     pg.done()
@@ -1130,13 +1130,13 @@ def _update_files(ctx):
     if msg is not None:
         nprint(msg)
 
-    _update_errors = errors
+    _load_errors = errors
     if len(errors) > 0:
         nprint(errors[-4:])
 
 
-def get_update_errors():
-    return _update_errors
+def get_load_errors():
+    return _load_errors
 
 
 class KindField(Field):
@@ -1314,8 +1314,8 @@ def _remove_old():
     remove_old_tmps(tmp_dir, NAMED_TMP_PREFIX, cfg["named_tmp_valid_hour"])
 
 
-def update(mod, fmt, subtype=None, ffilter=None):
-    """Update file information.
+def load_info(mod, fmt, subtype=None, ffilter=None):
+    """Load file information.
 
     Remove temp files when necessary.
 
@@ -1336,7 +1336,7 @@ def update(mod, fmt, subtype=None, ffilter=None):
     node = NodeField(ctx)
 
     # collect files
-    _update_files(ctx)
+    _load_files_info(ctx)
     if encoding.startswith('utf-16'):
         ctx.encoding = 'utf-8'
     ctx.updated = time.time()
