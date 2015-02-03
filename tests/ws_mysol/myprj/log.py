@@ -7,8 +7,6 @@ from ws_mysol.myprj import get_node as _get_node
 __all__ = init_export_all(globals())
 get_node = _get_node
 
-FILE_FORMAT = 'log'
-
 
 def get_kind(sfield, fileo):
     """Return kinds value from file object."""

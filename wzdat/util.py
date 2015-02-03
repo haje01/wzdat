@@ -116,8 +116,8 @@ class Context(Property):
     def __init__(self, mod, startdir, encoding, logfmt):
         super(Context, self).__init__()
         self.mod = mod
-        self.files = mod['all_files']
-        self.fields = mod['fields']
+        self.files = mod['all_files'] = []
+        self.fields = mod['fields'] = {}
         self.startdir = startdir
         self.encoding = codecs.lookup(encoding).name
         self.logfmt = logfmt

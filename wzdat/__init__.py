@@ -21,8 +21,5 @@ if 'WZDAT_NOLOG' not in os.environ and 'log' in cfg:
 def init_export_all(mod):
     for e in ALL_EXPORT:
         mod[e] = None
-    mod['all_files'] = []
-    mod['files'] = []
-    mod['fields'] = {}
     mod['load_info'] = load_info
     return ALL_EXPORT

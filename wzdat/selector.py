@@ -1354,10 +1354,8 @@ def load_info(mod, fmt, target_mod=None, subtype=None, prog_fn=None):
 
 
 def transmit_wzdat_vars(target_mod, load_mod):
-    print('transmit_wzdat_vars')
     for k in ['files', 'kinds', 'dates', 'nodes', 'node', 'kind', 'date',
               'slot']:
-        print('set {}'.format(k))
         target_mod[k] = load_mod[k]
 
 
