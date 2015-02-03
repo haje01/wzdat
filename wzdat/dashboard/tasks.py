@@ -79,7 +79,7 @@ def _select_files_condition(data, ftype):
     prj = cfg['prj']
     mpath = '%s/%s/%s.py' % (pkg, prj, ftype)
     m = imp.load_source('%s' % ftype,  mpath)
-    m.load_info()
+    m.load_info(None, lambda rate: _progress(select_files, rate))
 
     qs = parse_qs(data)
     _start_dt = qs['start_dt'][0]
@@ -109,7 +109,6 @@ def select_files(ftype, data):
     """Asynchronously select files."""
     print('select_files')
     m, start_dt, end_dt, nodes, kinds = _select_files_condition(data, ftype)
-    m.load_info(lambda rate: _progress(select_files, rate))
     files = m.files[start_dt:end_dt][nodes][kinds]
     sfiles = str(files)
     if 'size: ' not in sfiles:
@@ -118,8 +117,9 @@ def select_files(ftype, data):
 
 
 @app.task()
-def select_and_zip_files(ftype, data):
-    print 'select_and_zip_files'
+def zip_files(ftype, data):
+    """Asynchronously zip files."""
+    print 'zip_files'
     print data
     files = data.split('\n')
     total = len(files) + 1
@@ -130,7 +130,7 @@ def select_and_zip_files(ftype, data):
             prog += 1
             _add_zip_flat(zf, _file)
             print prog / total
-            _progress(select_and_zip_files, prog/total)
+            _progress(zip_files, prog/total)
 
     filename = tmp_file.split(os.path.sep)[-1]
     _, TMP_URL = get_urls()

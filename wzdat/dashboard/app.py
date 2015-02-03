@@ -286,8 +286,8 @@ def finder_poll_search(task_id):
 @app.route('/finder_request_download/<ftype>', methods=['POST'])
 def finder_request_download(ftype):
     logging.debug("finder_request_download")
-    from wzdat.dashboard.tasks import select_and_zip_files
-    task = select_and_zip_files.delay(ftype, request.data)
+    from wzdat.dashboard.tasks import zip_files
+    task = zip_files.delay(ftype, request.data)
     logging.debug(request.data)
     return Response(task.task_id)
 
@@ -295,8 +295,8 @@ def finder_request_download(ftype):
 @app.route('/finder_poll_request_download/<task_id>', methods=['POST'])
 def finder_poll_request_download(task_id):
     logging.debug("finder_poll_request_download")
-    from wzdat.dashboard.tasks import select_and_zip_files
-    return _response_task_status(select_and_zip_files, task_id)
+    from wzdat.dashboard.tasks import zip_files
+    return _response_task_status(zip_files, task_id)
 
 
 @app.route('/notebooks')

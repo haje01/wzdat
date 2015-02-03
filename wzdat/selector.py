@@ -1314,7 +1314,7 @@ def _remove_old():
     remove_old_tmps(tmp_dir, NAMED_TMP_PREFIX, cfg["named_tmp_valid_hour"])
 
 
-def load_info(mod, fmt, subtype=None, ffilter=None, prog_fn=None):
+def load_info(mod, fmt, target_mod=None, subtype=None, prog_fn=None):
     """Load file information.
 
     Remove temp files when necessary.
@@ -1330,17 +1330,35 @@ def load_info(mod, fmt, subtype=None, ffilter=None, prog_fn=None):
 
     if encoding.startswith('utf-16'):
         _dir = get_conv_dir()
-    ctx = Context(mod, _dir, encoding, fmt, ffilter)
-    date = DateField(ctx)
-    kind = KindField(ctx)
-    node = NodeField(ctx)
+    ctx = Context(mod, _dir, encoding, fmt)
+    mod['date'] = DateField(ctx)
+    mod['kind'] = KindField(ctx)
+    mod['node'] = NodeField(ctx)
 
     # collect files
     _load_files_info(ctx, prog_fn)
     if encoding.startswith('utf-16'):
         ctx.encoding = 'utf-8'
     ctx.updated = time.time()
-    return ctx, date, kind, node
+
+    # make selectors
+    _files = FileSelector(ctx, ctx.mod['all_files'], 'file')
+    mod['files'] = _files
+    mod['kinds'] = Selector(_files, 'kind')
+    mod['dates'] = Selector(_files, 'date')
+    mod['nodes'] = Selector(_files, 'node')
+    mod['slot'] = SlotMap(ctx)
+
+    if target_mod is not None:
+        transmit_wzdat_vars(target_mod, mod)
+
+
+def transmit_wzdat_vars(target_mod, load_mod):
+    print('transmit_wzdat_vars')
+    for k in ['files', 'kinds', 'dates', 'nodes', 'node', 'kind', 'date',
+              'slot']:
+        print('set {}'.format(k))
+        target_mod[k] = load_mod[k]
 
 
 class FileField(Field):

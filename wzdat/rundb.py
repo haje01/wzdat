@@ -251,12 +251,11 @@ def cache_files():
         old_use_cache = cfg['use_cache']
         prj = cfg['prj']
         print "Caching files for: %s" % prj
-        datadir = cfg['data_dir']
         pkg = cfg['sol_pkg']
         ftypes = cfg['file_types']
         for ftype in ftypes:
-            cmd = ['from %s.%s.%s import find_files_and_save; '
-                   'find_files_and_save("%s")' % (pkg, prj, ftype, datadir)]
+            cmd = ['from %s.%s.%s import load_info; '
+                   'load_info()' % (pkg, prj, ftype)]
             cmd = ' '.join(cmd)
             exec(cmd)
         update_cache_info()

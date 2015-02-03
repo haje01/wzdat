@@ -1,18 +1,15 @@
 # -*- coding: utf-8 -*-
 """Sample exlog adapter"""
+import logging
 
 from wzdat.value import DateValue
-from wzdat import ALL_EXPORT, make_selectors
-from wzdat.selector import load_info as _load_info, Value, find_files_and_save as\
-    _find_files_and_save
+from wzdat import init_export_all
+from wzdat.selector import load_info as _load_info, Value
 from ws_mysol.myprj import get_node as _get_node
 
 get_node = _get_node
 
-__all__ = ALL_EXPORT
-
-all_files = fields = ctx = kind = date = node = None
-files = kinds = dates = nodes = slot = None
+__all__ = init_export_all(globals())
 
 
 def get_kind(sfield, fileo):
@@ -45,29 +42,19 @@ def get_date(dfield, fileo):
     """Return date value from file object."""
     filename = fileo.filename
     _date = filename.split('-')[1].split('.')[0]
+    logging.debug('get_date {}'.format(filename))
     y, m, d = _date[:4], _date[4:6], _date[6:8]
+    logging.debug('y {} m {} d {}'.format(y, m, d))
     y, m, d = int(y), int(m), int(d)
     return DateValue._instance(dfield, y, m, d)
 
 
-def ffilter(adir, filenames):
+def file_filter(adir, filenames):
     if 'exlog' not in adir:
         return []
     return [fn for fn in filenames if fn.endswith('.log')]
 
 
-def load_info(prog_cb=None):
+def load_info(target_mod=None, prog_cb=None):
     """Initilize global variables."""
-    global all_files, fields, ctx, date, kind, node
-    global files, kinds, dates, nodes, slot
-
-    all_files = []
-    fields = {}
-
-    ctx, date, kind, node = _load_info(globals(), 'log', None, ffilter,
-                                       prog_cb)
-    files, kinds, dates, nodes, slot = make_selectors(ctx, all_files)
-
-
-def find_files_and_save(startdir):
-    _find_files_and_save(startdir, 'log', ffilter)
+    _load_info(globals(), 'log', target_mod, None, prog_cb)

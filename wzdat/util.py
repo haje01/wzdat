@@ -113,7 +113,7 @@ class Context(Property):
     def load(path):
         pass
 
-    def __init__(self, mod, startdir, encoding, logfmt, ffilter):
+    def __init__(self, mod, startdir, encoding, logfmt):
         super(Context, self).__init__()
         self.mod = mod
         self.files = mod['all_files']
@@ -121,7 +121,7 @@ class Context(Property):
         self.startdir = startdir
         self.encoding = codecs.lookup(encoding).name
         self.logfmt = logfmt
-        self.ffilter = ffilter
+        self.ffilter = mod['file_filter'] if 'file_filter' in mod else None
 
     def save(self, path):
         pass

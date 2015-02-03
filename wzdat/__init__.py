@@ -6,12 +6,10 @@ import logging
 import logging.config
 
 from wzdat.make_config import make_config
-from wzdat.selector import load_info as _load_info
+from wzdat.selector import load_info
 
-load_info = _load_info
-
-ALL_EXPORT = ['files', 'kinds', 'dates', 'dates', 'nodes', 'load_info', 'node',
-              'kind', 'date', 'slot']
+ALL_EXPORT = ['files', 'kinds', 'dates', 'nodes', 'load_info', 'node', 'kind',
+              'date', 'slot']
 
 
 cfg = make_config()
@@ -20,12 +18,11 @@ if 'WZDAT_NOLOG' not in os.environ and 'log' in cfg:
     logging.config.dictConfig(cfg['log'])
 
 
-def make_selectors(ctx, all_files):
-    from wzdat.selector import FileSelector, Selector, SlotMap
-    """Make selectors and return them."""
-    _files = FileSelector(ctx, all_files, 'file')
-    kinds = Selector(_files, 'kind')
-    dates = Selector(_files, 'date')
-    nodes = Selector(_files, 'node')
-    slot = SlotMap(ctx)
-    return _files, kinds, dates, nodes, slot
+def init_export_all(mod):
+    for e in ALL_EXPORT:
+        mod[e] = None
+    mod['all_files'] = []
+    mod['files'] = []
+    mod['fields'] = {}
+    mod['load_info'] = load_info
+    return ALL_EXPORT

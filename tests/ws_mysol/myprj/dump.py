@@ -2,18 +2,13 @@
 
 """Sample dump adapter"""
 
-from wzdat import ALL_EXPORT, make_selectors
+from wzdat import init_export_all
 from wzdat.value import DateValue, Value
-from wzdat.selector import load_info as _load_info, find_files_and_save as \
-    _find_files_and_save
+from wzdat.selector import load_info as _load_info
 from ws_mysol.myprj import get_node as _get_node
 
+__all__ = init_export_all(globals())
 get_node = _get_node
-
-__all__ = ALL_EXPORT
-
-all_files = fields = ctx = kind = date = node = None
-files = kinds = dates = nodes = slot = None
 
 
 def get_kind(sfield, fileo):
@@ -35,16 +30,6 @@ def get_date(dfield, fileo):
     return DateValue._instance(dfield, y, m, d)
 
 
-def load_info(prog_cb=None):
+def load_info(target_mod=None, prog_cb=None):
     """Initilize global variables."""
-    global all_files, fields, ctx, date, kind, node
-    global files, kinds, dates, nodes, slot
-
-    all_files = []
-    fields = {}
-    ctx, date, kind, node = _load_info(globals(), 'dmp', None, None, prog_cb)
-    files, kinds, dates, nodes, slot = make_selectors(ctx, all_files)
-
-
-def find_files_and_save(startdir):
-    _find_files_and_save(startdir, 'dmp')
+    _load_info(globals(), 'dmp', target_mod, None, prog_cb)
