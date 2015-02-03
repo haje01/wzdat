@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 """Sample log adapter"""
-from wzdat import init_export_all, load_info as _load_info
+from wzdat.selector import load_info as _load_info
 from wzdat.value import DateValue, Value
 from ws_mysol.myprj import get_node as _get_node
 
-__all__ = init_export_all(globals())
 get_node = _get_node
 
 
@@ -56,5 +55,5 @@ def file_filter(adir, filenames):
             fn]
 
 
-def load_info(target_mod=None, prog_cb=None):
-    _load_info(globals(), 'log', target_mod, None, prog_cb)
+def load_info(prog_cb=None):
+    _load_info(globals(), 'log', None, prog_cb)

@@ -31,37 +31,6 @@ def logs():
     yield log, exlog, dump
 
 
-@pytest.mark.skipif(not TEST_IMPORT_ALL, reason="No Import All Test")
-def test_selector_impall():
-    from wzdat.util import gen_dummydata
-    ddir = cfg['data_dir']
-    # remove previous dummy data
-    import shutil
-    shutil.rmtree(ddir)
-
-    # generate new dummy data
-    gen_dummydata(ddir)
-    from ws_mysol.myprj.log import *  # NOQA
-    load_info(locals())
-    assert len(files) == 450
-    assert set(kinds) == set([kind.auth, kind.community,
-                              kind.game])
-    assert set(nodes) == set([node.jp_node_1, node.jp_node_2,
-                              node.jp_node_3, node.kr_node_1,
-                              node.kr_node_2, node.kr_node_3,
-                              node.us_node_1, node.us_node_2,
-                              node.us_node_3])
-    assert set(dates) == set([date.D2014_02_24, date.D2014_02_25,
-                              date.D2014_02_26, date.D2014_02_27,
-                              date.D2014_02_28, date.D2014_03_01,
-                              date.D2014_03_02, date.D2014_03_03,
-                              date.D2014_03_04, date.D2014_03_05])
-
-    # test repetitive load_info
-    load_info(locals())
-    assert len(files) == 450
-
-
 def test_selector_basic(logs):
     # Log
     log = logs[0]

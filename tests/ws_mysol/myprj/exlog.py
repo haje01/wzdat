@@ -3,13 +3,10 @@
 import logging
 
 from wzdat.value import DateValue
-from wzdat import init_export_all
 from wzdat.selector import load_info as _load_info, Value
 from ws_mysol.myprj import get_node as _get_node
 
 get_node = _get_node
-
-__all__ = init_export_all(globals())
 
 
 def get_kind(sfield, fileo):
@@ -55,6 +52,6 @@ def file_filter(adir, filenames):
     return [fn for fn in filenames if fn.endswith('.log')]
 
 
-def load_info(target_mod=None, prog_cb=None):
+def load_info(prog_cb=None):
     """Initilize global variables."""
-    _load_info(globals(), 'log', target_mod, None, prog_cb)
+    _load_info(globals(), 'log', None, prog_cb)

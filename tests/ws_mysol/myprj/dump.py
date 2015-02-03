@@ -2,12 +2,10 @@
 
 """Sample dump adapter"""
 
-from wzdat import init_export_all
 from wzdat.value import DateValue, Value
 from wzdat.selector import load_info as _load_info
 from ws_mysol.myprj import get_node as _get_node
 
-__all__ = init_export_all(globals())
 get_node = _get_node
 
 
@@ -30,6 +28,6 @@ def get_date(dfield, fileo):
     return DateValue._instance(dfield, y, m, d)
 
 
-def load_info(target_mod=None, prog_cb=None):
+def load_info(prog_cb=None):
     """Initilize global variables."""
-    _load_info(globals(), 'dmp', target_mod, None, prog_cb)
+    _load_info(globals(), 'dmp', None, prog_cb)
