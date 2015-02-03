@@ -109,6 +109,7 @@ def select_files(ftype, data):
     """Asynchronously select files."""
     print('select_files')
     m, start_dt, end_dt, nodes, kinds = _select_files_condition(data, ftype)
+    m.load_info(lambda rate: _progress(select_files, rate))
     files = m.files[start_dt:end_dt][nodes][kinds]
     sfiles = str(files)
     if 'size: ' not in sfiles:

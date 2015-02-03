@@ -198,7 +198,7 @@ except ImportError:
 
 
 class ProgressBar:
-    def __init__(self, title, iterations):
+    def __init__(self, title, iterations, prog_cb=None):
         self.title = title
         self.iterations = iterations
         self.prog_bar = '[]'
@@ -207,6 +207,7 @@ class ProgressBar:
         self.prev_pct = -1
         self.prev_time = 0
         self.__update_amount(0)
+        self.prog_cb = prog_cb
         if have_ipython:
             self.animate = self.animate_ipython
         else:
@@ -223,6 +224,8 @@ class ProgressBar:
 
     def animate_ipython(self, eiter):
         pct = self.get_pct(eiter)
+        if self.prog_cb is not None:
+            self.prog_cb(pct / 100.0)
         if eiter != self.iterations:
             if self.prev_pct == pct:
                 return

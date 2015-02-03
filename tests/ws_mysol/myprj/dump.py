@@ -35,14 +35,14 @@ def get_date(dfield, fileo):
     return DateValue._instance(dfield, y, m, d)
 
 
-def load_info():
+def load_info(prog_cb=None):
     """Initilize global variables."""
     global all_files, fields, ctx, date, kind, node
     global files, kinds, dates, nodes, slot
 
     all_files = []
     fields = {}
-    ctx, date, kind, node = _load_info(globals(), 'dmp')
+    ctx, date, kind, node = _load_info(globals(), 'dmp', None, None, prog_cb)
     files, kinds, dates, nodes, slot = make_selectors(ctx, all_files)
 
 

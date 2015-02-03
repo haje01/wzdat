@@ -56,7 +56,7 @@ def ffilter(adir, filenames):
     return [fn for fn in filenames if fn.endswith('.log')]
 
 
-def load_info():
+def load_info(prog_cb=None):
     """Initilize global variables."""
     global all_files, fields, ctx, date, kind, node
     global files, kinds, dates, nodes, slot
@@ -64,7 +64,8 @@ def load_info():
     all_files = []
     fields = {}
 
-    ctx, date, kind, node = _load_info(globals(), 'log', None, ffilter)
+    ctx, date, kind, node = _load_info(globals(), 'log', None, ffilter,
+                                       prog_cb)
     files, kinds, dates, nodes, slot = make_selectors(ctx, all_files)
 
 

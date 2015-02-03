@@ -1109,14 +1109,14 @@ def find_files_and_save(startdir, fmt, ffilter=None, root_list=None):
     return rv
 
 
-def _load_files_info(ctx):
+def _load_files_info(ctx, prog_cb):
     global _load_errors
     root_list = []
     rv, msg = _load_files_precalc(ctx, root_list)
     root_list, filecnt = rv
 
     fileno = 0
-    pg = ProgressBar('collecting file info', filecnt)
+    pg = ProgressBar('collecting file info', filecnt, prog_cb)
     errors = []
     for _root in root_list:
         fileno, errs = _load_files_root(ctx, _root, filecnt, fileno, pg)
@@ -1314,7 +1314,7 @@ def _remove_old():
     remove_old_tmps(tmp_dir, NAMED_TMP_PREFIX, cfg["named_tmp_valid_hour"])
 
 
-def load_info(mod, fmt, subtype=None, ffilter=None):
+def load_info(mod, fmt, subtype=None, ffilter=None, prog_fn=None):
     """Load file information.
 
     Remove temp files when necessary.
@@ -1336,7 +1336,7 @@ def load_info(mod, fmt, subtype=None, ffilter=None):
     node = NodeField(ctx)
 
     # collect files
-    _load_files_info(ctx)
+    _load_files_info(ctx, prog_fn)
     if encoding.startswith('utf-16'):
         ctx.encoding = 'utf-8'
     ctx.updated = time.time()
