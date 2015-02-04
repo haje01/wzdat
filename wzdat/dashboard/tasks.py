@@ -122,7 +122,7 @@ def zip_files(ftype, data):
     print 'zip_files'
     print data
     files = data.split('\n')
-    total = len(files) + 1
+    total = float(len(files))
     prog = 1
     tmp_file, _ = unique_tmp_path(TMP_PREFIX, '.zip')
     with zipfile.ZipFile(tmp_file, 'w', zipfile.ZIP_DEFLATED) as zf:
