@@ -20,7 +20,7 @@ body.wait *, body.wait
       </ul>
       {% for ft in file_types %}
       <div id="tab-body-{{loop.index}}" class="tab-body {%if not loop.first%}hide{%endif%}">
-        <form class="form-horizontal" style="margin-top: 20px" autocomplete="off">
+        <form id="search-form-{{ft[0]}}" class="form-horizontal" style="margin-top: 20px" autocomplete="off">
           <div class="form-group">
             <label class="col-md-1 control-label">Date </label>
             <div class="form-inline" style="margin-top: 6px">
@@ -169,11 +169,26 @@ function getFormData(ft) {
 }
 
 
+function disableSearchForm(ft) {
+  $('#search-form-' + ft + ' :input').prop("disabled", "disabled");
+  $('#start_dt-' + ft).addClass("disabled");
+  $('#end_dt-' + ft).addClass("disabled");
+}
+
+
+function enableSearchForm(ft) {
+  $('#search-form-' + ft + ' :input').removeProp("disabled");
+  $('#start_dt-' + ft).removeClass("disabled");
+  $('#end_dt-' + ft).removeClass("disabled");
+}
+
+
 $('.searchBtn').click(function(e) {
   e.preventDefault();
   clearSearchResults();
 
   var ft = $(this).attr('ftype');
+  disableSearchForm(ft);
   $('#search-' + ft).attr('disabled', 'disabled');
   var data = getFormData(ft);
   request_task(this, 'select_files', '/finder_search/' + ft, '/finder_poll_search/', data, 'html', function(msg) 
@@ -189,6 +204,7 @@ $('.searchBtn').click(function(e) {
         $('#search_result-' + ft).html('<hr/><h4>Search Result</h4><pre id="file_data-' + ft + '">' + msg + '</pre><b>Total ' + hsize + '</b><form class="form-horizontal" style="margin-top: 20px"><div class="form-group"><div class="col-md-offset-1"><button id="request_download-' + ft + '" class="btn btn-primary ladda-button" data-style="expand-right" data-size="s"><span class="ladda-label">Request Download</span></button></div></div></form><div id="download_result-' + ft + '"></div>');
         attachRequestHandler(ft);
       }
+      enableSearchForm(ft)
     }, function() {
         $('#search-' + ft).removeAttr('disabled');
     });
