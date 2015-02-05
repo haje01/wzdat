@@ -25,7 +25,7 @@ log:
         handlers: [console, file]
 
 # for WzDat Test
-use_cache: false
+use_cache: False
 data_dir: $WZDAT_DIR/tests/dummydata
 sol_dir: $WZDAT_DIR/tests
 sol_pkg: ws_mysol

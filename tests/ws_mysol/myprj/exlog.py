@@ -54,4 +54,4 @@ def file_filter(adir, filenames):
 
 def load_info(prog_cb=None):
     """Initilize global variables."""
-    _load_info(globals(), 'log', None, prog_cb)
+    _load_info(globals(), 'exlog', None, prog_cb)
