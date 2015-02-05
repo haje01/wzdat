@@ -20,7 +20,6 @@ def _remove_forwarder_file(es):
 def check_cache():
     # TODO: remove when file-wise caching done
     es = _remove_forwarder_file(evt.get_unhandled_events())
-    logging.debug(str(es))
     if len(es) > 0:
         cache_all()
         ids = [e[0] for e in es]

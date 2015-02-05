@@ -38,15 +38,6 @@ ENV C_FORCE_ROOT true
 # SQLite
 RUN apt-get -qq -y install sqlite3 libsqlite3-dev
 
-# Prepare WzDat
-RUN mkdir -p /var/wzdat/hdf
-RUN mkdir -p /var/wzdat/conv
-RUN mkdir -p /var/wzdat/cache
-RUN mkdir -p /var/tmp/wzdat
-RUN chmod 1777 /var/wzdat/conv
-RUN chmod 1777 /var/wzdat/cache
-RUN chmod 1777 /var/tmp/wzdat
-
 # Supervisor & SSH
 RUN apt-get -qq -y install supervisor
 RUN apt-get -qq -y install openssh-server
