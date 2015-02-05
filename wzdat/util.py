@@ -113,22 +113,24 @@ class Context(Property):
     def load(path):
         pass
 
-    def __init__(self, mod, startdir, encoding, logfmt):
+    def __init__(self, mod, startdir, encoding, file_type):
         super(Context, self).__init__()
         self.mod = mod
         self.files = mod['all_files'] = []
         self.fields = mod['fields'] = {}
         self.startdir = startdir
         self.encoding = codecs.lookup(encoding).name
-        self.logfmt = logfmt
-        self.ffilter = mod['file_filter'] if 'file_filter' in mod else None
+        self.file_type = file_type
+        assert 'file_filter' in mod,\
+            "Adapter must implement 'file_filter' function"
+        self.ffilter = mod['file_filter']
 
     def save(self, path):
         pass
 
     @property
     def isdblog(self):
-        return self.logfmt.lower() == 'csv'
+        return self.file_type.lower() == 'csv'
 
 
 def get_kernel_id(cfile):

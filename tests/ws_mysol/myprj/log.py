@@ -56,4 +56,4 @@ def file_filter(adir, filenames):
 
 
 def load_info(prog_cb=None):
-    _load_info(globals(), 'log', None, prog_cb)
+    _load_info(globals(), 'log', prog_cb)

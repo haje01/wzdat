@@ -28,6 +28,10 @@ def get_date(dfield, fileo):
     return DateValue._instance(dfield, y, m, d)
 
 
+def file_filter(adir, filenames):
+    return [fn for fn in filenames if fn.endswith('.dmp')]
+
+
 def load_info(prog_cb=None):
     """Initilize global variables."""
-    _load_info(globals(), 'dmp', None, prog_cb)
+    _load_info(globals(), 'dump', prog_cb)

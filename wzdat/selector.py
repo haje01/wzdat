@@ -3,7 +3,6 @@
 
 import os
 import types
-import fnmatch
 import codecs
 import zipfile
 import time
@@ -1055,7 +1054,7 @@ def _get_cache_path(fmt):
 
 def _load_files_precalc(ctx, root_list):
     use_cache = cfg['use_cache'] if 'use_cache' in cfg else True
-    cpath = _get_cache_path(ctx.logfmt)
+    cpath = _get_cache_path(ctx.file_type)
     if use_cache and os.path.isfile(cpath):
         tstr = _get_found_time(cpath)
         msg = '\nusing file infos found %s ago.' % tstr
@@ -1063,33 +1062,28 @@ def _load_files_precalc(ctx, root_list):
             root_list, filecnt = pickle.load(f)
             if filecnt > 0:
                 return (root_list, filecnt), msg
-    return find_files_and_save(ctx.startdir, ctx.logfmt, ctx.ffilter,
+    return find_files_and_save(ctx.startdir, ctx.file_type, ctx.ffilter,
                                root_list), None
 
 
-def _filter_fmt_files(adir, filenames, filecnt, fmt, ffilter):
+def _filter_files(adir, filenames, filecnt, file_type, ffilter):
     """
-    Filter files by format(extions or filter function) then returns matching
+    Filter files by file type(filter function) then returns matching
     files and cumulated count.
     """
-    if ffilter is None:
-        # if no file filter is exist, use format name as file extension
-        rfiles = fnmatch.filter(filenames, ('*.' + fmt))
-        filecnt += len(rfiles)
-    else:
-        rfiles = ffilter(adir, filenames)
-        filecnt += len(rfiles)
+    rfiles = ffilter(adir, filenames)
+    filecnt += len(rfiles)
     return rfiles, filecnt
 
 
-def find_files_and_save(startdir, fmt, ffilter=None, root_list=None):
+def find_files_and_save(startdir, file_type, ffilter=None, root_list=None):
     logging.debug('find_files_and_save')
     logging.debug('startdir: ' + str(startdir))
     if root_list is None:
         root_list = []
     use_cache = cfg['use_cache'] if 'use_cache' in cfg else True
     if use_cache:
-        cpath = _get_cache_path(fmt)
+        cpath = _get_cache_path(file_type)
     nprint('finding files and save info...')
     filecnt = 0
     assert os.path.isdir(startdir)
@@ -1098,8 +1092,8 @@ def find_files_and_save(startdir, fmt, ffilter=None, root_list=None):
         _root = [os.path.abspath(root), []]
         root_list.append(_root)
         if len(filenames) > 0:
-            rfiles, filecnt = _filter_fmt_files(root, filenames, filecnt, fmt,
-                                                ffilter)
+            rfiles, filecnt = _filter_files(root, filenames, filecnt,
+                                            file_type, ffilter)
             rfiles = sorted(rfiles)
             _root[1] = rfiles
     rv = sorted(root_list), filecnt
@@ -1314,7 +1308,7 @@ def _remove_old():
     remove_old_tmps(tmp_dir, NAMED_TMP_PREFIX, cfg["named_tmp_valid_hour"])
 
 
-def load_info(mod, fmt, subtype=None, prog_fn=None):
+def load_info(mod, file_type, prog_fn=None):
     """Load file information.
 
     Remove temp files when necessary.
@@ -1325,12 +1319,12 @@ def load_info(mod, fmt, subtype=None, prog_fn=None):
     cfg = make_config()
     _dir = cfg['data_dir']
     encoding = cfg["data_encoding"]
-    if subtype is not None and isinstance(encoding, dict):
-        encoding = encoding[subtype]
+    if isinstance(encoding, dict):
+        encoding = encoding[file_type]
 
     if encoding.startswith('utf-16'):
         _dir = get_conv_dir()
-    ctx = Context(mod, _dir, encoding, fmt)
+    ctx = Context(mod, _dir, encoding, file_type)
     mod['date'] = DateField(ctx)
     mod['kind'] = KindField(ctx)
     mod['node'] = NodeField(ctx)
