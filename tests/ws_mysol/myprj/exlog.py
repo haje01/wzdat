@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 """Sample exlog adapter"""
-import logging
-
 from wzdat.value import DateValue
 from wzdat.selector import load_info as _load_info, Value
 from ws_mysol.myprj import get_node as _get_node
@@ -39,9 +37,7 @@ def get_date(dfield, fileo):
     """Return date value from file object."""
     filename = fileo.filename
     _date = filename.split('-')[1].split('.')[0]
-    logging.debug('get_date {}'.format(filename))
     y, m, d = _date[:4], _date[4:6], _date[6:8]
-    logging.debug('y {} m {} d {}'.format(y, m, d))
     y, m, d = int(y), int(m), int(d)
     return DateValue._instance(dfield, y, m, d)
 

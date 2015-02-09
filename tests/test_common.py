@@ -7,10 +7,10 @@ import pytest
 from wzdat.make_config import make_config, invalidate_config
 from wzdat.util import ChangeDir, get_var_dir, get_tmp_dir, get_hdf_dir,\
     get_cache_dir, get_conv_dir, get_htimestamp, parse_htimestamp,\
-    convert_server_time_to_client
+    convert_server_time_to_client, cache_files, find_files_and_save
 
 
-@pytest.yield_fixture(scope='module')
+@pytest.yield_fixture()
 def fxcfg():
     import tempfile
     tdir = tempfile.gettempdir()
@@ -99,3 +99,17 @@ def test_common_datetime():
     cdt = convert_server_time_to_client(sdt, pytz.UTC,
                                         pytz.timezone('Asia/Seoul'))
     assert '2015-01-01 09:00:00' == cdt.strftime('%Y-%m-%d %H:%M:%S')
+
+
+def test_common_cache(fxlogs, fxdb):
+    log = fxlogs[0]
+    from wzdat.util import get_cache_dir
+    cfg = make_config()
+    d = get_cache_dir()
+    assert os.listdir(d) == []
+    find_files_and_save(cfg['data_dir'], 'log', True, log.file_filter)
+    assert os.listdir(d) == ['log_found_files.pkl']
+    os.remove(os.path.join(d, 'log_found_files.pkl'))
+
+    cache_files()
+    assert len(os.listdir(d)) > 0

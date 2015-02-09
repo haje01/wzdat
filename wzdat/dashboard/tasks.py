@@ -63,6 +63,7 @@ def _select_files_dates(m, _start_dt, _end_dt):
     start_dt = end_dt = None
     grab_end = False
     for date in m.dates:
+        print '=='
         if grab_end:
             end_dt = date
             break
@@ -82,20 +83,26 @@ def _select_files_condition(data, ftype):
     m.load_info(lambda rate: _progress(select_files, rate))
 
     qs = parse_qs(data)
-    _start_dt = qs['start_dt'][0]
-    _end_dt = qs['end_dt'][0]
-    _nodes = qs['nodes[]']
-    _kinds = qs['kinds[]']
+    _start_dt = qs['start_dt'][0] if 'start_dt' in qs else None
+    _end_dt = qs['end_dt'][0] if 'end_dt' in qs else None
+    print _start_dt, _end_dt
+    _nodes = qs['nodes[]'] if 'nodes[]' in qs else None
+    _kinds = qs['kinds[]'] if 'kinds[]' in qs else None
 
     start_dt, end_dt = _select_files_dates(m, _start_dt, _end_dt)
+    print '----------'
+    print start_dt, end_dt
     nodes = []
-    for node in m.nodes:
-        if str(node) in _nodes:
-            nodes.append(node)
+    if _nodes is not None:
+        for node in m.nodes:
+            if str(node) in _nodes:
+                nodes.append(node)
     kinds = []
-    for kind in m.kinds.group():
-        if str(kind) in _kinds:
-            kinds.append(kind)
+    if _kinds is not None:
+        for kind in m.kinds.group():
+            if str(kind) in _kinds:
+                kinds.append(kind)
+    print nodes, kinds
     return m, start_dt, end_dt, nodes, kinds
 
 
@@ -109,7 +116,19 @@ def select_files(ftype, data):
     """Asynchronously select files."""
     print('select_files')
     m, start_dt, end_dt, nodes, kinds = _select_files_condition(data, ftype)
-    files = m.files[start_dt:end_dt][nodes][kinds]
+    if start_dt is not None or end_dt is not None:
+        print 'date filter'
+        files = m.files[start_dt:end_dt]
+    else:
+        print 'no date filter'
+        files = m.files
+    print nodes, kinds
+    if len(nodes) > 0:
+        print 'node filter'
+        files = files[nodes]
+    if len(kinds) > 0:
+        print 'kind filter'
+        files = files[kinds]
     sfiles = str(files)
     if 'size: ' not in sfiles:
         sfiles += '\nsize: ' + files.hsize

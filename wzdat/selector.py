@@ -9,7 +9,6 @@ import time
 import shutil
 from collections import defaultdict
 from subprocess import check_call, CalledProcessError
-import pickle
 import logging
 import traceback
 
@@ -29,7 +28,7 @@ from wzdat.value import ValueList, FailValue, Value, check_date_slice
 from wzdat.util import unique_tmp_path, sizeof_fmt, unique_list, \
     remove_empty_file, Property, remove_old_tmps, get_line_count, \
     get_slice_idx, ProgressBar, nprint, Context, convert_data_file,\
-    get_convfile_path, get_tmp_dir, get_cache_dir, get_conv_dir
+    get_convfile_path, get_tmp_dir, get_conv_dir, load_files_precalc
 from wzdat.lineinfo import LineInfo, LineInfoImpl_Count, LineInfoImpl_Array
 
 qmode = 'files'
@@ -1037,76 +1036,10 @@ def _load_files_root(ctx, _root, filecnt, fileno, pg):
     return fileno, errs
 
 
-def _get_found_time(cpath):
-    s = int(time.time() - os.path.getmtime(cpath))
-    m, s = divmod(s, 60)
-    h, m = divmod(m, 60)
-    if h > 0:
-        return '%d hour %d minute' % (h, m)
-    else:
-        return '%d minute %d seconds' % (m, s)
-
-
-def _get_cache_path(fmt):
-    cache_dir = get_cache_dir()
-    return os.path.join(cache_dir, '%s_found_files.pkl' % (fmt))
-
-
-def _load_files_precalc(ctx, root_list):
-    use_cache = cfg['use_cache'] if 'use_cache' in cfg else True
-    cpath = _get_cache_path(ctx.file_type)
-    if use_cache and os.path.isfile(cpath):
-        tstr = _get_found_time(cpath)
-        msg = '\nusing file infos found %s ago.' % tstr
-        with open(cpath, 'r') as f:
-            root_list, filecnt = pickle.load(f)
-            if filecnt > 0:
-                return (root_list, filecnt), msg
-    return find_files_and_save(ctx.startdir, ctx.file_type, ctx.ffilter,
-                               root_list), None
-
-
-def _filter_files(adir, filenames, filecnt, file_type, ffilter):
-    """
-    Filter files by file type(filter function) then returns matching
-    files and cumulated count.
-    """
-    rfiles = ffilter(adir, filenames)
-    filecnt += len(rfiles)
-    return rfiles, filecnt
-
-
-def find_files_and_save(startdir, file_type, ffilter=None, root_list=None):
-    logging.debug('find_files_and_save')
-    logging.debug('startdir: ' + str(startdir))
-    if root_list is None:
-        root_list = []
-    use_cache = cfg['use_cache'] if 'use_cache' in cfg else True
-    if use_cache:
-        cpath = _get_cache_path(file_type)
-    nprint('finding files and save info...')
-    filecnt = 0
-    assert os.path.isdir(startdir)
-    for root, dirs, filenames in os.walk(startdir):
-        dirs[:] = [d for d in dirs if d not in ('_var_',)]
-        _root = [os.path.abspath(root), []]
-        root_list.append(_root)
-        if len(filenames) > 0:
-            rfiles, filecnt = _filter_files(root, filenames, filecnt,
-                                            file_type, ffilter)
-            rfiles = sorted(rfiles)
-            _root[1] = rfiles
-    rv = sorted(root_list), filecnt
-    if use_cache:
-        with open(cpath, 'w') as f:
-            pickle.dump(rv, f)
-    return rv
-
-
 def _load_files_info(ctx, prog_cb):
     global _load_errors
     root_list = []
-    rv, msg = _load_files_precalc(ctx, root_list)
+    rv, msg = load_files_precalc(ctx, root_list)
     root_list, filecnt = rv
 
     fileno = 0

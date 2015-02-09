@@ -1,8 +1,6 @@
 import re
 import os
 
-import pytest
-
 import wzdat
 from wzdat.make_config import make_config
 
@@ -12,28 +10,9 @@ localhost = os.environ['WZDAT_HOST']
 TEST_IMPORT_ALL = False
 
 
-@pytest.yield_fixture(scope="session")
-def logs():
-    from wzdat.util import gen_dummydata
-    ddir = cfg['data_dir']
-    # remove previous dummy data
-    import shutil
-    shutil.rmtree(ddir)
-
-    # generate new dummy data
-    gen_dummydata(ddir)
-    from ws_mysol.myprj import log
-    log.load_info()
-    from ws_mysol.myprj import exlog
-    exlog.load_info()
-    from ws_mysol.myprj import dump
-    dump.load_info()
-    yield log, exlog, dump
-
-
-def test_selector_basic(logs):
+def test_selector_basic(fxlogs):
     # Log
-    log = logs[0]
+    log = fxlogs[0]
     update_err = wzdat.selector.get_load_errors()
     assert len(update_err) == 0
     assert len(log.files) == 450
@@ -54,7 +33,7 @@ def test_selector_basic(logs):
     assert len(df.columns) == 4
 
     # ExLog
-    log = logs[1]
+    log = fxlogs[1]
     assert len(log.files) == 90
     f = log.files[0]
     assert 'ExLog' in f.path
@@ -62,13 +41,13 @@ def test_selector_basic(logs):
     assert len(df.columns) == 4
 
     # Dump
-    dump = logs[2]
+    dump = fxlogs[2]
     assert len(dump.files) == 27
     assert len(dump.kinds) == 3
 
 
-def test_selector_value(logs):
-    log = logs[0]
+def test_selector_value(fxlogs):
+    log = fxlogs[0]
     f = log.files[0]
     assert isinstance(f, wzdat.selector.FileValue)
     assert f.path == 'jp/node-1/log/auth_2014-02-24.log'
@@ -104,8 +83,8 @@ def test_selector_value(logs):
     2014-02-24 23:00 [ERROR] - Async'''
 
 
-def test_selector_fileselector(logs):
-    log = logs[0]
+def test_selector_fileselector(fxlogs):
+    log = fxlogs[0]
     # log.files[0] == jp/node-1/log/auth_2014-02-24.log
     mf = log.files[0:2]
     assert isinstance(mf, wzdat.selector.FileSelector)
@@ -134,8 +113,8 @@ def test_selector_fileselector(logs):
     assert zl is not None
 
 
-def test_selector_hdf(logs):
-    log = logs[0]
+def test_selector_hdf(fxlogs):
+    log = fxlogs[0]
     from wzdat.util import HDF
     mf = log.files[log.kind.auth][:2]
     df = mf.to_frame()

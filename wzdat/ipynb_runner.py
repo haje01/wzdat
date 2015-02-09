@@ -197,7 +197,7 @@ def _parse_notebook_name(paths, scheds, groups, fnames, path, pjob, static):
             return
         sched = '' if g[0] is None else g[0].replace('|', '/')
         if pjob.setall(sched):
-            logging.debug(u"Found '{}'.".format(path))
+            # logging.debug(u"Found '{}'.".format(path))
             gname = '' if g[1] is None else g[1]
             fname = g[2]
             paths.append(path)

@@ -7,6 +7,7 @@ import math
 import logging
 from datetime import datetime
 import datetime as _datetime
+import pickle
 import fnmatch
 import time
 from subprocess import check_call, CalledProcessError
@@ -635,3 +636,122 @@ def get_htimestamp(ts=None):
 def parse_htimestamp(ts):
     from dateutil.parser import parse
     return parse(ts)
+
+
+def get_cache_path(fmt):
+    cache_dir = get_cache_dir()
+    return os.path.join(cache_dir, '%s_found_files.pkl' % (fmt))
+
+
+def _filter_files(adir, filenames, filecnt, file_type, ffilter):
+    """
+    Filter files by file type(filter function) then returns matching
+    files and cumulated count.
+    """
+    rfiles = ffilter(adir, filenames)
+    filecnt += len(rfiles)
+    return rfiles, filecnt
+
+
+def find_files_and_save(startdir, file_type, use_cache, ffilter=None,
+                        root_list=None):
+    logging.debug('find_files_and_save')
+    logging.debug('startdir: ' + str(startdir))
+    if root_list is None:
+        root_list = []
+    nprint('finding files and save info...')
+    filecnt = 0
+    assert os.path.isdir(startdir)
+    for root, dirs, filenames in os.walk(startdir):
+        dirs[:] = [d for d in dirs if d not in ('_var_',)]
+        _root = [os.path.abspath(root), []]
+        root_list.append(_root)
+        if len(filenames) > 0:
+            rfiles, filecnt = _filter_files(root, filenames, filecnt,
+                                            file_type, ffilter)
+            rfiles = sorted(rfiles)
+            _root[1] = rfiles
+    rv = sorted(root_list), filecnt
+    if use_cache:
+        cpath = get_cache_path(file_type)
+        with open(cpath, 'w') as f:
+            pickle.dump(rv, f)
+    return rv
+
+
+def _get_found_time(cpath):
+    s = int(time.time() - os.path.getmtime(cpath))
+    m, s = divmod(s, 60)
+    h, m = divmod(m, 60)
+    if h > 0:
+        return '%d hour %d minute' % (h, m)
+    else:
+        return '%d minute %d seconds' % (m, s)
+
+
+def load_files_precalc(ctx, root_list):
+    use_cache = cfg['use_cache'] if 'use_cache' in cfg else True
+    cpath = get_cache_path(ctx.file_type)
+    if use_cache and os.path.isfile(cpath):
+        tstr = _get_found_time(cpath)
+        msg = '\nusing file infos found %s ago.' % tstr
+        with open(cpath, 'r') as f:
+            root_list, filecnt = pickle.load(f)
+            if filecnt > 0:
+                return (root_list, filecnt), msg
+    return find_files_and_save(ctx.startdir, ctx.file_type, use_cache,
+                               ctx.ffilter, root_list), None
+
+
+def cache_files():
+    import imp
+    from rundb import update_cache_info
+    logging.debug('cache_files')
+    with ChangeDir(cfg['sol_dir']):
+        # prevent using cache
+        if 'file_types' not in cfg:
+            logging.warning('no file_types in cfg. exit')
+            return
+        old_use_cache = cfg['use_cache']
+        data_dir = cfg['data_dir']
+        pkg = cfg['sol_pkg']
+        prj = cfg['prj']
+        print "Caching files for: %s" % prj
+        ftypes = cfg['file_types']
+        for ftype in ftypes:
+            mpath = '%s/%s/%s.py' % (pkg, prj, ftype)
+            mod = imp.load_source('%s' % ftype,  mpath)
+            ffilter = mod.file_filter
+            find_files_and_save(data_dir, ftype, True, ffilter, [])
+        update_cache_info()
+        cfg['use_cache'] = old_use_cache
+
+
+def cache_finder():
+    import imp
+    from wzdat.rundb import update_finder_info
+    # Make cache for file finder.
+    logging.debug('cache_finder')
+    with ChangeDir(cfg['sol_dir']):
+        if 'file_types' not in cfg:
+            logging.warning('no file_types in cfg. exit')
+            return
+        ret = []
+        if ret is None or len(ret) == 0:
+            pkg = cfg['sol_pkg']
+            prj = cfg['prj']
+            ftypes = cfg["file_types"]
+            sol_dir = cfg['sol_dir']
+            os.chdir(sol_dir)
+            ret = []
+            for ft in ftypes:
+                mpath = '%s/%s/%s.py' % (pkg, prj, ft)
+                mod = imp.load_source('%s' % ft,  mpath)
+                mod.load_info()
+                dates = [str(date) for date in mod.dates[:-15:-1]]
+                kinds = sorted([str(kind) for kind in mod.kinds.group()])
+                nodes = sorted([str(node) for node in mod.nodes])
+                info = ft, dates, kinds, nodes
+                ret.append(info)
+            update_finder_info(ret)
+        return ret

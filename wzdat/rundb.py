@@ -10,7 +10,6 @@ import logging
 import sqlite3
 
 from wzdat.make_config import make_config
-from wzdat.util import ChangeDir
 
 cfg = make_config()
 RUNNER_DB_PATH = cfg['runner_db_path']
@@ -191,6 +190,7 @@ def update_finder_info(info):
 
 def save_cron(paths, scheds):
     with Cursor(RUNNER_DB_PATH) as cur:
+        cur.execute('DELETE FROM cron')
         for i, path in enumerate(paths):
             cur.execute('SELECT count(*) FROM cron WHERE path=?', (path,))
             if cur.fetchone()[0] > 0:
@@ -239,53 +239,3 @@ if __name__ == "__main__":
             destroy_db()
         else:
             print "Unregistered command: " + cmd
-
-
-def cache_files():
-    logging.debug('cache_files')
-    with ChangeDir(cfg['sol_dir']):
-        # prevent using cache
-        if 'file_types' not in cfg:
-            logging.warning('no file_types in cfg. exit')
-            return
-        old_use_cache = cfg['use_cache']
-        prj = cfg['prj']
-        print "Caching files for: %s" % prj
-        pkg = cfg['sol_pkg']
-        ftypes = cfg['file_types']
-        for ftype in ftypes:
-            cmd = ['from %s.%s.%s import load_info; '
-                   'load_info()' % (pkg, prj, ftype)]
-            cmd = ' '.join(cmd)
-            exec(cmd)
-        update_cache_info()
-        cfg['use_cache'] = old_use_cache
-
-
-def cache_finder():
-    import imp
-    # Make cache for file finder.
-    logging.debug('cache_finder')
-    with ChangeDir(cfg['sol_dir']):
-        if 'file_types' not in cfg:
-            logging.warning('no file_types in cfg. exit')
-            return
-        ret = []
-        if ret is None or len(ret) == 0:
-            pkg = cfg['sol_pkg']
-            prj = cfg['prj']
-            ftypes = cfg["file_types"]
-            sol_dir = cfg['sol_dir']
-            os.chdir(sol_dir)
-            ret = []
-            for ft in ftypes:
-                mpath = '%s/%s/%s.py' % (pkg, prj, ft)
-                mod = imp.load_source('%s' % ft,  mpath)
-                mod.load_info()
-                dates = [str(date) for date in mod.dates[:-15:-1]]
-                kinds = sorted([str(kind) for kind in mod.kinds.group()])
-                nodes = sorted([str(node) for node in mod.nodes])
-                info = ft, dates, kinds, nodes
-                ret.append(info)
-            update_finder_info(ret)
-        return ret

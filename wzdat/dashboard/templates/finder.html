@@ -22,8 +22,10 @@ body.wait *, body.wait
       <div id="tab-body-{{loop.index}}" class="tab-body {%if not loop.first%}hide{%endif%}">
         <form id="search-form-{{ft[0]}}" class="form-horizontal" style="margin-top: 20px" autocomplete="off">
           <div class="form-group">
-            <label class="col-md-1 control-label">Date </label>
-            <div class="form-inline" style="margin-top: 6px">
+            <div class="col-md-1 checkbox">
+              <input class="category date" type="checkbox" value="Date" ftype="{{ft[0]}}" checked><strong>Date</strong></input>
+            </div>
+            <div class="form-inline date-{{ft[0]}}" style="margin-top: 9px">
               <span>From</span>
               <div class="btn-group" style="margin-right: 20px">
                 <a id="start_dt-{{ft[0]}}" role="button" data-toggle="dropdown" href="javascript:void(0)">Start <span class="caret"></span></a>
@@ -45,8 +47,10 @@ body.wait *, body.wait
             </div>
           </div>
           <div class="form-group">
-            <label class="col-md-1 control-label">Kind </label>
-            <div class="form-inline col-md-11">
+            <div class="col-md-1 checkbox">
+              <input class="category kind" type="checkbox" value="Kind" ftype="{{ft[0]}}" checked><strong>Kind</strong></input>
+            </div>
+            <div class="form-inline kind-{{ft[0]}}">
               {% for kind in ft[2] %}
               <div class="checkbox" style="margin-right: 20px">
                 <input class="kind" ftype="{{ft[0]}}" type="checkbox" value="{{kind}}" {%if ft[2]|length == 1%}checked{%endif%}> {{kind}}
@@ -55,8 +59,10 @@ body.wait *, body.wait
             </div>
           </div>
           <div class="form-group">
-            <label class="col-md-1 control-label">Node </label>
-            <div class="form-inline col-md-11">
+            <div class="col-md-1 checkbox">
+              <input class="category node" type="checkbox" value="Node" ftype="{{ft[0]}}" checked><strong>Node</strong></input>
+            </div>
+            <div class="form-inline node-{{ft[0]}}">
               {% for node in ft[3] %}
               <div class="checkbox" style="margin-right: 20px">
                 <input class="node" ftype="{{ft[0]}}" type="checkbox" value="{{node}}" {%if ft[3]|length == 1%}checked{%endif%}> {{node}}
@@ -109,6 +115,11 @@ $('.kind').click(function(e) {
   checkSearchCondition(ft);
 });
 
+$('.category').click(function(e) {
+  var ft = $(this).attr('ftype');
+  checkSearchCondition(ft);
+});
+
 $('.node').click(function(e) {
   var ft = $(this).attr('ftype');
   checkSearchCondition(ft);
@@ -137,10 +148,19 @@ function checkSearchCondition(ft) {
   var edt = $('#end_dt-' + ft).text();
   var dt = $('#end_dt-' + ft).attr('class');
   var sb = $('#search-' + ft);
-  var kinds = checkedKinds();
-  var nodes = checkedNodes();
+  var kinds = checkedKinds(ft);
+  var nodes = checkedNodes(ft);
   var disabled = false;
-  if (sdt == 'Start ' || edt == 'End ' || dt == 'falsedate' || kinds.length == 0 || nodes.length == 0) {
+  var rv = getCategoryStat(ft);
+  var date = rv[0];
+  var kind = rv[1];
+  var node = rv[2];
+
+  normalizeControlStat(ft)
+  pdate = !date || (sdt != 'Start ' && edt != 'End ');
+  pkind = !kind || (kinds.length > 0)
+  pnode = !node || (nodes.length > 0)
+  if (!pdate || !pkind || !pnode) {
     disabled = true;
   }
   if (disabled) {
@@ -150,34 +170,84 @@ function checkSearchCondition(ft) {
   }
 }
 
-function checkedKinds() {
-  return $('.kind:visible:checked').map(function() { return this.value; }).get();
+function getCategoryStat(ft) {
+  var date = $('.category.date[ftype=' + ft + ']').prop('checked');
+  var kind = $('.category.kind[ftype=' + ft + ']').prop('checked');
+  var node = $('.category.node[ftype=' + ft + ']').prop('checked');
+  return [date, kind, node]
 }
 
-function checkedNodes() {
-  return $('.node:visible:checked').map(function() { return this.value; }).get();
+
+function normalizeControlStat(ft) {
+  var rv = getCategoryStat(ft);
+  var date = rv[0];
+  var kind = rv[1];
+  var node = rv[2];
+
+  $('#search-form-' + ft + ' :input').removeProp("disabled");
+  if (!date) {
+    disableDates(ft);
+  } else {
+    enableDates(ft);
+  }
+
+  if (!kind) {
+    $('input.kind[ftype=' + ft + ']:not(.category)').prop('disabled', 'disabled');
+  } else {
+    $('input.kind[ftype=' + ft + ']:not(.category)').removeProp('disabled');
+  }
+
+  if (!node) {
+    $('input.node[ftype=' + ft + ']:not(.category)').prop('disabled', 'disabled');
+  } else {
+    $('input.node[ftype=' + ft + ']:not(.category)').removeProp('disabled');
+  }
+}
+
+function checkedKinds(ft) {
+  return $('.kind[ftype=' + ft + ']:not(.category):checked').map(function() { return this.value; }).get();
+}
+
+function checkedNodes(ft) {
+  return $('.node[ftype=' + ft + ']:not(.category):checked').map(function() { return this.value; }).get();
 }
 
 
 function getFormData(ft) {
-  var start_dt = $('#start_dt-' + ft).text();
-  var end_dt = $('#end_dt-' + ft).text();
-  var kinds = checkedKinds();
-  var nodes = checkedNodes();
-  var data = {'start_dt': start_dt, 'end_dt': end_dt, 'kinds': kinds, 'nodes': nodes};
+  var rv = getCategoryStat(ft);
+  var date = rv[0];
+  var kind = rv[1];
+  var node = rv[2];
+  var data = {}
+  if (date) {
+    var start_dt = $('#start_dt-' + ft).text();
+    var end_dt = $('#end_dt-' + ft).text();
+    data['start_dt'] = start_dt;
+    data['end_dt'] = end_dt;
+  }
+  if (kind) {
+    data['kinds'] = checkedKinds(ft);
+  }
+  if (node) {
+    data['nodes'] = checkedNodes(ft);
+  }
   return data
 }
 
 
 function disableSearchForm(ft) {
   $('#search-form-' + ft + ' :input').prop("disabled", "disabled");
+  disableDates(ft);
+}
+
+
+function disableDates(ft) {
   $('#start_dt-' + ft).addClass("disabled");
   $('#end_dt-' + ft).addClass("disabled");
 }
 
 
-function enableSearchForm(ft) {
-  $('#search-form-' + ft + ' :input').removeProp("disabled");
+function enableDates(ft) {
   $('#start_dt-' + ft).removeClass("disabled");
   $('#end_dt-' + ft).removeClass("disabled");
 }
@@ -204,7 +274,7 @@ $('.searchBtn').click(function(e) {
         $('#search_result-' + ft).html('<hr/><h4>Search Result</h4><pre id="file_data-' + ft + '">' + msg + '</pre><b>Total ' + hsize + '</b><form class="form-horizontal" style="margin-top: 20px"><div class="form-group"><div class="col-md-offset-1"><button id="request_download-' + ft + '" class="btn btn-primary ladda-button" data-style="expand-right" data-size="s"><span class="ladda-label">Request Download</span></button></div></div></form><div id="download_result-' + ft + '"></div>');
         attachRequestHandler(ft);
       }
-      enableSearchForm(ft)
+      normalizeControlStat(ft)
     }, function() {
         $('#search-' + ft).removeAttr('disabled');
     });

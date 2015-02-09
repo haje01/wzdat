@@ -3,21 +3,14 @@ import time
 import pytest
 import sqlite3
 
-from wzdat.rundb import reset_db, Cursor, _update_run_info,\
-    _update_cache_info, destroy_table, destroy_db, create_db
+from wzdat.rundb import Cursor, _update_run_info, _update_cache_info,\
+    save_cron
 from wzdat.make_config import make_config
 
 cfg = make_config()
 
 RUNNER_DB_PATH = cfg['runner_db_path']
 TEST_DB_LOCK = False
-
-
-@pytest.yield_fixture(scope='module')
-def fxdb():
-    reset_db()
-    yield
-    create_db()  # restore destroyed tables
 
 
 def is_table_exist(tbname):
@@ -33,18 +26,6 @@ def test_db_create(fxdb):
         assert is_table_exist('finder')
         assert is_table_exist('cron')
         assert is_table_exist('event')
-
-
-def test_db_destroy(fxdb):
-    destroy_table('event')
-    assert not is_table_exist('event')
-    assert is_table_exist('info')
-
-    destroy_db()
-    assert not is_table_exist('cron')
-    assert not is_table_exist('cache')
-    assert not is_table_exist('finder')
-    assert not is_table_exist('info')
 
 
 @pytest.mark.skipif(not TEST_DB_LOCK, reason="No DBLock Test")
@@ -65,3 +46,17 @@ def test_db_update_run():
                 print str(e)
                 print i, time.time() - st
                 raise
+
+
+def test_db_save_cron(fxdb):
+    from wzdat.ipynb_runner import find_cron_notebooks
+    from wzdat.util import get_notebook_dir
+    nb_dir = get_notebook_dir()
+    paths, scheds, _, _ = find_cron_notebooks(nb_dir)
+    with Cursor(RUNNER_DB_PATH) as cur:
+        rv = cur.execute('SELECT count(*) FROM cron').fetchone()
+        assert rv[0] == 0
+    save_cron(paths, scheds)
+    with Cursor(RUNNER_DB_PATH) as cur:
+        rv = cur.execute('SELECT count(*) FROM cron').fetchone()
+        assert rv[0] == 2
