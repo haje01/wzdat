@@ -1,9 +1,8 @@
 wzdat_
 ======
-
-.. image:: http://54.65.72.149/api/badge/github.com/haje01/wzdat/status.svg?branch=master
+.. image:: http://54.65.207.123/api/badge/github.com/haje01/wzdat/status.svg?branch=master
   :alt: Build Status
-  :target: http://54.65.72.149/github.com/haje01/wzdat
+  :target: http://54.65.207.123/github.com/haje01/wzdat
 
 
 .. image:: https://coveralls.io/repos/haje01/wzdat/badge.png
