@@ -70,6 +70,9 @@ def make_config(cfgpath=None, usecache=True):
         assert 'WZDAT_CFG' in os.environ
         cfgpath = os.environ['WZDAT_CFG']
 
+    # check required env vars
+    assert 'WZDAT_DIR' in os.environ
+
     adir = os.path.dirname(cfgpath)
     afile = os.path.basename(cfgpath)
 

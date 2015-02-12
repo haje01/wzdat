@@ -16,3 +16,4 @@ ipython==2.3.0
 pysqlite==2.6.3
 pyzmq==14.4.1
 tornado==4.0.2
+requests==2.5.1

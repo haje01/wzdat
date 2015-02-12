@@ -43,11 +43,16 @@ def _reset_data():
 def fxdocker():
     print 'fxdocker'
 
-    cid = check_output(['docker', 'ps', '-q', 'wzdat_myprj']).strip()
+    cid = None
+    cons = check_output(['docker', 'ps']).split('\n')
+    for con in cons[1:]:
+        elm = con.split()
+        if len(elm) > 0 and elm[-1] == 'wzdat_myprj':
+            cid = elm[0]
     path = os.path.expandvars('$WZDAT_DIR/system')
     if not cid:
         # launch container
-        print 'launch docker'
+        print 'Launching docker'
         ret = check_output(['fab', 'launch:myprj'], cwd=path)
         assert 'Done' in ret
         while True:
