@@ -173,4 +173,4 @@ def relaunch(_remote=False):
 
 def launch(_remote=False):
     cmd = run if _remote else local
-    cmd('python -m system.launch')
+    cmd('python -m system.cmds launch')
