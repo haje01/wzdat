@@ -1,6 +1,6 @@
 import os
 import types
-import pickle
+import cPickle
 
 from wzdat.base import IListable
 from wzdat.util import unique_list, get_slice_idx, normalize_idx
@@ -137,7 +137,7 @@ class LineInfo(IListable):
         sinfopath = tmppath + SAVE_INFO_EXT
         with open(sinfopath, 'w') as f:
             sinfo = LineInfo_SInfo(self)
-            pickle.dump(sinfo, f, 2)
+            cPickle.dump(sinfo, f, 2)
 
     def remove_saved(self, tmppath):
         sinfopath = tmppath + SAVE_INFO_EXT
@@ -148,7 +148,7 @@ class LineInfo(IListable):
     def load(self, tmppath, ctx):
         sinfopath = tmppath + SAVE_INFO_EXT
         with open(sinfopath, 'r') as f:
-            sinfo = pickle.load(f)
+            sinfo = cPickle.load(f)
             impls = []
             for impl_info in sinfo.impl_infos:
                 impl = impl_info.make_impl(ctx)
@@ -468,7 +468,7 @@ class LineInfoImpl_Array_SInfo(ILineInfoImpl_SInfo):
         fileidx = {name: idx for idx, name in enumerate(ufiles)}
 
         self.nodes = [nodeidx[node._repr] for node in impl.nodes]
-        self.kinds = [kindidx [kind._part] for kind in impl.kinds]
+        self.kinds = [kindidx[kind._part] for kind in impl.kinds]
         self.dates = [dateidx[date._sdate] for date in impl.dates]
         self.files = [fileidx[_file.path] for _file in impl.files]
 
@@ -495,7 +495,7 @@ class LineInfoImpl_Array_SInfo(ILineInfoImpl_SInfo):
         nodes = self._find_real_values(self.nodemap, self.nodes, nvals,
                                        '_repr')
         kinds = self._find_real_values(self.kindmap, self.kinds, svals,
-                                         '_part')
+                                       '_part')
         dates = self._find_real_values(self.datemap, self.dates, dvals,
                                        '_sdate')
         files = self._find_real_values(self.filemap, self.files,

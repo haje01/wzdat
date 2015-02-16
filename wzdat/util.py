@@ -7,7 +7,7 @@ import math
 import logging
 from datetime import datetime
 import datetime as _datetime
-import pickle
+import cPickle
 import fnmatch
 import time
 from subprocess import check_call, CalledProcessError
@@ -675,7 +675,7 @@ def find_files_and_save(startdir, file_type, use_cache, ffilter=None,
     if use_cache:
         cpath = get_cache_path(file_type)
         with open(cpath, 'w') as f:
-            pickle.dump(rv, f)
+            cPickle.dump(rv, f)
     return rv
 
 
@@ -696,7 +696,7 @@ def load_files_precalc(ctx, root_list):
         tstr = _get_found_time(cpath)
         msg = '\nusing file infos found %s ago.' % tstr
         with open(cpath, 'r') as f:
-            root_list, filecnt = pickle.load(f)
+            root_list, filecnt = cPickle.load(f)
             if filecnt > 0:
                 return (root_list, filecnt), msg
     return find_files_and_save(ctx.startdir, ctx.file_type, use_cache,
