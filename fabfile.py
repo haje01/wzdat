@@ -36,7 +36,6 @@ def prepare():
     # test()
     diff()
     commit()
-    coveralls()
     gpush()
 
 
@@ -174,4 +173,4 @@ def relaunch(_remote=False):
 
 def launch(_remote=False):
     cmd = run if _remote else local
-    cmd('python -m wzdat.system.launch')
+    cmd('python -m system.launch')

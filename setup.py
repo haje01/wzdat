@@ -7,7 +7,7 @@ setup(name="wzdat",
       author="JeongJu Kim",
       author_email="haje01@gmail.com",
       license="MIT",
-      packages=["wzdat", "wzdat.dashboard", "wzdat.system"],
+      packages=["wzdat", "wzdat.dashboard"],
       include_package_data=True,
       zip_safe=False,
       )
