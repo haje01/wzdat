@@ -1,6 +1,6 @@
 import os
 
-from fabric.api import local, run, env, abort
+from fabric.api import local, run, env, abort, cd
 
 env.password = 'docker'
 prj_map = {}
@@ -28,16 +28,25 @@ def commit(msg=None):
     local('git commit -m "{}" -a'.format(msg))
 
 
-def push():
+def gpush():
     local("git push")
 
 
 def prepare_deploy():
-    test()
+    # test()
     diff()
     commit()
     coveralls()
-    push()
+    gpush()
+
+
+def set_hosts():
+    env.hosts = open('hosts_file', 'r').readlines()
+
+
+def deploy():
+    with cd('~/wzdat'):
+        run("git pull")
 
 
 def _get_prj_and_ports():
@@ -63,7 +72,7 @@ def hosts(prj=None):
     env.hosts = hosts
 
 
-def push():
+def dpush():
     local('docker push haje01/wzdat-base')
     local('docker push haje01/wzdat')
 
