@@ -132,9 +132,10 @@ def _build_dev(_remote):
 
 @parallel
 def build(_remote=False):
-    _build_base(_remote)
-    _build(_remote)
-    _build_dev(_remote)
+    with cd('system'):
+        _build_base(_remote)
+        _build(_remote)
+        _build_dev(_remote)
 
 
 def _get_host():
