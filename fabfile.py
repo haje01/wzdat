@@ -23,6 +23,10 @@ def commit():
     local('git commit -m "{}" -a'.format(msg))
 
 
+def push():
+    local("git push")
+
+
 def prepare_deploy():
     test()
     coverall()
