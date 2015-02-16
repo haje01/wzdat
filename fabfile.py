@@ -18,8 +18,13 @@ def coverall():
     local("coveralls")
 
 
-def commit():
-    msg = raw_input("Enter commit message: ")
+def diff():
+    local("git diff")
+
+
+def commit(msg=None):
+    if msg is None:
+        msg = raw_input("Enter commit message: ")
     local('git commit -m "{}" -a'.format(msg))
 
 
@@ -29,8 +34,9 @@ def push():
 
 def prepare_deploy():
     test()
-    coverall()
+    diff()
     commit()
+    coverall()
     push()
 
 
