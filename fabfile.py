@@ -47,6 +47,7 @@ def deploy():
     with cd('~/wzdat'):
         run("git pull")
         build(True)
+        relaunch(True)
 
 
 def _get_prj_and_ports():
