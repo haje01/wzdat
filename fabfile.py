@@ -1,6 +1,6 @@
 import os
 
-from fabric.api import local, run, env, abort, cd
+from fabric.api import local, run, env, abort, cd, parallel
 
 env.password = 'docker'
 prj_map = {}
@@ -47,6 +47,7 @@ def set_hosts():
 def deploy():
     with cd('~/wzdat'):
         run("git pull")
+        build(True)
 
 
 def _get_prj_and_ports():
@@ -89,40 +90,51 @@ def rm(prj):
     local('docker rm -f wzdat_{prj}'.format(prj=prj))
 
 
-def rm_all():
-    local('docker rm -f $(docker ps -aq)')
+def rm_all(_remote=False):
+    cmd = run if _remote else local
+    cmd('docker rm -f $(docker ps -aq)')
 
 
-def _build_base():
-    local('ln -fs files/base.docker Dockerfile')
-    local('docker build -t haje01/wzdat-base .')
-    local('rm -f Dockerfile')
+def _build_base(_remote):
+    cmd = run if _remote else local
+    cmd('ln -fs files/base.docker Dockerfile')
+    cmd('docker build -t haje01/wzdat-base .')
+    cmd('rm -f Dockerfile')
 
 
-def _build():
-    r = local('docker images -q haje01/wzdat-base', capture=True)
+def _build(_remote):
+    cmd = run if _remote else local
+    if _remote:
+        r = run('docker images -q haje01/wzdat-base')
+    else:
+        r = cmd('docker images -q haje01/wzdat-base', capture=True)
     if len(r) == 0:
         print "No local 'haje01/wzdat-base' image. Trying to find in the "\
             "docker hub."
-    local('ln -fs files/self.docker Dockerfile')
-    local('docker build --no-cache -t haje01/wzdat .')
-    local('rm -f Dockerfile')
+    cmd('ln -fs files/self.docker Dockerfile')
+    cmd('docker build --no-cache -t haje01/wzdat .')
+    cmd('rm -f Dockerfile')
 
 
-def _build_dev():
-    r = local('docker images -q haje01/wzdat', capture=True)
+def _build_dev(_remote):
+    cmd = run if _remote else local
+    if _remote:
+        r = cmd('docker images -q haje01/wzdat')
+    else:
+        r = cmd('docker images -q haje01/wzdat', capture=True)
     if len(r) == 0:
         print "No local 'haje01/wzdat' image. Trying to find in the docker"\
             " hub."
-    local('ln -fs files/dev/dev.docker Dockerfile')
-    local('docker build --no-cache -t haje01/wzdat-dev .')
-    local('rm -f Dockerfile')
+    cmd('ln -fs files/dev/dev.docker Dockerfile')
+    cmd('docker build --no-cache -t haje01/wzdat-dev .')
+    cmd('rm -f Dockerfile')
 
 
-def build():
-    _build_base()
-    _build()
-    _build_dev()
+@parallel
+def build(_remote=False):
+    _build_base(_remote)
+    _build(_remote)
+    _build_dev(_remote)
 
 
 def _get_host():
@@ -143,11 +155,6 @@ def log(prj):
     local('docker logs -f wzdat_{prj}'.format(prj=prj))
 
 
-def _get_pkg():
-    assert 'WZDAT_SOL_PKG' in os.environ
-    return os.environ['WZDAT_SOL_PKG']
-
-
 def cache():
     run('python -m wzdat.jobs cache-all')
 
@@ -160,102 +167,11 @@ def runcron():
     run('python -m wzdat.jobs run-all-cron-notebooks')
 
 
-class _ChangeDir(object):
-    def __init__(self, *dirs):
-        self.cwd = os.getcwd()
-        self.path = os.path.join(*dirs)
-
-    def __enter__(self):
-        assert os.path.isdir(self.path)
-        os.chdir(self.path)
-
-    def __exit__(self, atype, value, tb):
-        os.chdir(self.cwd)
+def relaunch(_remote=False):
+    rm_all(_remote)
+    launch(_remote)
 
 
-def _make_config(cfgpath):
-    """Make config object for project and return it."""
-    import yaml
-
-    def _expand_var(dic):
-        assert type(dic) == dict
-        # expand vars
-        for k, v in dic.iteritems():
-            typ = type(v)
-            if typ != str and typ != unicode:
-                continue
-            dic[k] = os.path.expandvars(v)
-        return dic
-
-    _cfg = {}
-    if cfgpath is None:
-        assert 'WZDAT_CFG' in os.environ
-        cfgpath = os.environ['WZDAT_CFG']
-
-    adir = os.path.dirname(cfgpath)
-    afile = os.path.basename(cfgpath)
-
-    with _ChangeDir(adir):
-        loaded = yaml.load(open(afile, 'r'))
-        loaded = _expand_var(loaded)
-        if 'base_cfg' in loaded:
-            bcfgpath = loaded['base_cfg']
-            if os.path.isfile(bcfgpath):
-                bcfg = _make_config(bcfgpath)
-                del loaded['base_cfg']
-                bcfg.update(loaded)
-                loaded = bcfg
-    _cfg.update(loaded)
-    return _cfg
-
-
-def relaunch(prj):
-    rm(prj)
-    launch(prj)
-    log(prj)
-
-
-def launch(prj, dbg=False):
-    assert 'WZDAT_DIR' in os.environ
-    assert 'WZDAT_SOL_DIR' in os.environ
-    wzpkg = _get_pkg()
-    wzdir = os.environ['WZDAT_DIR']
-    wzsol = os.environ['WZDAT_SOL_DIR']
-    runopt = ""
-    cmd = ""
-    if dbg is not False:
-        runopt = "-ti"
-        cmd = "bash"
-    else:
-        runopt = "-d"
-    cfg_path = os.path.join(wzsol, wzpkg, prj, 'config.yml')
-    cfg = _make_config(cfg_path)
-    iport = cfg['host_ipython_port']
-    iport = cfg['host_ipython_port']
-    dport = cfg['host_dashboard_port']
-    if 'data_dir' in cfg:
-        datavol = '{}'.format(cfg['data_dir'])
-    else:
-        # for service systems, project logdata dir is  /logdata/{prj}
-        datavol = '/logdata/{}'.format(prj)
-    cmd = 'docker run {runopt} -p 22 -p {iport}:8090 -p {dport}:80\
-            -p 873 --name "wzdat_{wzprj}"\
-            -v {wzdir}:/wzdat -v {wzsol}:/solution\
-            -v {datavol}:/logdata\
-            -v $HOME/.vimrc:/root/.vimrc\
-            -v $HOME/.vim/:/root/.vim\
-            -v $HOME/.gitconfig:/root/.gitconfig\
-            -v $HOME/.screenrc:/root/.screenrc\
-            -e WZDAT_DIR=/wzdat\
-            -e WZDAT_SOL_DIR=/solution\
-            -e WZDAT_SOL_PKG={wzpkg}\
-            -e WZDAT_PRJ={wzprj}\
-            -e WZDAT_HOST={wzhost}\
-            -e WZDAT_CFG=/solution/{wzpkg}/{wzprj}/config.yml\
-            -e HOME=/root\
-            haje01/wzdat-dev {cmd}'.format(runopt=runopt, wzprj=prj,
-                                           wzdir=wzdir, wzsol=wzsol,
-                                           wzpkg=wzpkg, wzhost=wzhost,
-                                           iport=iport, dport=dport,
-                                           datavol=datavol, cmd=cmd)
-    local(cmd)
+def launch(_remote=False):
+    cmd = run if _remote else local
+    cmd('python -m wzdat.system.launch')
