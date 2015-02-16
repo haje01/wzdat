@@ -32,7 +32,7 @@ def gpush():
     local("git push")
 
 
-def prepare_deploy():
+def prepare():
     # test()
     diff()
     commit()
