@@ -10,6 +10,26 @@ assert 'WZDAT_HOST' in os.environ
 wzhost = os.environ['WZDAT_HOST']
 
 
+def test():
+    local("py.test tests/ system/tests --cov wzdat --cov-report=xml")
+
+
+def coverall():
+    local("coveralls")
+
+
+def commit():
+    msg = raw_input("Enter commit message: ")
+    local('git commit -m "{}" -a'.format(msg))
+
+
+def prepare_deploy():
+    test()
+    coverall()
+    commit()
+    push()
+
+
 def _get_prj_and_ports():
     r = local('docker ps -a', capture=True)
     prjs = []
