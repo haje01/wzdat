@@ -11,10 +11,10 @@ wzhost = os.environ['WZDAT_HOST']
 
 
 def test():
-    local("py.test tests/ system/tests --cov wzdat --cov-report=xml")
+    local("py.test tests/ system/tests --cov wzdat --cov-report=term-missing")
 
 
-def coverall():
+def coveralls():
     local("coveralls")
 
 
@@ -36,7 +36,7 @@ def prepare_deploy():
     test()
     diff()
     commit()
-    coverall()
+    coveralls()
     push()
 
 
