@@ -1,7 +1,6 @@
 import os
-import sys
 
-from fabric.api import local, abort, run, env, execute
+from fabric.api import local, abort, run, env
 
 
 env.password = 'docker'
@@ -155,26 +154,8 @@ def docker_hosts(prj=None):
 
 
 def runcron():
-    docker_hosts()
     run('python -m wzdat.jobs run-all-cron-notebooks')
 
 
 def cache():
-    docker_hosts()
     run('python -m wzdat.jobs cache-all')
-
-
-if __name__ == "__main__":
-    assert 'WZDAT_PRJS' in os.environ
-    assert len(sys.argv) > 1
-    cmd = sys.argv[1]
-    if cmd == 'launch':
-        prjs = os.environ['WZDAT_PRJS'].split(',')
-        for prj in prjs:
-            launch(prj)
-    elif cmd == 'runcron':
-        runcron()
-    elif cmd == 'cache':
-        cache()
-    elif cmd == 'rm_all':
-        rm_all()
