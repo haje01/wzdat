@@ -40,6 +40,11 @@ def remote_hosts():
     env.hosts = open('remote_hosts', 'r').readlines()
 
 
+def pull():
+    with cd('~/wzdat'):
+        run("git pull")
+
+
 def deploy(_build=False):
     with cd('~/wzdat'):
         run("git pull")
@@ -115,6 +120,16 @@ def build(_remote=False):
 def relaunch(_remote=False):
     rm_all(_remote)
     launch(_remote)
+
+
+def cache(_remote=False):
+    cmd = run if _remote else local
+    cmd('python -m system.cmds cache')
+
+
+def runcron(_remote=False):
+    cmd = run if _remote else local
+    cmd('python -m system.cmds runcron')
 
 
 def launch(_remote=False):

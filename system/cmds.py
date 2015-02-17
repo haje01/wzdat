@@ -1,7 +1,7 @@
 import os
 import sys
 
-from fabric.api import local, abort, run, env
+from fabric.api import local, abort, run, env, execute
 
 
 env.password = 'docker'
@@ -175,6 +175,6 @@ if __name__ == "__main__":
     elif cmd == 'runcron':
         runcron()
     elif cmd == 'cache':
-        runcron()
+        cache()
     elif cmd == 'rm_all':
         rm_all()
