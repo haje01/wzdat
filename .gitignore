@@ -23,4 +23,4 @@ dummydata/
 dump.rdb
 tests/tmp/
 *.h5
-hosts_file
+remote_hosts

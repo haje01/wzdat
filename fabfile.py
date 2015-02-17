@@ -26,14 +26,14 @@ def commit(msg=None):
     local('git commit -m "{}" -a'.format(msg))
 
 
-def gpush():
+def push():
     local("git push")
 
 
 def prepare():
     # test()
     commit()
-    gpush()
+    push()
 
 
 def remote_hosts():
