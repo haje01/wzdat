@@ -207,8 +207,7 @@ def _make_config(cfgpath):
     adir = os.path.dirname(cfgpath)
     afile = os.path.basename(cfgpath)
 
-    from wzdat.util import ChangeDir
-    with ChangeDir(adir):
+    with _ChangeDir(adir):
         loaded = yaml.load(open(afile, 'r'))
         loaded = _expand_var(loaded)
         if 'base_cfg' in loaded:
