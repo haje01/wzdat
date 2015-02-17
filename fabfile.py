@@ -39,7 +39,7 @@ def remote_hosts():
     env.hosts = open('remote_hosts', 'r').readlines()
 
 
-def pull():
+def gpull():
     with cd('~/wzdat'):
         run("git pull")
 
@@ -118,12 +118,12 @@ def relaunch(_remote=False):
 
 
 def _container_cmd(kind, _remote):
-    wdir = os.environ['WZDAT_DIR']
-    cdir = os.path.join(wdir, 'system')
     if _remote:
-        with cd(cdir):
+        with cd('/wzdat/system'):
             run('fab docker_hosts {}'.format(kind))
     else:
+        wdir = os.environ['WZDAT_DIR']
+        cdir = os.path.join(wdir, 'system')
         from wzdat.util import ChangeDir
         with ChangeDir(cdir):
             local('fab docker_hosts {}'.format(kind))
@@ -139,7 +139,7 @@ def runcron(_remote=False):
 
 def launch(_remote=False):
     if _remote:
-        _container_cmd('launch', _remote)
+        _container_cmd('launch', True)
     else:
         from system.fabfile import _launch
         prjs = os.environ['WZDAT_PRJS'].split(',')
