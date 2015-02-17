@@ -60,5 +60,8 @@ ADD files/supervisord.conf /etc/supervisor/conf.d/wzdat.conf
 RUN pip install pytest
 RUN pip install python-coveralls
 
+# Management
+RUN pip install fabric
+
 # Update Bash
 RUN apt-get update && apt-get install --only-upgrade bash
