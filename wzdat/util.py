@@ -15,10 +15,6 @@ from tempfile import TemporaryFile
 import uuid as _uuid
 import codecs
 
-import matplotlib.pyplot as plt
-import numpy as np
-from pandas import HDFStore
-
 from wzdat.make_config import make_config
 from wzdat.const import NAMED_TMP_PREFIX, HDF_FILE_PREFIX, HDF_FILE_EXT
 
@@ -171,6 +167,7 @@ def hdf_path(name):
 
 
 def hdf_exists(path, key):
+    from pandas import HDFStore
     exist = False
     if os.path.isfile(path):
         store = HDFStore(path)
@@ -185,6 +182,7 @@ class HDF(object):
         self.store = None
 
     def __enter__(self):
+        from pandas import HDFStore
         self.store = HDFStore(hdf_path(self.username))
         return self
 
@@ -311,6 +309,8 @@ def heat_map(df, ax_fs=13, **kwargs):
                         go to this site
                     http://wiki.scipy.org/Cookbook/Matplotlib/Show_colormaps
     """
+    import matplotlib.pyplot as plt
+
     expected_args = set(['figsize', 'rows_len', 'cols_len',
                          'colorbar', 'cmap', 'celltext', 'title',
                          'xlabel', 'ylabel', 'colorbar_label',
@@ -340,6 +340,8 @@ def heat_map(df, ax_fs=13, **kwargs):
 
 
 def _init_heat_map_kwargs(df, kwargs):
+    import matplotlib.pyplot as plt
+
     kwargs.setdefault('figsize', (11, 4))
     kwargs.setdefault('colorbar', True)
     kwargs.setdefault('celltext', True)
@@ -380,6 +382,7 @@ def _celltext(df, ax, rows, cols, skipna, txt_fmt):
 
 
 def _set_ticks_labels(df, ax, ax_fs, rows, cols, kwargs):
+    import numpy as np
     ax.set_xticks(np.linspace(0, cols - 1, cols))
     ax.set_yticks(np.linspace(0, rows - 1, rows))
     ax.set_xticklabels(df.columns, fontsize=ax_fs)
