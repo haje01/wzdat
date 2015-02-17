@@ -1,7 +1,11 @@
 import os
 import sys
 
-from fabric.api import local
+from fabric.api import local, abort, run, env
+
+
+env.password = 'docker'
+prj_map = {}
 
 
 class _ChangeDir(object):
@@ -109,6 +113,57 @@ def rm_all():
     local('docker rm -f $(docker ps -aq)')
 
 
+def _get_host():
+    return os.environ['WZDAT_B2DHOST'] if 'WZDAT_B2DHOST' in os.environ else\
+        '0.0.0.0'
+
+
+def ssh(_prj):
+    for prj, port in _get_prj_and_ports():
+        if prj == _prj:
+            local('ssh root@{host} -p {port}'.format(host=_get_host(),
+                                                     port=port))
+            return
+    abort("Can't find project")
+
+
+def log(prj):
+    local('docker logs -f wzdat_{prj}'.format(prj=prj))
+
+
+def _get_prj_and_ports():
+    r = local('docker ps -a', capture=True)
+    prjs = []
+    for line in r.split('\n')[1:]:
+        port = None
+        for col in line.split():
+            if '22/tcp' in col:
+                port = col.split('->')[0].split(':')[1]
+        name = '_'.join(line.split()[-1].split('_')[1:])
+        prjs.append((name, port))
+    return prjs
+
+
+def docker_hosts(prj=None):
+    hosts = []
+    for _prj, port in _get_prj_and_ports():
+        if prj is None or prj == _prj:
+            host = 'root@{}:{}'.format(_get_host(), port)
+            hosts.append(host)
+            prj_map[host] = _prj
+    env.hosts = hosts
+
+
+def runcron():
+    docker_hosts()
+    run('python -m wzdat.jobs run-all-cron-notebooks')
+
+
+def cache():
+    docker_hosts()
+    run('python -m wzdat.jobs cache-all')
+
+
 if __name__ == "__main__":
     assert 'WZDAT_PRJS' in os.environ
     assert len(sys.argv) > 1
@@ -117,5 +172,9 @@ if __name__ == "__main__":
         prjs = os.environ['WZDAT_PRJS'].split(',')
         for prj in prjs:
             launch(prj)
-    if cmd == 'rm_all':
+    elif cmd == 'runcron':
+        runcron()
+    elif cmd == 'cache':
+        runcron()
+    elif cmd == 'rm_all':
         rm_all()
