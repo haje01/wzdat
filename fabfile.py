@@ -119,7 +119,7 @@ def relaunch(_remote=False):
 
 def _container_cmd(kind, _remote):
     if _remote:
-        with cd('/wzdat/system'):
+        with cd('~/wzdat/system'):
             run('fab docker_hosts {}'.format(kind))
     else:
         wdir = os.environ['WZDAT_DIR']
