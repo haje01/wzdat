@@ -1,4 +1,5 @@
 test: true  # test mode
+debug: true # debug mode
 
 # for Test common Log settings
 log:
@@ -38,3 +39,7 @@ tmp_valid_hour: 24
 named_tmp_valid_hour: 720  # 24 * 30
 server_timezone: UTC
 client_timezone: "Asia/Seoul"
+
+# for Dashboard Error Reporting
+admins:
+    - "haje01@webzen.co.kr"

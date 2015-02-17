@@ -23,6 +23,7 @@ def diff():
 
 
 def commit(msg=None):
+    diff()
     if msg is None:
         msg = raw_input("Enter commit message: ")
     local('git commit -m "{}" -a'.format(msg))
@@ -34,7 +35,6 @@ def gpush():
 
 def prepare():
     # test()
-    diff()
     commit()
     gpush()
 
@@ -43,10 +43,12 @@ def set_hosts():
     env.hosts = open('hosts_file', 'r').readlines()
 
 
-def deploy():
+@parallel
+def deploy(_dbuild=False):
     with cd('~/wzdat'):
         run("git pull")
-        build(True)
+        if _dbuild:
+            dbuild(True)
         relaunch(True)
 
 
@@ -131,7 +133,7 @@ def _build_dev(_remote):
 
 
 @parallel
-def build(_remote=False):
+def dbuild(_remote=False):
     with cd('system'):
         _build_base(_remote)
         _build(_remote)

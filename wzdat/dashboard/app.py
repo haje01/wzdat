@@ -1,5 +1,4 @@
 import os
-import sys
 import json
 import time
 import re
@@ -10,17 +9,12 @@ from flask import Flask, render_template, request, Response, redirect, url_for
 from markdown import markdown
 from IPython.nbformat.current import reads
 
-DEBUG = True
-
-if DEBUG:
-    sys.path.insert(0, ".")
 from wzdat.util import get_notebook_dir, convert_server_time_to_client
 from wzdat.rundb import get_cache_info, get_finder_info
 from wzdat.jobs import cache_finder
 from wzdat.make_config import make_config
 
 app = Flask(__name__)
-app.debug = DEBUG
 
 ansi_escape = re.compile(r'\x1b[^m]*m')
 
@@ -28,6 +22,15 @@ ansi_escape = re.compile(r'\x1b[^m]*m')
 cfg = make_config()
 assert 'WZDAT_HOST' in os.environ
 HOST = os.environ['WZDAT_HOST']
+app.debug = cfg['debug'] if 'debug' in cfg else False
+
+if not app.debug and 'admins' in cfg:
+    admins = cfg['admins']
+    from logging.handlers import SMTPHandler
+    mail_handler = SMTPHandler('127.0.0.1', 'dashboard@localhost', admins,
+                               'Dashboard Errors')
+    mail_handler.setLevel(logging.ERROR)
+    app.logger.addHandler(mail_handler)
 
 
 def _page_common_vars():
@@ -313,4 +316,4 @@ def notebooks():
                            cache_time=cache_time)
 
 if __name__ == "__main__":
-    app.run(host=HOST, port=cfg['dashboard_port'], debug=DEBUG)
+    app.run(host=HOST, port=cfg['dashboard_port'])

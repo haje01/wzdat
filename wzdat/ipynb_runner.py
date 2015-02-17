@@ -215,6 +215,7 @@ def register_cron_notebooks(paths, scheds):
     assert 'WZDAT_HOST' in os.environ
     cfg_path = os.environ['WZDAT_CFG']
     host = os.environ['WZDAT_HOST']
+    fileh.write('WZDAT_DIR=/wzdat\n')
     fileh.write('WZDAT_CFG=%s\n' % cfg_path)
     fileh.write('WZDAT_HOST=%s\n' % host)
     fileh.close()
