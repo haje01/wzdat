@@ -11,6 +11,19 @@ assert 'WZDAT_HOST' in os.environ
 wzhost = os.environ['WZDAT_HOST']
 
 
+class _ChangeDir(object):
+    def __init__(self, *dirs):
+        self.cwd = os.getcwd()
+        self.path = os.path.join(*dirs)
+
+    def __enter__(self):
+        assert os.path.isdir(self.path)
+        os.chdir(self.path)
+
+    def __exit__(self, atype, value, tb):
+        os.chdir(self.cwd)
+
+
 def test():
     local("py.test tests/ system/tests --cov wzdat --cov-report=term-missing")
 
@@ -84,8 +97,7 @@ def _container_cmd(cmdstr, _remote):
             run('fab docker_hosts {}'.format(cmdstr))
     else:
         wdir = os.environ['WZDAT_DIR']
-        from wzdat.util import ChangeDir
-        with ChangeDir(wdir):
+        with _ChangeDir(wdir):
             local('fab docker_hosts {}'.format(cmdstr))
 
 
@@ -132,8 +144,7 @@ def build(_remote=False):
             _build(True)
             _build_dev(True)
     else:
-        from wzdat.util import ChangeDir
-        with ChangeDir('system'):
+        with _ChangeDir('system'):
             _build_base(False)
             _build(False)
             _build_dev(False)
