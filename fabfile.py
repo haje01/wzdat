@@ -31,7 +31,6 @@ def push():
 
 
 def prepare():
-    # test()
     commit()
     push()
 
@@ -64,10 +63,6 @@ def status():
 
 def ps():
     local('docker ps -a')
-
-
-def rm(prj):
-    local('docker rm -f wzdat_{prj}'.format(prj=prj))
 
 
 def rm_all(_remote=False):
@@ -122,16 +117,31 @@ def relaunch(_remote=False):
     launch(_remote)
 
 
+def _container_cmd(kind, _remote):
+    wdir = os.environ['WZDAT_DIR']
+    cdir = os.path.join(wdir, 'system')
+    if _remote:
+        with cd(cdir):
+            run('fab docker_hosts {}'.format(kind))
+    else:
+        from wzdat.util import ChangeDir
+        with ChangeDir(cdir):
+            local('fab docker_hosts {}'.format(kind))
+
+
 def cache(_remote=False):
-    cmd = run if _remote else local
-    cmd('python -m system.cmds cache')
+    _container_cmd('cache', _remote)
 
 
 def runcron(_remote=False):
-    cmd = run if _remote else local
-    cmd('python -m system.cmds runcron')
+    _container_cmd('runcron', _remote)
 
 
 def launch(_remote=False):
-    cmd = run if _remote else local
-    cmd('python -m system.cmds launch')
+    if _remote:
+        _container_cmd('launch', _remote)
+    else:
+        from system.fabfile import _launch
+        prjs = os.environ['WZDAT_PRJS'].split(',')
+        for prj in prjs:
+            _launch(prj)

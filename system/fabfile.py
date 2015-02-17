@@ -61,7 +61,18 @@ def _make_config(cfgpath):
     return _cfg
 
 
-def launch(prj, dbg=False):
+def launch():
+    assert 'WZDAT_PRJS' in os.environ
+    prjs = os.environ['WZDAT_PRJS'].split(',')
+    for prj in prjs:
+        _launch(prj)
+
+
+def rm(prj):
+    local('docker rm -f wzdat_{prj}'.format(prj=prj))
+
+
+def _launch(prj, dbg=False):
     assert 'WZDAT_DIR' in os.environ
     assert 'WZDAT_SOL_DIR' in os.environ
     wzpkg = _get_pkg()
