@@ -19,8 +19,6 @@ from wzdat.make_config import make_config
 from wzdat.const import NAMED_TMP_PREFIX, HDF_FILE_PREFIX, HDF_FILE_EXT
 
 
-cfg = make_config()
-
 LOG_KINDS = ('game', 'auth', 'community')
 PROCESSES = {'game': 3}
 
@@ -398,6 +396,7 @@ def _set_ticks_labels(df, ax, ax_fs, rows, cols, kwargs):
 
 
 def get_notebook_dir():
+    cfg = make_config()
     sol_dir = cfg['sol_dir']
     prj = cfg['prj']
     base = cfg['notebook_base_dir'] if 'notebook_base_dir' in cfg else\
@@ -419,6 +418,7 @@ def _get_dir(basedir, subdir, make):
 
 
 def get_data_dir(make=True):
+    cfg = make_config()
     data_dir = cfg['data_dir']
     if not os.path.isdir(data_dir) and make:
         if os.path.isfile(data_dir):
@@ -474,6 +474,7 @@ def cap_call(cmd, _test=False):
 
 
 def get_convfile_path(path):
+    cfg = make_config()
     relpath = os.path.relpath(path, cfg['data_dir'])
     conv_dir = get_conv_dir()
     return os.path.join(conv_dir, relpath)
@@ -491,6 +492,7 @@ def convert_data_file(srcpath, encoding, dstpath):
 
 def convert_server_time_to_client(dt, stz=None, ctz=None):
     import pytz
+    cfg = make_config()
 
     def get_tz(tz):
         return pytz.UTC if tz == 'UTC' else pytz.timezone(tz)
@@ -693,6 +695,7 @@ def _get_found_time(cpath):
 
 
 def load_files_precalc(ctx, root_list):
+    cfg = make_config()
     use_cache = cfg['use_cache'] if 'use_cache' in cfg else True
     cpath = get_cache_path(ctx.file_type)
     if use_cache and os.path.isfile(cpath):
@@ -710,6 +713,7 @@ def cache_files():
     import imp
     from rundb import update_cache_info
     logging.debug('cache_files')
+    cfg = make_config()
     with ChangeDir(cfg['sol_dir']):
         # prevent using cache
         if 'file_types' not in cfg:
@@ -735,6 +739,7 @@ def cache_finder():
     from wzdat.rundb import update_finder_info
     # Make cache for file finder.
     logging.debug('cache_finder')
+    cfg = make_config()
     with ChangeDir(cfg['sol_dir']):
         if 'file_types' not in cfg:
             logging.warning('no file_types in cfg. exit')
