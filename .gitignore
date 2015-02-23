@@ -24,3 +24,5 @@ dump.rdb
 tests/tmp/
 *.h5
 remote_hosts
+Dockerfile
+*.rdb

@@ -67,6 +67,7 @@ def dashboard():
     base_url = 'http://%s:%d/tree' % (HOST, iport)
     notebook_dir = get_notebook_dir()
     paths, _, _groups, fnames = find_cron_notebooks(notebook_dir, static=True)
+    logging.debug("find_cron_notebooks done")
     groups = {}
     for i, path in enumerate(paths):
         sdir = os.path.dirname(path).replace(notebook_dir, '')[1:]
@@ -77,6 +78,7 @@ def dashboard():
         if gk not in groups:
             groups[gk] = []
         groups[gk].append((path, url, fname))
+    logging.debug("collected notebooks by group")
 
     gnbs = []
     for gk in sorted(groups.keys()):
@@ -84,6 +86,7 @@ def dashboard():
             _collect_gnbs(gnbs, gk, groups)
     if '' in groups:
         _collect_gnbs(gnbs, '', groups)
+    logging.debug("done _collect_gnbs")
 
     return render_template("dashboard.html", cur="dashboard",
                            projname=projname, notebooks=gnbs,
@@ -125,7 +128,7 @@ def poll_view(task_id):
         state = task.state
         if state == 'PENDING':
             return 'PROGRESS:0'
-        print task.state, task.status
+        logging.debug("{} - {}".format(task.state, task.status))
         if task.state == 'PROGRESS':
             return 'PROGRESS:' + str(task.result)
         outputs = task.get()
@@ -142,6 +145,7 @@ def poll_view(task_id):
 
 
 def _nb_output_to_html(path):
+    logging.debug('_nb_output_to_html {}'.format(path.encode('utf-8')))
     rv = []
     with open(path, 'r') as f:
         nb = reads(f.read(), 'json')
@@ -213,9 +217,13 @@ def _collect_gnbs(gnbs, gk, groups):
 
     nbs = []
     notebook_dir = get_notebook_dir()
+    logging.debug('_collect_gnbs ' + notebook_dir)
+    logging.debug(str(groups[gk]))
     for path, url, fname in groups[gk]:
         out = _nb_output_to_html(path)
+        logging.debug('get_run_info {}'.format(path.encode('utf-8')))
         ri = rundb.get_run_info(path)
+        logging.debug('get_run_info done')
         if ri is not None:
             start, elapsed = _get_run_time(ri)
             cur = ri[2]
@@ -225,6 +233,7 @@ def _collect_gnbs(gnbs, gk, groups):
         path = path.replace(notebook_dir, '')[1:]
         nbs.append((url, fname, out, ri, path))
     gnbs.append((gk, nbs))
+    logging.debug('_collect_gnbs done')
 
 
 def _get_run_time(ri):
@@ -259,7 +268,6 @@ def _response_task_status(task_fn, task_id):
         state = task.state
         if state == 'PENDING':
             return 'PROGRESS:0'
-        print task.state, task.status
         if task.state == 'PROGRESS':
             return 'PROGRESS:' + str(task.result)
         outputs = task.get()
