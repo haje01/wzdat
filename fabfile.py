@@ -94,7 +94,7 @@ def _cmd(cmdstr, _remote=False):
 def _container_cmd(cmdstr, _remote):
     if _remote:
         with cd('~/wzdat'):
-            run('fab docker_hosts {}'.format(cmdstr))
+            run('fab remote_hosts {}'.format(cmdstr))
     else:
         wdir = os.environ['WZDAT_DIR']
         with _ChangeDir(wdir):
