@@ -22,6 +22,7 @@ data_dir = cfg['data_dir']
 
 @app.task()
 def run_view_cell(nbpath, formname, kwargs):
+    print('run_view_cell {}'.format(formname))
     nb = read(open(nbpath), 'json')
     r = NotebookRunner(nb, pylab=True)
     total = float(get_view_cell_cnt(r) + 1)
@@ -33,6 +34,7 @@ def run_view_cell(nbpath, formname, kwargs):
             run_code(r, init)
     init = "from wzdat.dashboard.control import Form; %s = Form();"\
            "form.init(%s)" % (formname, repr(kwargs))
+    print('init {}'.format(init))
     try:
         run_code(r, init)
     except Exception:

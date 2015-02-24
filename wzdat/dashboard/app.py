@@ -95,6 +95,7 @@ def dashboard():
 
 @app.route('/start_view/<path:nbpath>', methods=['POST'])
 def start_view(nbpath):
+    logging.debug('start_view')
     data = json.loads(request.data)
     kwargs = {}
     notebook_dir = get_notebook_dir()
@@ -102,10 +103,14 @@ def start_view(nbpath):
     formname = ''
     for kv in data:
         name = kv['name']
+        logging.debug('name: {}'.format(name))
         if name == 'wzd_formname':
+            logging.debug('wzd_formname')
             formname = kv['value']
+            logging.debug('formname: {}'.format(formname))
         else:
             value = kv['value']
+            logging.debug('value: {}'.format(value))
             if name in kwargs:
                 if type(kwargs[name]) != list:
                     kwargs[name] = [kwargs[name]]
@@ -120,6 +125,7 @@ def start_view(nbpath):
 
 @app.route('/poll_view/<task_id>', methods=['POST'])
 def poll_view(task_id):
+    logging.debug('poll_view {}'.format(task_id))
     from wzdat.dashboard.tasks import run_view_cell
     from wzdat.util import div
 
@@ -132,6 +138,7 @@ def poll_view(task_id):
         if task.state == 'PROGRESS':
             return 'PROGRESS:' + str(task.result)
         outputs = task.get()
+        logging.debug('outputs {}'.format(outputs))
     except Exception:
         err = task.traceback
         logging.error(err)
