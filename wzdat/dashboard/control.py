@@ -1,3 +1,4 @@
+from datetime import datetime
 from collections import OrderedDict
 
 from BeautifulSoup import BeautifulSoup as bs
@@ -6,6 +7,16 @@ from BeautifulSoup import BeautifulSoup as bs
 def _typed_value(sv):
     if type(sv) == list or type(sv) == tuple:
         return sv
+
+    # try for datetime to prevent false eval
+    try:
+        _ = datetime.strptime(sv, '%Y-%m-%d')  # NOQA
+    except ValueError:
+        pass
+    else:
+        return sv
+
+    # try eval
     try:
         return eval(sv)
     except Exception:
