@@ -487,6 +487,13 @@ def convert_data_file(srcpath, encoding, dstpath):
         os.makedirs(_dir)
     cmd = ['iconv', '-f', encoding, '-t', 'utf-8', '-o', dstpath, srcpath]
     check_call(cmd)
+    # if iconv failed
+    if not os.path.isfile(dstpath):
+        # log it, then touch
+        logging.error('convert_data_file failed: from {} to {}'
+                      .format(srcpath, dstpath))
+        with open(dstpath, 'a'):
+            os.utime(dstpath, None)
     return dstpath
 
 
