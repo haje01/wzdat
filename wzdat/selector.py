@@ -1260,7 +1260,7 @@ def load_info(mod, file_type, prog_fn=None):
     _dir = cfg['data_dir']
     encoding = cfg["data_encoding"]
     if isinstance(encoding, dict):
-        encoding = encoding[file_type]
+        encoding = encoding[file_type] if file_type in encoding else ''
 
     if encoding.startswith('utf-16'):
         _dir = get_conv_dir()

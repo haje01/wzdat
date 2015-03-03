@@ -114,7 +114,10 @@ class Context(Property):
         self.files = mod['all_files'] = []
         self.fields = mod['fields'] = {}
         self.startdir = startdir
-        self.encoding = codecs.lookup(encoding).name
+        if len(encoding) > 0:
+            self.encoding = codecs.lookup(encoding).name
+        else:
+            self.encoding = ''
         self.file_type = file_type
         assert 'file_filter' in mod,\
             "Adapter must implement 'file_filter' function"
