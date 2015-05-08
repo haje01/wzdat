@@ -18,7 +18,12 @@ def _typed_value(sv):
 
     # try eval
     try:
-        return eval(sv)
+        rv = eval(sv)
+        # check intrinsic func
+        if hasattr(rv, '__call__'):
+            return sv
+        else:
+            return rv
     except Exception:
         return sv
 
