@@ -773,3 +773,8 @@ def cache_finder():
                 ret.append(info)
             update_finder_info(ret)
         return ret
+
+
+def disable_perfwarn():
+    import warnings
+    warnings.simplefilter(action="ignore", category="PerformanceWarning")
