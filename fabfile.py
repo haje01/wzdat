@@ -172,7 +172,7 @@ def ccm_runcron():
 
 
 def launch(_remote=False):
-    if _remote:
+    if _remote is True:
         _container_cmd('launch', True)
     else:
         prjs = os.environ['WZDAT_PRJS'].split(',')
