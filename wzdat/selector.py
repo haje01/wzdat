@@ -994,6 +994,18 @@ def _load_files_root_vals(fieldcnt, fields, fileo, field_getter):
     return vals, field_errs
 
 
+def _load_files_root_check_conv(ctx, abspath, converted):
+    if ctx.encoding.startswith('utf-16'):
+        convfile = get_convfile_path(abspath)
+        logging.debug('need conversion. check convfile {}'.format(convfile))
+        if not os.path.isfile(convfile):
+            logging.debug('convfile not exist. make one')
+            convert_data_file(abspath, ctx.encoding, convfile)
+            converted.append(abspath)
+        abspath = convfile
+    return abspath
+
+
 def _load_files_root(ctx, _root, filecnt, fileno, pg):
     root = _root[0]
     fields = ctx.fields.values()
@@ -1008,12 +1020,7 @@ def _load_files_root(ctx, _root, filecnt, fileno, pg):
         if 'progress_cb' in ctx.dict:
             ctx.dict['progress_cb'](pg.prev_pct)
         abspath = os.path.join(root, filename)
-        if ctx.encoding.startswith('utf-16'):
-            convfile = get_convfile_path(abspath)
-            if not os.path.isfile(convfile):
-                convert_data_file(abspath, ctx.encoding, convfile)
-                converted.append(abspath)
-            abspath = convfile
+        abspath = _load_files_root_check_conv(ctx, abspath, converted)
         fileo = FileValue(ctx, abspath)
 
         vals, field_errs = _load_files_root_vals(fieldcnt, fields, fileo,
@@ -1253,7 +1260,7 @@ def load_info(mod, file_type, prog_fn=None):
     _dir = cfg['data_dir']
     encoding = cfg["data_encoding"]
     if isinstance(encoding, dict):
-        encoding = encoding[file_type]
+        encoding = encoding[file_type] if file_type in encoding else ''
 
     if encoding.startswith('utf-16'):
         _dir = get_conv_dir()
