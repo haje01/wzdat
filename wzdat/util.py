@@ -777,4 +777,10 @@ def cache_finder():
 
 def disable_perfwarn():
     import warnings
-    warnings.simplefilter(action="ignore", category="PerformanceWarning")
+    import pandas
+    warnings.simplefilter("ignore", pandas.io.common.PerformanceWarning)
+
+
+def dashboard_alert(atype, htmlmsg):
+    return u'<div class="alert alert-{atype}" role="alert">{htmlmsg}</div>'.\
+        format(atype=atype, htmlmsg=htmlmsg)

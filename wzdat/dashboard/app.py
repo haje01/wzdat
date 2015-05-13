@@ -190,7 +190,8 @@ def _cell_output_to_html_dashboard(output, image_cell):
     elif _type == 'display_data':
         if 'png' in output:
             data = output['png']
-            return '<img src="data:image/png;base64,%s"></img>' % data
+            return '<img src="data:image/png;base64,%s" style="width: 100%%;'\
+                'height: 100%%"></img>' % data
     elif _type == 'pyout':
         if 'html' in output:
             return '<div class="rendered_html">%s</div>' % output['html']
