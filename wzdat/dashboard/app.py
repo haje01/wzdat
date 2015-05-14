@@ -156,8 +156,10 @@ def _nb_output_to_html(path):
     rv = []
     with open(path, 'r') as f:
         nb = reads(f.read(), 'json')
-        for cell in nb['worksheets'][0]['cells']:
-            _cell_output_to_html(rv, cell)
+        ws = nb['worksheets']
+        if len(nb) > 0:
+            for cell in ws[0]['cells']:
+                _cell_output_to_html(rv, cell)
     return '\n'.join(rv)
 
 
