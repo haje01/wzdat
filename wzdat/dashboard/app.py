@@ -110,7 +110,7 @@ def start_view(nbpath):
             logging.debug('formname: {}'.format(formname))
         else:
             value = kv['value']
-            logging.debug('value: {}'.format(value))
+            logging.debug(u'value: {}'.format(value))
             if name in kwargs:
                 if type(kwargs[name]) != list:
                     kwargs[name] = [kwargs[name]]
