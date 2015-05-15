@@ -168,3 +168,6 @@ class Form(object):
 
     def __getitem__(self, key):
         return self.od.get(key, None)
+
+    def __contains__(self, key):
+        return key in self.od
