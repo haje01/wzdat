@@ -163,10 +163,10 @@ def ccmd_cache():
 
 
 def runcron(_remote=False):
-    _container_cmd('ccm_runcron', _remote)
+    _container_cmd('ccmd_runcron', _remote)
 
 
-def ccm_runcron():
+def ccmd_runcron():
     run('python -m wzdat.jobs run-all-cron-notebooks')
 
 

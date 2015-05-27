@@ -101,9 +101,10 @@
           alert('Request Failed.');
         }
         $.post(start_url, data, fmt)
-        .done(function(task_id) {
+        .done(function(task_info) {
+          console.log(task_info)
           var tm = setInterval(function() {
-            var url = poll_url + task_id;
+            var url = poll_url + task_info;
             $.post(url, {})
             .done(function(result) {
               //console.log(result);

@@ -138,7 +138,7 @@ def poll_view(task_id):
         if task.state == 'PROGRESS':
             return 'PROGRESS:' + str(task.result)
         outputs = task.get()
-        logging.debug('outputs {}'.format(outputs))
+        # logging.debug('outputs {}'.format(outputs))
     except Exception:
         err = task.traceback
         logging.error(err)
@@ -159,30 +159,61 @@ def start_rerun(nbpath):
 
     from wzdat.dashboard.tasks import rerun_notebook
     task = rerun_notebook.delay(nbpath)
-    return Response(task.task_id)
+    rv = nbpath + '/' + task.task_id
+    logging.debug(u'rv {}'.format(rv))
+    return Response(rv)
 
 
-@app.route('/poll_rerun/<task_id>', methods=['POST'])
-def poll_rerun(task_id):
-    logging.debug('poll_rerun {}'.format(task_id))
-    from wzdat.dashboard.tasks import run_view_cell
+@app.route('/poll_rerun/<path:task_info>', methods=['POST'])
+def poll_rerun(task_info):
+    task_id = 0
+    logging.debug(u'poll_rerun {}'.format(task_info))
+    from wzdat import rundb
+    from wzdat.util import div
+    from wzdat.dashboard.tasks import rerun_notebook
+    task_id = task_info.split('/')[-1]
+    nbpath = '/'.join(task_info.split('/')[:-1])
+
+    if nbpath[0] != '/':
+        nbpath = '/' + nbpath
+    # logging.debug(u'task_id {}, nbpath {}'.format(task_id, nbpath))
 
     try:
-        task = run_view_cell.AsyncResult(task_id)
+        task = rerun_notebook.AsyncResult(task_id)
         state = task.state
         if state == 'PENDING':
             return 'PROGRESS:0'
         logging.debug("{} - {}".format(task.state, task.status))
         if task.state == 'PROGRESS':
-            return 'PROGRESS:' + str(task.result)
-    except Exception:
+            ri = rundb.get_run_info(nbpath)
+            # logging.debug(u"ri {}".format(ri))
+            if ri is not None:
+                err = ri[4]
+                # logging.debug(u'err: {}'.format(err))
+                if err is None:
+                    cur = ri[2]
+                    total = ri[3]
+                    return 'PROGRESS:' + str(cur/float(total))
+                else:
+                    return Response('<div class="view"><pre '
+                                    'class="ds-err">%s</pre></div>' % err)
+            else:
+                return 'PROGRESS:0'
+        outputs = task.get()
+        # logging.debug('outputs {}'.format(outputs))
+    except Exception, e:
+        logging.error(e)
         err = task.traceback
         logging.error(err)
         err = ansi_escape.sub('', err)
         return Response('<div class="view"><pre class="ds-err">%s</pre></div>'
                         % err)
-    return Response('OK')
 
+    rv = []
+    _nb_output_to_html_dashboard(div, rv, outputs, 'rerun')
+    ret = '\n'.join(rv)
+    logging.debug(u'ret {}'.format(ret))
+    return Response(ret)
 
 def _nb_output_to_html(path):
     logging.debug('_nb_output_to_html {}'.format(path.encode('utf-8')))
@@ -260,17 +291,20 @@ def _collect_gnbs(gnbs, gk, groups):
     nbs = []
     notebook_dir = get_notebook_dir()
     logging.debug('_collect_gnbs ' + notebook_dir)
-    logging.debug(str(groups[gk]))
+    # logging.debug(str(groups[gk]))
     for path, url, fname in groups[gk]:
         out = _nb_output_to_html(path)
-        logging.debug('get_run_info {}'.format(path.encode('utf-8')))
+        # logging.debug('get_run_info {}'.format(path.encode('utf-8')))
         ri = rundb.get_run_info(path)
-        logging.debug('get_run_info done')
+        # logging.debug('get_run_info {}'.format(ri))
         if ri is not None:
             start, elapsed = _get_run_time(ri)
             cur = ri[2]
             total = ri[3]
             err = ri[4]
+            if err is not None:
+                out = '<div class="fail-result">Check error message, fix it, and rerun.</div>'
+            # logging.debug(u'err {}'.format(err))
             ri = (start, elapsed, cur, total, err)
         path = path.replace(notebook_dir, '')[1:]
         nbs.append((url, fname, out, ri, path))

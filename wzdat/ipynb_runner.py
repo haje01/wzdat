@@ -118,8 +118,8 @@ def update_notebook_by_run(path):
     err = None
     try:
         r.run_notebook(lambda cur: _progress_cell(path, cur))
-    except NotebookError, err:
-        err = unicode(err)
+    except NotebookError, e:
+        err = unicode(e)
     else:
         write(r.nb, open(path.encode('utf-8'), 'w'), 'json')
     finally:

@@ -7,7 +7,7 @@ from celery import Celery
 from IPython.nbformat.current import read
 
 from wzdat.ipynb_runner import run_notebook_view_cell, get_view_cell_cnt,\
-    run_code, update_notebook_by_run
+    run_code, update_notebook_by_run, rerun_notebook_cell
 from wzdat.make_config import make_config
 from wzdat.notebook_runner import NotebookRunner
 from wzdat.const import TMP_PREFIX
@@ -22,10 +22,18 @@ data_dir = cfg['data_dir']
 
 @app.task()
 def rerun_notebook(nbpath):
-    print('rerun_notebook {}'.format(nbpath))
+    print(u'rerun_notebook {}'.format(nbpath))
     rerun_notebook.update_state(state='PROGRESS', meta=0)
     update_notebook_by_run(nbpath)
     rerun_notebook.update_state(state='PROGRESS', meta=1)
+
+    nb = read(open(nbpath), 'json')
+    r = NotebookRunner(nb, pylab=True)
+    rv = []
+    cnt = 0
+    for i, cell in enumerate(r.iter_cells()):
+        rerun_notebook_cell(rv, r, cell, i)
+    return rv
 
 
 @app.task()

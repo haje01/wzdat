@@ -112,6 +112,11 @@ body {
   background-color: #ffe0e0;
 }
 
+.fail-result {
+  color: #994422;
+  font-size: 12pt;
+}
+
 .nb-group {
   font-size: 17px;
   padding-left: 18px;
