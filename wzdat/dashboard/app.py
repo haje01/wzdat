@@ -151,6 +151,39 @@ def poll_view(task_id):
     return Response(ret)
 
 
+@app.route('/start_rerun/<path:nbpath>', methods=['POST'])
+def start_rerun(nbpath):
+    logging.debug('start_rerun')
+    notebook_dir = get_notebook_dir()
+    nbpath = os.path.join(notebook_dir, nbpath)
+
+    from wzdat.dashboard.tasks import rerun_notebook
+    task = rerun_notebook.delay(nbpath)
+    return Response(task.task_id)
+
+
+@app.route('/poll_rerun/<task_id>', methods=['POST'])
+def poll_rerun(task_id):
+    logging.debug('poll_rerun {}'.format(task_id))
+    from wzdat.dashboard.tasks import run_view_cell
+
+    try:
+        task = run_view_cell.AsyncResult(task_id)
+        state = task.state
+        if state == 'PENDING':
+            return 'PROGRESS:0'
+        logging.debug("{} - {}".format(task.state, task.status))
+        if task.state == 'PROGRESS':
+            return 'PROGRESS:' + str(task.result)
+    except Exception:
+        err = task.traceback
+        logging.error(err)
+        err = ansi_escape.sub('', err)
+        return Response('<div class="view"><pre class="ds-err">%s</pre></div>'
+                        % err)
+    return Response('OK')
+
+
 def _nb_output_to_html(path):
     logging.debug('_nb_output_to_html {}'.format(path.encode('utf-8')))
     rv = []

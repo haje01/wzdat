@@ -106,16 +106,16 @@
             var url = poll_url + task_id;
             $.post(url, {})
             .done(function(result) {
-              console.log(result);
+              //console.log(result);
               if (result.substring(0, 8) == 'PROGRESS') {
                 prog = parseFloat(result.split(':')[1]);
                 lad.setProgress(prog);
               }
               else {
-                handler(result)
-                //console.log(result);
                 lad.stop();
                 clearInterval(tm);
+                handler(result)
+                //console.log(result);
                 console.log(start_url);
                 ga('send', 'event', name, 'click', start_url)
               }

@@ -22,10 +22,13 @@
         <h3 class="nb-title {%if nb[3] is not none%}{% if nb[3][4] is not none %}nb-fail{%endif%}{% endif %}">
           <span>{{nb[1]}}</span>
           <span class="nb_edit">
-            <a href="{{nb[0]}}">code</a>
+            <div class="btn-group" role="group" style="margin-top: -3px">
+            <a class="btn btn-xs btn-info" role="button" href="{{nb[0]}}">code</a>
             {% if nb[3] is not none and nb[3][4] is not none %}
-            <button style="margin-top: -3px" type="button" class="btn btn-xs btn-danger btn-error" data-placement="bottom" data-toggle="popover" data-html="true" data-content="<pre style='font-size: 10px'>{{nb[3][4]}}</pre>">error</button> 
+              <button type="button" class="btn btn-xs btn-danger btn-error" data-placement="bottom" data-toggle="popover" data-html="true" data-content="<pre style='font-size: 10px'>{{nb[3][4]}}</pre>">error</button> 
+              <button type="button" class="btn btn-xs btn-warning ladda-button rerun" data-style="expand-right" data-size="s" nbpath="{{nb[4]}}">rerun</button> 
             {% endif %}
+            </div>
           </span>
           <div class="pull-right">
             {% if nb[3] is not none %}
@@ -37,7 +40,7 @@
               {% endif %}
           </div>
         </h3>
-        <div nbpath="{{nb[4]}}">
+        <div nbpath="{{nb[4]}}" class="nbresult">
           {{nb[2]|safe}}
         </div>
       </div>
@@ -66,5 +69,15 @@ $(function() {
     return false;
   });
 
+  $('button.rerun').click(function(e) {
+    e.preventDefault();
+    var nbpath = $(this).attr('nbpath');
+    var frame = $('div.nbresult[nbpath="' + nbpath + '"]');
+    frame.empty();
+    request_task(this, 'rerun_button', '/start_rerun/' + nbpath, '/poll_rerun/', {}, 'json', function(result) {
+      location.reload();
+    })
+    return false;
+  });
 });
 {% endblock %}

@@ -126,6 +126,20 @@ def update_notebook_by_run(path):
         rundb.finish_run(path, err)
 
 
+def rerun_notebook_cell(rv, r, cell, cnt):
+    _type = cell['cell_type']
+    if _type == 'code':
+        r.run_cell(cell)
+        code = cell['input']
+        if '#!dashboard_view' in code:
+            outs = r.nb['worksheets'][0]['cells'][cnt]['outputs']
+            rv += outs
+    elif _type == 'markdown':
+        src = cell['source']
+        if '<!--dashboard_view-->' in src:
+            rv.append(div(markdown(src), 'view'))
+
+
 def run_notebook_view_cell(rv, r, cell, cnt):
     _type = cell['cell_type']
     if _type == 'code':

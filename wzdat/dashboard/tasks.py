@@ -7,7 +7,7 @@ from celery import Celery
 from IPython.nbformat.current import read
 
 from wzdat.ipynb_runner import run_notebook_view_cell, get_view_cell_cnt,\
-    run_code
+    run_code, update_notebook_by_run
 from wzdat.make_config import make_config
 from wzdat.notebook_runner import NotebookRunner
 from wzdat.const import TMP_PREFIX
@@ -18,6 +18,14 @@ app = Celery('wdtask', backend='redis://localhost', broker='redis://localhost')
 cfg = make_config()
 sol_dir = cfg['sol_dir']
 data_dir = cfg['data_dir']
+
+
+@app.task()
+def rerun_notebook(nbpath):
+    print('rerun_notebook {}'.format(nbpath))
+    rerun_notebook.update_state(state='PROGRESS', meta=0)
+    update_notebook_by_run(nbpath)
+    rerun_notebook.update_state(state='PROGRESS', meta=1)
 
 
 @app.task()

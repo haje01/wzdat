@@ -8,7 +8,6 @@ prj_map = {}
 
 
 assert 'WZDAT_HOST' in os.environ
-wzhost = os.environ['WZDAT_HOST']
 
 
 class _ChangeDir(object):
@@ -231,7 +230,8 @@ def _launch(prj, dbg=False):
     wzpkg = _get_pkg()
     wzdir = os.environ['WZDAT_DIR']
     wzsol = os.environ['WZDAT_SOL_DIR']
-    wzhost = os.environ['WZDAT_HOST']
+    wzhost = os.environ['WZDAT_HOST'] if 'WZDAT_B2DHOST' not in os.environ else \
+        os.environ['WZDAT_B2DHOST']
     runopt = ""
     cmd = ""
     if dbg is not False:
