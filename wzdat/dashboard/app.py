@@ -60,6 +60,7 @@ def home():
 
 @app.route('/dashboard')
 def dashboard():
+    logging.debug("dashboard home")
     projname, dev, cache_time = _page_common_vars()
 
     from wzdat.ipynb_runner import find_cron_notebooks
@@ -182,26 +183,31 @@ def poll_rerun(task_info):
         task = rerun_notebook.AsyncResult(task_id)
         state = task.state
         if state == 'PENDING':
+            logging.debug('task pending')
             return 'PROGRESS:0'
-        logging.debug("{} - {}".format(task.state, task.status))
-        if task.state == 'PROGRESS':
+        elif task.state == 'PROGRESS':
             ri = rundb.get_run_info(nbpath)
-            # logging.debug(u"ri {}".format(ri))
             if ri is not None:
+                logging.debug(u"run info exist")
                 err = ri[4]
                 # logging.debug(u'err: {}'.format(err))
                 if err is None:
                     cur = ri[2]
-                    total = ri[3]
+                    total = ri[3] + 1
+                    logging.debug(u'cur {} total {}'.format(cur, total))
                     return 'PROGRESS:' + str(cur/float(total))
                 else:
+                    logging.debug(u"ri error {}".format(err))
                     return Response('<div class="view"><pre '
                                     'class="ds-err">%s</pre></div>' % err)
             else:
+                logging.debug(u"run info not exist")
                 return 'PROGRESS:0'
         outputs = task.get()
+        logging.debug('task done')
         # logging.debug('outputs {}'.format(outputs))
     except Exception, e:
+        logging.debug(str(e))
         logging.error(e)
         err = task.traceback
         logging.error(err)
@@ -212,8 +218,9 @@ def poll_rerun(task_info):
     rv = []
     _nb_output_to_html_dashboard(div, rv, outputs, 'rerun')
     ret = '\n'.join(rv)
-    logging.debug(u'ret {}'.format(ret))
+    # logging.debug(u'ret {}'.format(ret))
     return Response(ret)
+
 
 def _nb_output_to_html(path):
     logging.debug('_nb_output_to_html {}'.format(path.encode('utf-8')))
@@ -303,7 +310,8 @@ def _collect_gnbs(gnbs, gk, groups):
             total = ri[3]
             err = ri[4]
             if err is not None:
-                out = '<div class="fail-result">Check error message, fix it, and rerun.</div>'
+                out = '<div class="fail-result">Check error message, fix it,'\
+                      'and rerun.</div>'
             # logging.debug(u'err {}'.format(err))
             ri = (start, elapsed, cur, total, err)
         path = path.replace(notebook_dir, '')[1:]

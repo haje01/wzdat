@@ -104,8 +104,10 @@ def _run_init(r, path):
 
 
 def update_notebook_by_run(path):
+    rundb.reset_run(path)
     logging.debug(u'update_notebook_by_run {}'.format(path))
-    # run common init
+
+    # init runner
     nb = read(open(path.encode('utf-8')), 'json')
     r = NotebookRunner(nb, pylab=True)
 

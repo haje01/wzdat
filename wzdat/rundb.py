@@ -104,6 +104,18 @@ def remove_db_file():
         os.remove(RUNNER_DB_PATH)
 
 
+def reset_run(path):
+    """Reset run info."""
+    with Cursor(RUNNER_DB_PATH) as cur:
+        cur.execute('SELECT * FROM info WHERE path=?', (path,))
+        if cur.fetchone() is None:
+            cur.execute('INSERT INTO info(path, start, total) VALUES(?, 0, 0)',
+                        (path,))
+        else:
+            cur.execute('UPDATE info SET error=NULL, start=0, elapsed=NULL, '
+                        'cur=0, total=0 WHERE path=?', (path,))
+
+
 def start_run(path, total):
     with Cursor(RUNNER_DB_PATH) as cur:
         _start_run(cur, path, total)
