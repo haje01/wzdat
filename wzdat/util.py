@@ -14,6 +14,7 @@ from subprocess import check_call, CalledProcessError
 from tempfile import TemporaryFile
 import uuid as _uuid
 import codecs
+from collections import defaultdict
 
 from wzdat.make_config import make_config
 from wzdat.const import NAMED_TMP_PREFIX, HDF_FILE_PREFIX, HDF_FILE_EXT
@@ -784,3 +785,12 @@ def disable_perfwarn():
 def dashboard_alert(atype, htmlmsg):
     return u'<div class="alert alert-{atype}" role="alert">{htmlmsg}</div>'.\
         format(atype=atype, htmlmsg=htmlmsg)
+
+
+class KeyDefaultDict(defaultdict):
+    def __missing__(self, key):
+        if self.default_factory is None:
+            raise KeyError(key)
+        else:
+            ret = self[key] = self.default_factory(key)
+            return ret

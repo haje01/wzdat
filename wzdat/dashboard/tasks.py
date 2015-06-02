@@ -30,9 +30,10 @@ def rerun_notebook(nbpath):
     nb = read(open(nbpath), 'json')
     r = NotebookRunner(nb, pylab=True)
     rv = []
-    cnt = 0
     for i, cell in enumerate(r.iter_cells()):
+        print(u'run cell {}'.format(i))
         rerun_notebook_cell(rv, r, cell, i)
+    print(u'rerun_notebook {} done. returning results..'.format(nbpath))
     return rv
 
 

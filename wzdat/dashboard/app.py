@@ -241,7 +241,7 @@ def _cell_output_to_html(rv, cell):
     _cls = ''
     if _type == 'code' and 'outputs' in cell:
         code = cell['input']
-        if '#!dashboard' in code:
+        if '#!dashboard_control' in code or '#!dashboard_view' in code:
             if '#!dashboard_control' in code:
                 _cls = 'control'
             elif '#!dashboard_view' in code:
