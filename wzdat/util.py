@@ -99,6 +99,13 @@ class Property(object):
         except KeyError, e:
             raise AttributeError(e)
 
+    def __dir__(self):
+        return self.__dict__['dict'].keys()
+
+    def __iter__(self):
+        for i in self.__dict__['dict'].keys():
+            yield i
+
 
 class Context(Property):
 
@@ -784,3 +791,246 @@ def disable_perfwarn():
 def dashboard_alert(atype, htmlmsg):
     return u'<div class="alert alert-{atype}" role="alert">{htmlmsg}</div>'.\
         format(atype=atype, htmlmsg=htmlmsg)
+
+
+def get_dashboard_host():
+    return os.environ['WZDAT_HOST'] if 'WZDAT_B2DHOST' not in os.environ else\
+        os.environ['WZDAT_B2DHOST']
+
+
+def get_dashboard_port():
+    cfg = make_config()
+    return cfg['host_dashboard_port']
+
+
+def get_ipython_port():
+    cfg = make_config()
+    return cfg['host_ipython_port']
+
+
+def get_notebook_path():
+    import json
+    import urllib2
+    from IPython.lib import kernel
+    connection_file_path = kernel.get_connection_file()
+    connection_file = os.path.basename(connection_file_path)
+    try:
+        kernel_id = connection_file.split('-', 1)[1].split('.')[0]
+    except IndexError:
+        # test mode
+        return os.path.join(os.environ['WZDAT_SOL_DIR'],
+                            '__notes__/myprj/test-notebook3.ipynb')
+
+    url = "http://{}:{}/api/sessions".format(
+        get_dashboard_host(), get_ipython_port())
+    sessions = json.load(urllib2.urlopen(url))
+    for sess in sessions:
+        if sess['kernel']['id'] == kernel_id:
+            path = sess['notebook']['path']
+            name = sess['notebook']['name']
+            return os.path.join(path, name)
+
+
+class ScbProperty(Property):
+    '''
+        Property with callback function to be evoked by set operation.
+    '''
+    def __init__(self, set_cb):
+        super(ScbProperty, self).__init__()
+        self._set_cb = set_cb
+
+    def __setattr__(self, attr, val):
+        self.__dict__['dict'][attr] = val
+        self._set_cb(attr, val)
+
+
+class Manifest(Property):
+    def __init__(self):
+        super(Manifest, self).__init__()
+
+        nbdir = get_notebook_dir()
+        nbrpath = get_notebook_path()
+        self.path = os.path.join(nbdir, nbrpath.replace('.ipynb',
+                                                        '.manifest.ipynb'))
+
+        assert os.path.isfile(self.path), "Manifest file '{}' not "\
+            "exist.".format(self.path)
+
+        self._output_hdf = None
+        self.nr, mtext = self._get_user_manifest(self.path)
+        import ast
+        data = ast.literal_eval(mtext)
+        if 'depends' in data:
+            self._init_depends(data['depends'])
+        if 'output' in data:
+            self._init_output(data['output'])
+
+        self.files_chksum = None
+        self.hdf_chksum = None
+        _dict = self.__dict__['dict']
+        if 'depends' in _dict:
+            depends = _dict['depends']
+            if 'files' in depends:
+                if type(depends.files) not in (list, tuple):
+                    self.files_chksum = depends.files.checksum()
+                else:
+                    self.files_chksum = [files.checksum() for files in
+                                         depends.files]
+            if 'hdf' in depends:
+                if type(depends.hdf) is not list:
+                    self.hdf_chksum = dataframe_checksum(depends.hdf)
+                else:
+                    self.hdf_chksum = [dataframe_checksum(hdf) for hdf in
+                                       depends.hdf]
+
+        self._write_checksums()
+
+    def _write_checksums(self):
+        from IPython.nbformat.current import write
+        # clear surplus info
+        first_cell = self.nr.nb.worksheets[0].cells[0]
+        first_cell['outputs'] = []
+        del self.nr.nb.worksheets[0].cells[1:]
+
+        checksums = []
+        if self.files_chksum is not None:  # could be multiple depends
+            cdepends = []
+            if self.files_chksum is not None:
+                cdepends.append("        'files': {}".
+                                format(self.files_chksum))
+            if len(cdepends) > 0:
+                checksums.append("    'depends': {{\n{}\n    }}".
+                                 format(',\n'.join(cdepends)))
+
+        if self.hdf_chksum is not None:  # could be multiple output
+            coutput = []
+            if self.hdf_chksum is not None:
+                coutput.append("        'hdf': {}".format(self.hdf_chksum))
+            checksums.append("    'output': {{\n{}\n    }}".
+                             format(',\n'.join(coutput)))
+
+        if len(checksums) > 0:
+            import copy
+            newcell = copy.deepcopy(self.nr.nb.worksheets[0].cells[0])
+            cs_body = "# WARNING: Generated Checksums. Do Not Edit.\n{{\n{}\n}}".\
+                format(',\n'.join(checksums))
+            newcell['input'] = cs_body
+            self.nr.nb.worksheets[0].cells.append(newcell)
+            write(self.nr.nb, open(self.path.encode('utf-8'), 'w'), 'json')
+
+    def _get_user_manifest(self, path):
+        from IPython.nbformat.current import read
+        from wzdat.notebook_runner import NotebookRunner
+        nb = read(open(path.encode('utf-8')), 'json')
+        r = NotebookRunner(nb)
+        for cell in r.iter_code_cells():
+            r.run_cell(cell)
+            return r, cell['outputs'][0]['text']
+
+    def _parse_depends_files(self, files):
+        melm = files[0].split('.')
+        frm = '.'.join(melm[:-1])
+        mod = melm[-1]
+        dates = files[1]
+        return frm, mod, dates
+
+    def _init_depends(self, depends):
+        _dict = self.__dict__['dict']
+        _dict['depends'] = Property()
+
+        if 'files' in depends:
+            ftype = type(depends['files'][0])
+            if ftype not in (list, tuple):
+                files = depends['files']
+                frm, mod, dates = self._parse_depends_files(files)
+                cmd = 'from {} import {} as _; _.load_info(); depends.files ='\
+                    '_.files[_.dates[-{}:]]; _ = None'.format(frm, mod, dates)
+                exec(cmd, globals(), _dict)
+            else:
+                exec('depends.files = []', globals(), _dict)
+                for files in depends['files']:
+                    frm, mod, dates = self._parse_depends_files(files)
+                    cmd = 'from {} import {} as _; _.load_info(); depends.files.'\
+                        'append(_.files[_.dates[-{}:]]); _ = None'.\
+                        format(frm, mod, dates)
+                    exec(cmd, globals(), _dict)
+
+        if 'hdf' in depends:
+            ftype = type(depends['hdf'][0])
+            if ftype not in (list, tuple):
+                owner, sname = depends['hdf']
+                cmd = 'from wzdat.util import HDF\nwith HDF("{}") as hdf:\n'\
+                    '    depends.hdf = hdf.store["{}"]'.format(owner, sname)
+                exec(cmd, globals(), _dict)
+            else:
+                exec('from wzdat.util import HDF', globals(), _dict)
+                exec('depends.hdf = []', globals(), _dict)
+                for hdf in depends['hdf']:
+                    owner, sname = hdf
+                    cmd = 'with HDF("{}") as hdf:\n    depends.hdf.append('\
+                        'hdf.store["{}"])'.format(owner, sname)
+                    exec(cmd, globals(), _dict)
+
+    def _init_output(self, output):
+        _dict = self.__dict__['dict']
+        _dict['output'] = ScbProperty(self._on_output_set)
+        if 'hdf' in output:
+            self._output_hdf = output['hdf']
+
+    def _on_output_set(self, attr, val):
+        if attr == 'hdf':
+            assert self._output_hdf is not None, "Manifest has no output hdf"
+            owner, sname = self._output_hdf
+            with HDF(owner) as hdf:
+                hdf.store[sname] = val
+            self.hdf_chksum = dataframe_checksum(val)
+            self._write_checksums()
+
+
+def file_checksum(apath):
+    """Return rough checksum by file size & modifiy date"""
+    return hash(os.stat(apath).st_size, os.stat(apath).st_mtime)
+
+
+def dataframe_checksum(df):
+    return hash((len(df), df.values.nbytes, df.index.nbytes,
+                 df.columns.nbytes))
+
+
+def get_notebook_manifest_path(nbpath):
+    return nbpath.replace('.ipynb', '.manifest.ipynb')
+
+
+def iter_notebooks():
+    nbptrn = '*.ipynb'
+    nbdir = get_notebook_dir()
+    for root, dir, files in os.walk(nbdir):
+        for nb in fnmatch.filter(files, nbptrn):
+            if '-checkpoint' in nb:
+                continue
+            yield os.path.join(nbdir, nb)
+
+
+def iter_notebook_manifests():
+    for npath in iter_notebooks():
+        mpath = get_notebook_manifest_path(npath)
+        if os.path.isfile(mpath):
+            yield npath, mpath
+
+
+def find_hdf_notebook_path(_owner, _sname):
+    '''return path of hdf source notebook by examining manifest.'''
+    import json
+    get_notebook_dir()
+    for nbpath, mfpath in iter_notebook_manifests():
+        with open(mfpath, 'r') as f:
+            data = json.loads(f.read())
+            try:
+                inp = ''.join(data['worksheets'][0]['cells'][0]['input'])
+            except (KeyError, IndexError):
+                continue
+            inp = eval(inp)
+            if 'output' in inp and 'hdf' in inp['output']:
+                owner, sname = inp['output']['hdf']
+                if owner == _owner and sname == _sname:
+                    return nbpath

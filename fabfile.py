@@ -242,7 +242,6 @@ def _launch(prj, dbg=False):
     cfg_path = os.path.join(wzsol, wzpkg, prj, 'config.yml')
     cfg = _make_config(cfg_path)
     iport = cfg['host_ipython_port']
-    iport = cfg['host_ipython_port']
     dport = cfg['host_dashboard_port']
     if 'data_dir' in cfg:
         datavol = '{}'.format(cfg['data_dir'])
