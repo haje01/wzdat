@@ -310,7 +310,7 @@ def _collect_gnbs(gnbs, gk, groups):
             total = ri[3]
             err = ri[4]
             if err is not None:
-                out = '<div class="fail-result">Check error, fix it,'\
+                out = '<div class="fail-result">Check error, fix it, '\
                       'and rerun.</div>'
             # logging.debug(u'err {}'.format(err))
             ri = (start, elapsed, cur, total, err)
