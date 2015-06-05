@@ -928,7 +928,7 @@ class FileSelector(FileCommon, IFilterable, IMergeable):
             fpath = f.abspath.replace(data_dir, '')
             stats.append(fpath)
             stats.append(os.stat(f.abspath).st_size)
-            stats.append(os.stat(f.abspath).st_mtime)
+            # stats.append(os.stat(f.abspath).st_mtime)
         return hash(tuple(stats))
 
 
