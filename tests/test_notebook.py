@@ -2,9 +2,10 @@ import os
 
 import pytest
 
+from wzdat.manifest import Manifest, RecursiveReference
 from wzdat.util import get_notebook_dir, find_hdf_notebook_path,\
     get_notebook_manifest_path, iter_notebooks, iter_notebook_manifests,\
-    get_data_dir, dataframe_checksum, HDF, Manifest, RecursiveReference
+    get_data_dir, dataframe_checksum, HDF
 from wzdat.ipynb_runner import update_notebook_by_run
 
 
@@ -27,6 +28,9 @@ def fxnewfile():
 
     if os.path.isfile(newfile):
         os.unlink(newfile)
+        # reload file infor for following tests
+        from ws_mysol.myprj import log as l
+        l.load_info()
 
 
 def test_notebook_run():
