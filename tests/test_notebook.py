@@ -17,6 +17,15 @@ def fxsoldir():
 
 
 @pytest.yield_fixture
+def fxhdftest2():
+    with HDF('haje01') as hdf:
+        test = hdf.store['test']
+        if 'test2' not in hdf.store:
+            hdf.store['test2'] = test
+    yield None
+
+
+@pytest.yield_fixture
 def fxnewfile():
     # new file
     newfile = os.path.join(get_data_dir(), 'kr/node-3/log',
@@ -43,10 +52,11 @@ def test_notebook_run():
 
 
 def test_notebook_util():
-    nbs = [nb for nb in iter_notebooks()]
-    assert len(nbs) == 10
-    nbms = [(nb, mf) for nb, mf in iter_notebook_manifests()]
-    assert len(nbms) == 4
+    nbdir = get_notebook_dir()
+    nbs = [nb for nb in iter_notebooks(nbdir)]
+    assert len(nbs) == 12
+    nbms = [(nb, mf) for nb, mf in iter_notebook_manifests(nbdir)]
+    assert len(nbms) == 5
     path = os.path.join(get_notebook_dir(), 'test-notebook3.ipynb')
     assert path == find_hdf_notebook_path('haje01', 'test')
 
@@ -85,19 +95,31 @@ def test_notebook_manifest(fxsoldir):
     assert 'output' in chksums[5]
     assert '-9210520864853562061' in chksums[6]
 
+    path = os.path.join(get_notebook_dir(), 'test-notebook3.ipynb')
+    assert os.path.isfile(path)
+    mpath = get_notebook_manifest_path(path)
+    assert os.path.isfile(mpath)
+    manifest = Manifest(False, False, path)
+    assert manifest._out_hdf_chksum is None
 
-def test_notebook_manifest2(fxsoldir):
+
+def test_notebook_manifest2(fxsoldir, fxhdftest2):
+    # multiple files & hdfs dependency test
     path = os.path.join(get_notebook_dir(), 'test-notebook5.ipynb')
     assert os.path.isfile(path)
     mpath = get_notebook_manifest_path(path)
     assert os.path.isfile(mpath)
-
-    # run notebook
     update_notebook_by_run(path)
+    manifest = Manifest(False, True, path)
+    assert len(manifest.depends.files) == 2
+    assert len(manifest.depends.hdf) == 2
+    assert len(manifest._dep_files_chksum) == 2
+    assert len(manifest._dep_hdf_chksum) == 2
+    assert manifest._out_hdf_chksum is None
 
     path = os.path.join(get_notebook_dir(), 'test-notebook6.ipynb')
     with pytest.raises(RecursiveReference):
-        Manifest(False, path)
+        Manifest(False, False, path)
 
 
 def test_notebook_dependency(fxsoldir, fxnewfile):
@@ -110,8 +132,8 @@ def test_notebook_dependency(fxsoldir, fxnewfile):
             del hdf.store['test']
 
     update_notebook_by_run(path)
-    manifest = Manifest(False, path)
-    assert manifest._prev_files_chksum == manifest._files_chksum
+    manifest = Manifest(False, True, path)
+    assert manifest._prev_files_chksum == manifest._dep_files_chksum
     with HDF('haje01') as hdf:
         prev_hdf_chksum = dataframe_checksum(hdf.store['test'])
         print "prev_hdf_chksum {}".format(prev_hdf_chksum)
@@ -121,9 +143,9 @@ def test_notebook_dependency(fxsoldir, fxnewfile):
     with open(fxnewfile, 'w') as f:
         f.write('2014-03-05 23:30 [ERROR] - Async\n')
 
-    manifest = Manifest(False, path)
+    manifest = Manifest(False, False, path)
     assert manifest._depend_files_changed
-    assert manifest._prev_files_chksum != manifest._files_chksum
+    assert manifest._prev_files_chksum != manifest._dep_files_chksum
 
     # run notebok again
     update_notebook_by_run(path)
@@ -134,3 +156,16 @@ def test_notebook_dependency(fxsoldir, fxnewfile):
 
     # check check
     assert prev_hdf_chksum != new_hdf_chksum
+
+
+def test_notebook_depresolv(fxsoldir):
+    from wzdat.nbdependresolv import DependencyTree
+    skip_nbs = [os.path.join(get_notebook_dir(), 'test-notebook6.ipynb')]
+    dt = DependencyTree(get_notebook_dir(), skip_nbs)
+    nb3 = dt.get_notebook_by_fname('test-notebook3')
+    nb4 = dt.get_notebook_by_fname('test-notebook4')
+    nb5 = dt.get_notebook_by_fname('test-notebook5')
+    assert nb4.is_depend(nb3)
+    assert nb5.is_depend(nb3)
+    assert nb5.is_depend(nb4)
+    dt.resolve()

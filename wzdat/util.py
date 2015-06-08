@@ -863,7 +863,7 @@ def get_notebook_manifest_path(nbpath):
     return nbpath.replace('.ipynb', '.manifest.ipynb')
 
 
-def iter_notebooks():
+def iter_notebooks(nbdir):
     nbptrn = '*.ipynb'
     nbdir = get_notebook_dir()
     for root, dir, files in os.walk(nbdir):
@@ -873,8 +873,8 @@ def iter_notebooks():
             yield os.path.join(nbdir, nb)
 
 
-def iter_notebook_manifests():
-    for npath in iter_notebooks():
+def iter_notebook_manifests(nbdir):
+    for npath in iter_notebooks(nbdir):
         mpath = get_notebook_manifest_path(npath)
         if os.path.isfile(mpath):
             yield npath, mpath
@@ -883,8 +883,8 @@ def iter_notebook_manifests():
 def find_hdf_notebook_path(_owner, _sname):
     '''return path of hdf source notebook by examining manifest.'''
     import json
-    get_notebook_dir()
-    for nbpath, mfpath in iter_notebook_manifests():
+    nbdir = get_notebook_dir()
+    for nbpath, mfpath in iter_notebook_manifests(nbdir):
         with open(mfpath, 'r') as f:
             data = json.loads(f.read())
             try:

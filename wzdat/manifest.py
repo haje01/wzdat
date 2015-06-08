@@ -13,8 +13,9 @@ class RecursiveReference(Exception):
 
 
 class Manifest(Property):
-    def __init__(self, write=True, test_path=None):
+    def __init__(self, write=True, load=True, test_path=None):
         super(Manifest, self).__init__()
+        self._write = write
 
         if test_path is None:
             nbdir = get_notebook_dir()
@@ -29,44 +30,52 @@ class Manifest(Property):
             "exist.".format(self._path)
 
         self._output_hdf = self._prev_files_chksum = self._prev_hdf_chksum = \
-            self._files_chksum = self._hdf_chksum = None
+            self._dep_files_chksum = self._dep_hdf_chksum = \
+            self._out_hdf_chksum = None
         self._nr, mtext = self._read_manifest()
-        data = ast.literal_eval(mtext)
+        data = ast.literal_eval(mtext) if len(mtext) > 0 else {}
 
         if 'output' in data:
             self._init_output(data['output'])
 
         if 'depends' in data:
-            self._exec_depends(data['depends'])
+            if load:
+                self._load_depends(data['depends'])
+            else:
+                self._init_depends(data['depends'])
 
         _dict = self.__dict__['dict']
-        if 'depends' in _dict:
-            self._init_depends(_dict['depends'])
+        if 'depends' in _dict and load:
+            self._chksum_depends(_dict['depends'])
 
-        if write:
+    def __enter__(self):
+        return self
+
+    def __exit__(self, atype, value, traceback):
+        if atype is None and self._write:
             self._write_checksums()
 
-    def _init_depends(self, depends):
+    def _chksum_depends(self, depends):
         if 'files' in depends:
             if type(depends.files) not in (list, tuple):
-                self._files_chksum = depends.files.checksum()
+                self._dep_files_chksum = depends.files.checksum()
             else:
-                self._files_chksum = [files.checksum() for files in
-                                      depends.files]
+                self._dep_files_chksum = [files.checksum() for files in
+                                          depends.files]
         if 'hdf' in depends:
             if type(depends.hdf) is not list:
-                self._hdf_chksum = dataframe_checksum(depends.hdf)
+                self._dep_hdf_chksum = dataframe_checksum(depends.hdf)
             else:
-                self._hdf_chksum = [dataframe_checksum(hdf) for hdf in
-                                    depends.hdf]
+                self._dep_hdf_chksum = [dataframe_checksum(hdf) for hdf in
+                                        depends.hdf]
 
     @property
     def _depend_files_changed(self):
-        return self._prev_files_chksum != self._files_chksum
+        return self._prev_files_chksum != self._dep_files_chksum
 
     @property
     def _depend_hdf_changed(self):
-        return self._prev_hdf_chksum != self._hdf_chksum
+        return self._prev_hdf_chksum != self._dep_hdf_chksum
 
     @property
     def _output_exist(self):
@@ -89,19 +98,24 @@ class Manifest(Property):
         del self._nr.nb.worksheets[0].cells[1:]
 
         checksums = []
-        if self._files_chksum is not None:  # could be multiple depends
+        if self._dep_files_chksum is not None or\
+                self._dep_hdf_chksum is not None:
             cdepends = []
-            if self._files_chksum is not None:
+            if self._dep_files_chksum is not None:
                 cdepends.append("        'files': {}".
-                                format(self._files_chksum))
+                                format(self._dep_files_chksum))
+            if self._dep_hdf_chksum is not None:
+                cdepends.append("        'hdf': {}".
+                                format(self._dep_hdf_chksum))
             if len(cdepends) > 0:
                 checksums.append("    'depends': {{\n{}\n    }}".
                                  format(',\n'.join(cdepends)))
 
-        if self._hdf_chksum is not None:  # could be multiple output
+        if self._out_hdf_chksum is not None:  # could be multiple outputs
             coutput = []
-            if self._hdf_chksum is not None:
-                coutput.append("        'hdf': {}".format(self._hdf_chksum))
+            if self._out_hdf_chksum is not None:
+                coutput.append("        'hdf': {}".format(
+                    self._out_hdf_chksum))
             checksums.append("    'output': {{\n{}\n    }}".
                              format(',\n'.join(coutput)))
 
@@ -125,7 +139,12 @@ class Manifest(Property):
             r.run_cell(cell)
             # user cell
             if i == 0:
-                mtext = cell['outputs'][0]['text']
+                if 'outputs' in cell:
+                    try:
+                        mtext = cell['outputs'][0]['text']
+                    except IndexError:
+                        import pdb; pdb.set_trace()  # XXX BREAKPOINT
+                        pass
             # generated checksum cell
             elif i == 1:
                 chksum = cell['outputs'][0]['text']
@@ -145,7 +164,38 @@ class Manifest(Property):
         dates = files[1]
         return frm, mod, dates
 
-    def _exec_depends(self, depends):
+    def _init_depends(self, depends):
+        _dict = self.__dict__['dict']
+        dicdep = _dict['depends'] = Property()
+
+        if 'files' in depends:
+            ftype = type(depends['files'][0])
+            if ftype not in (list, tuple):
+                files = depends['files']
+                frm, mod, dates = self._parse_depends_files(files)
+                dicdep.files = [frm, mod, dates]
+            else:
+                depends_files = []
+                for files in depends['files']:
+                    frm, mod, dates = self._parse_depends_files(files)
+                    depends_files.append([frm, mod, dates])
+                dicdep.files = depends_files
+
+        if 'hdf' in depends:
+            ftype = type(depends['hdf'][0])
+            if ftype not in (list, tuple):
+                owner, sname = depends['hdf']
+                self._check_recursive_refer(owner, sname)
+                dicdep.hdf = [owner, sname]
+            else:
+                depends_hdf = []
+                for hdf in depends['hdf']:
+                    owner, sname = hdf
+                    self._check_recursive_refer(owner, sname)
+                    depends_hdf.append([owner, sname])
+                dicdep.hdf = depends_hdf
+
+    def _load_depends(self, depends):
         _dict = self.__dict__['dict']
         _dict['depends'] = Property()
 
@@ -185,7 +235,8 @@ class Manifest(Property):
                     exec(cmd, globals(), _dict)
 
     def _check_recursive_refer(self, owner, sname):
-        if self._output_hdf[0] == owner and self._output_hdf[1] == sname:
+        if self._output_hdf is not None and self._output_hdf[0] == owner and\
+                self._output_hdf[1] == sname:
             raise RecursiveReference
 
     def _init_output(self, output):
@@ -200,5 +251,4 @@ class Manifest(Property):
             owner, sname = self._output_hdf
             with HDF(owner) as hdf:
                 hdf.store[sname] = val
-            self._hdf_chksum = dataframe_checksum(val)
-            self._write_checksums()
+            self._out_hdf_chksum = dataframe_checksum(val)
