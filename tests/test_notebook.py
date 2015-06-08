@@ -76,7 +76,7 @@ def test_notebook_manifest(fxsoldir):
     from wzdat.util import HDF
     with HDF('haje01') as hdf:
         df = hdf.store.select('test')
-        assert len(df) == 4320
+        assert len(df) == 7560
 
     #
     # check manifest checksum
@@ -89,11 +89,11 @@ def test_notebook_manifest(fxsoldir):
     chksums = ws['cells'][1]['input']
     assert 'WARNING' in chksums[0]
     # check depends checksum
-    assert 'depends' in chksums[2]
-    assert '6533060286654657065' in chksums[3]
+    assert 'depends' in chksums[3]
+    assert '8875249185536240278' in chksums[4]
     # check output checksum
-    assert 'output' in chksums[5]
-    assert '-9210520864853562061' in chksums[6]
+    assert 'output' in chksums[6]
+    assert '5917511075693791499' in chksums[7]
 
     path = os.path.join(get_notebook_dir(), 'test-notebook3.ipynb')
     assert os.path.isfile(path)

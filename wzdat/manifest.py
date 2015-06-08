@@ -3,9 +3,11 @@
 
 import os
 import ast
+import time
+from datetime import datetime
 
 from wzdat.util import Property, get_notebook_path, get_notebook_dir,\
-    dataframe_checksum, HDF, ScbProperty
+    dataframe_checksum, HDF, ScbProperty, convert_server_time_to_client
 
 
 class RecursiveReference(Exception):
@@ -97,7 +99,10 @@ class Manifest(Property):
         first_cell['outputs'] = []
         del self._nr.nb.worksheets[0].cells[1:]
 
-        checksums = []
+        last_run = datetime.fromtimestamp(time.time())
+        last_run = convert_server_time_to_client(last_run)
+        last_run = last_run.strftime("%Y-%m-%d %H:%M:%S")
+        body = ["    'last_run': '{}'".format(last_run)]
         if self._dep_files_chksum is not None or\
                 self._dep_hdf_chksum is not None:
             cdepends = []
@@ -108,22 +113,22 @@ class Manifest(Property):
                 cdepends.append("        'hdf': {}".
                                 format(self._dep_hdf_chksum))
             if len(cdepends) > 0:
-                checksums.append("    'depends': {{\n{}\n    }}".
-                                 format(',\n'.join(cdepends)))
+                body.append("    'depends': {{\n{}\n    }}".
+                            format(',\n'.join(cdepends)))
 
         if self._out_hdf_chksum is not None:  # could be multiple outputs
             coutput = []
             if self._out_hdf_chksum is not None:
                 coutput.append("        'hdf': {}".format(
                     self._out_hdf_chksum))
-            checksums.append("    'output': {{\n{}\n    }}".
-                             format(',\n'.join(coutput)))
+            body.append("    'output': {{\n{}\n    }}".
+                        format(',\n'.join(coutput)))
 
-        if len(checksums) > 0:
+        if len(body) > 0:
             import copy
             newcell = copy.deepcopy(self._nr.nb.worksheets[0].cells[0])
             cs_body = "# WARNING: Generated Checksums. Do Not Edit.\n{{\n{}\n}}".\
-                format(',\n'.join(checksums))
+                format(',\n'.join(body))
             newcell['input'] = cs_body
             self._nr.nb.worksheets[0].cells.append(newcell)
 
@@ -139,23 +144,28 @@ class Manifest(Property):
             r.run_cell(cell)
             # user cell
             if i == 0:
-                if 'outputs' in cell:
-                    try:
-                        mtext = cell['outputs'][0]['text']
-                    except IndexError:
-                        import pdb; pdb.set_trace()  # XXX BREAKPOINT
-                        pass
+                mtext = self._read_manifest_user_cell(cell)
             # generated checksum cell
             elif i == 1:
                 chksum = cell['outputs'][0]['text']
                 data = ast.literal_eval(chksum)
-                if 'depends' in data:
-                    depends = data['depends']
-                    if 'files' in depends:
-                        self._prev_files_chksum = depends['files']
-                    if 'hdf' in depends:
-                        self._prev_hdf_chksum = depends['hdf']
+                self._read_manifest_user_chksum_cell(data)
         return r, mtext
+
+    def _read_manifest_user_cell(self, cell):
+        if 'outputs' in cell:
+            try:
+                return cell['outputs'][0]['text']
+            except IndexError:
+                pass
+
+    def _read_manifest_user_chksum_cell(self, data):
+        if 'depends' in data:
+            depends = data['depends']
+            if 'files' in depends:
+                self._prev_files_chksum = depends['files']
+            if 'hdf' in depends:
+                self._prev_hdf_chksum = depends['hdf']
 
     def _parse_depends_files(self, files):
         melm = files[0].split('.')
