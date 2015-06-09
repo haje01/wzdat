@@ -6,7 +6,8 @@ from datetime import datetime
 from wzdat.manifest import Manifest, RecursiveReference
 from wzdat.util import get_notebook_dir, find_hdf_notebook_path,\
     get_notebook_manifest_path, iter_notebooks, iter_notebook_manifest_input,\
-    get_data_dir, dataframe_checksum, HDF, iter_dashboard_notebook
+    get_data_dir, dataframe_checksum, HDF, iter_dashboard_notebook, \
+    iter_scheduled_notebook
 from wzdat.ipynb_runner import update_notebook_by_run
 
 
@@ -44,8 +45,7 @@ def fxnewfile():
 
 
 def test_notebook_run():
-    path = os.path.join(get_notebook_dir(),
-                        '[* * * * *@Test]test-notebook.ipynb')
+    path = os.path.join(get_notebook_dir(), 'test-notebook.ipynb')
     assert os.path.isfile(path)
     before = os.stat(path).st_mtime
     update_notebook_by_run(path)
@@ -55,9 +55,9 @@ def test_notebook_run():
 def test_notebook_util():
     nbdir = get_notebook_dir()
     nbs = [nb for nb in iter_notebooks(nbdir)]
-    assert len(nbs) == 12
+    assert len(nbs) == 14
     nbms = [(nb, mi) for nb, mi in iter_notebook_manifest_input(nbdir)]
-    assert len(nbms) == 5
+    assert len(nbms) == 7
     path = os.path.join(nbdir, 'test-notebook3.ipynb')
     assert path == find_hdf_notebook_path('haje01', 'test')
 
@@ -174,7 +174,10 @@ def test_notebook_depresolv(fxsoldir):
     assert nb4.is_depend(nb3)
     assert nb5.is_depend(nb3)
     assert nb5.is_depend(nb4)
-    dt.resolve()
+    resolved = dt.resolve()
+    sched_nbs = set([snb for snb, _ in iter_scheduled_notebook(nbdir)])
+    resolved_nbs = set([nb.path for nb in resolved])
+    assert len(sched_nbs & resolved_nbs) == 0
 
 
 def test_notebook_dashboard(fxsoldir):

@@ -2,8 +2,7 @@
 """Notebook dependency resolver."""
 import os
 
-from wzdat.util import iter_notebook_manifests
-from wzdat.manifest import Manifest
+from wzdat.util import iter_notebook_manifest
 
 
 class UnresolvedHDFDependency(Exception):
@@ -33,10 +32,7 @@ class DependencyTree(object):
         self.notebooks = []
 
         # collect notebooks with manifest
-        for nbpath, _ in iter_notebook_manifests(nbdir):
-            if skip_nbs is not None and nbpath in skip_nbs:
-                continue
-            manifest = Manifest(False, False, nbpath)
+        for nbpath, manifest in iter_notebook_manifest(nbdir, skip_nbs):
             nb = Notebook(nbpath, manifest)
             self.notebooks.append(nb)
 
@@ -63,8 +59,10 @@ class DependencyTree(object):
                 return nb
 
     def iter_top_notebooks(self):
-        '''Iterate top notebooks(no dependency of outer hdf).'''
+        '''Iterate top notebooks(no dependency of outer hdf, no schdule).'''
         for nb in self.notebooks:
+            if 'schedule' in nb.manifest:
+                continue
             if 'depends' not in nb.manifest or 'hdf' not in \
                     nb.manifest.depends:
                 yield nb

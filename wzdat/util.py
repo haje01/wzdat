@@ -873,6 +873,18 @@ def iter_notebooks(nbdir):
             yield os.path.join(nbdir, nb)
 
 
+def iter_notebook_manifest(nbdir, skip_nbs=None):
+    from wzdat.manifest import Manifest
+    for npath in iter_notebooks(nbdir):
+        if skip_nbs is not None and npath in skip_nbs:
+            continue
+        mpath = get_notebook_manifest_path(npath)
+        if not os.path.isfile(mpath):
+            continue
+        manifest = Manifest(False, False, npath)
+        yield npath, manifest
+
+
 def iter_notebook_manifest_input(nbdir):
     import json
     for npath in iter_notebooks(nbdir):
@@ -905,7 +917,7 @@ def find_hdf_notebook_path(_owner, _sname):
                 return nbpath
 
 
-def iter_cron_notebook(nbdir):
+def iter_scheduled_notebook(nbdir):
     for nbpath, minp in iter_notebook_manifest_input(nbdir):
         if 'schedule' in minp:
             schedule = minp['schedule']

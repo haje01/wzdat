@@ -37,6 +37,9 @@ class Manifest(Property):
         self._nr, mtext = self._read_manifest()
         data = ast.literal_eval(mtext) if len(mtext) > 0 else {}
 
+        for k, v in data.iteritems():
+            self.__dict__['dict'][k] = v
+
         if 'output' in data:
             self._init_output(data['output'])
 
