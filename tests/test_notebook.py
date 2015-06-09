@@ -5,8 +5,8 @@ from datetime import datetime
 
 from wzdat.manifest import Manifest, RecursiveReference
 from wzdat.util import get_notebook_dir, find_hdf_notebook_path,\
-    get_notebook_manifest_path, iter_notebooks, iter_notebook_manifests,\
-    get_data_dir, dataframe_checksum, HDF
+    get_notebook_manifest_path, iter_notebooks, iter_notebook_manifest_input,\
+    get_data_dir, dataframe_checksum, HDF, iter_dashboard_notebook
 from wzdat.ipynb_runner import update_notebook_by_run
 
 
@@ -56,14 +56,15 @@ def test_notebook_util():
     nbdir = get_notebook_dir()
     nbs = [nb for nb in iter_notebooks(nbdir)]
     assert len(nbs) == 12
-    nbms = [(nb, mf) for nb, mf in iter_notebook_manifests(nbdir)]
+    nbms = [(nb, mi) for nb, mi in iter_notebook_manifest_input(nbdir)]
     assert len(nbms) == 5
-    path = os.path.join(get_notebook_dir(), 'test-notebook3.ipynb')
+    path = os.path.join(nbdir, 'test-notebook3.ipynb')
     assert path == find_hdf_notebook_path('haje01', 'test')
 
 
 def test_notebook_manifest(fxsoldir):
-    path = os.path.join(get_notebook_dir(), 'test-notebook3.ipynb')
+    nbdir = get_notebook_dir()
+    path = os.path.join(nbdir, 'test-notebook3.ipynb')
     assert os.path.isfile(path)
     mpath = get_notebook_manifest_path(path)
     assert os.path.isfile(mpath)
@@ -96,7 +97,7 @@ def test_notebook_manifest(fxsoldir):
     assert 'output' in chksums[6]
     assert '5917511075693791499' in chksums[7]
 
-    path = os.path.join(get_notebook_dir(), 'test-notebook3.ipynb')
+    path = os.path.join(nbdir, 'test-notebook3.ipynb')
     assert os.path.isfile(path)
     mpath = get_notebook_manifest_path(path)
     assert os.path.isfile(mpath)
@@ -107,7 +108,8 @@ def test_notebook_manifest(fxsoldir):
 
 def test_notebook_manifest2(fxsoldir, fxhdftest2):
     # multiple files & hdfs dependency test
-    path = os.path.join(get_notebook_dir(), 'test-notebook5.ipynb')
+    nbdir = get_notebook_dir()
+    path = os.path.join(nbdir, 'test-notebook5.ipynb')
     assert os.path.isfile(path)
     mpath = get_notebook_manifest_path(path)
     assert os.path.isfile(mpath)
@@ -119,14 +121,15 @@ def test_notebook_manifest2(fxsoldir, fxhdftest2):
     assert len(manifest._dep_hdf_chksum) == 2
     assert manifest._out_hdf_chksum is None
 
-    path = os.path.join(get_notebook_dir(), 'test-notebook6.ipynb')
+    path = os.path.join(nbdir, 'test-notebook6.ipynb')
     with pytest.raises(RecursiveReference):
         Manifest(False, False, path)
 
 
 def test_notebook_dependency(fxsoldir, fxnewfile):
     # run notebook first
-    path = os.path.join(get_notebook_dir(), 'test-notebook3.ipynb')
+    nbdir = get_notebook_dir()
+    path = os.path.join(nbdir, 'test-notebook3.ipynb')
     assert os.path.isfile(path)
 
     with HDF('haje01') as hdf:
@@ -161,9 +164,10 @@ def test_notebook_dependency(fxsoldir, fxnewfile):
 
 
 def test_notebook_depresolv(fxsoldir):
+    nbdir = get_notebook_dir()
     from wzdat.nbdependresolv import DependencyTree
-    skip_nbs = [os.path.join(get_notebook_dir(), 'test-notebook6.ipynb')]
-    dt = DependencyTree(get_notebook_dir(), skip_nbs)
+    skip_nbs = [os.path.join(nbdir, 'test-notebook6.ipynb')]
+    dt = DependencyTree(nbdir, skip_nbs)
     nb3 = dt.get_notebook_by_fname('test-notebook3')
     nb4 = dt.get_notebook_by_fname('test-notebook4')
     nb5 = dt.get_notebook_by_fname('test-notebook5')
@@ -171,3 +175,17 @@ def test_notebook_depresolv(fxsoldir):
     assert nb5.is_depend(nb3)
     assert nb5.is_depend(nb4)
     dt.resolve()
+
+
+def test_notebook_dashboard(fxsoldir):
+    nbdir = get_notebook_dir()
+    dnbs = [nbpath for nbpath in iter_dashboard_notebook(nbdir)]
+    assert len(dnbs) == 2
+
+
+def test_notebook_cron(fxsoldir):
+    from wzdat.jobs import register_cron
+    register_cron()
+    from crontab import CronTab
+    cron = CronTab()
+    assert len(cron.crons) == 2

@@ -873,26 +873,40 @@ def iter_notebooks(nbdir):
             yield os.path.join(nbdir, nb)
 
 
-def iter_notebook_manifests(nbdir):
+def iter_notebook_manifest_input(nbdir):
+    import json
     for npath in iter_notebooks(nbdir):
         mpath = get_notebook_manifest_path(npath)
-        if os.path.isfile(mpath):
-            yield npath, mpath
+        if not os.path.isfile(mpath):
+            continue
+        with open(mpath, 'r') as f:
+            data = json.loads(f.read())
+            try:
+                minp = ''.join(data['worksheets'][0]['cells'][0]['input'])
+            except (KeyError, IndexError):
+                continue
+            minp = eval(minp)
+            yield npath, minp
+
+
+def iter_dashboard_notebook(nbdir):
+    for npath, mip in iter_notebook_manifest_input(nbdir):
+        if 'dashboard' in mip:
+            yield npath
 
 
 def find_hdf_notebook_path(_owner, _sname):
     '''return path of hdf source notebook by examining manifest.'''
-    import json
     nbdir = get_notebook_dir()
-    for nbpath, mfpath in iter_notebook_manifests(nbdir):
-        with open(mfpath, 'r') as f:
-            data = json.loads(f.read())
-            try:
-                inp = ''.join(data['worksheets'][0]['cells'][0]['input'])
-            except (KeyError, IndexError):
-                continue
-            inp = eval(inp)
-            if 'output' in inp and 'hdf' in inp['output']:
-                owner, sname = inp['output']['hdf']
-                if owner == _owner and sname == _sname:
-                    return nbpath
+    for nbpath, minp in iter_notebook_manifest_input(nbdir):
+        if 'output' in minp and 'hdf' in minp['output']:
+            owner, sname = minp['output']['hdf']
+            if owner == _owner and sname == _sname:
+                return nbpath
+
+
+def iter_cron_notebook(nbdir):
+    for nbpath, minp in iter_notebook_manifest_input(nbdir):
+        if 'schedule' in minp:
+            schedule = minp['schedule']
+            yield nbpath, schedule

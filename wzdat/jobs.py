@@ -34,10 +34,14 @@ def cache_all():
 
 
 def register_cron():
-    from wzdat.util import get_notebook_dir
+    from wzdat.util import get_notebook_dir, iter_cron_notebook
     from wzdat.ipynb_runner import find_cron_notebooks, register_cron_notebooks
-    nb_dir = get_notebook_dir()
-    paths, scheds, _, _ = find_cron_notebooks(nb_dir)
+    nbdir = get_notebook_dir()
+    # TODO: remove legacy style notebooks & functions
+    paths, scheds, _, _ = find_cron_notebooks(nbdir)
+    for path, sched in iter_cron_notebook(nbdir):
+        paths.append(path)
+        scheds.append(sched)
     logging.debug("register_cron")
     register_cron_notebooks(paths, scheds)
     save_cron(paths, scheds)
