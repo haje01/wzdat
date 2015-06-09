@@ -65,7 +65,8 @@ class DependencyTree(object):
     def iter_top_notebooks(self):
         '''Iterate top notebooks(no dependency of outer hdf).'''
         for nb in self.notebooks:
-            if 'depends' in nb.manifest and 'hdf' not in nb.manifest.depends:
+            if 'depends' not in nb.manifest or 'hdf' not in \
+                    nb.manifest.depends:
                 yield nb
 
     def resolve(self):

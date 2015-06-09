@@ -160,6 +160,10 @@ class Manifest(Property):
                 pass
 
     def _read_manifest_user_chksum_cell(self, data):
+        if 'last_run' in data:
+            self.last_run = datetime.strptime(data['last_run'], '%Y-%m-%d '
+                                              '%H:%M:%S')
+
         if 'depends' in data:
             depends = data['depends']
             if 'files' in depends:

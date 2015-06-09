@@ -1,6 +1,7 @@
 import os
 
 import pytest
+from datetime import datetime
 
 from wzdat.manifest import Manifest, RecursiveReference
 from wzdat.util import get_notebook_dir, find_hdf_notebook_path,\
@@ -100,6 +101,7 @@ def test_notebook_manifest(fxsoldir):
     mpath = get_notebook_manifest_path(path)
     assert os.path.isfile(mpath)
     manifest = Manifest(False, False, path)
+    assert type(manifest.last_run) is datetime
     assert manifest._out_hdf_chksum is None
 
 
