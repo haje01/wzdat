@@ -306,12 +306,13 @@ def heat_map(df, ax_fs=13, **kwargs):
      ax_fs    (int)  : x-axis and y-axis fontsize (default 13)
      skipna   (bool) : heat_map celltext 'nan value' skip, (default True)
      title    (str)  : set heat_map title (default 'NA')
-     cmap     (plt.cm): set heat_map colormaps (default plt.cm.jet)
+     cmap     (plt.cm): set heat_map colormaps (default plt.cm.cool)
                         do you want another colormaps?
                         go to this site
                     http://wiki.scipy.org/Cookbook/Matplotlib/Show_colormaps
     """
     import matplotlib.pyplot as plt
+    from matplotlib import ticker
 
     expected_args = set(['figsize', 'rows_len', 'cols_len',
                          'colorbar', 'cmap', 'celltext', 'title',
@@ -335,14 +336,39 @@ def heat_map(df, ax_fs=13, **kwargs):
         ax.set_title(kwargs['title'], fontsize=kwargs['label_fs'])
     _set_ticks_labels(df, ax, ax_fs, rows, cols, kwargs)
     if kwargs['colorbar'] is True:
-        color_bar = plt.colorbar()
+        txt_fmt = kwargs['txt_fmt']
+        if hasattr(txt_fmt, '__call__'):
+            def fmt(x, pos):
+                return txt_fmt(x)
+            color_bar = plt.colorbar(format=ticker.FuncFormatter(fmt))
+        else:
+            color_bar = plt.colorbar()
         if kwargs['colorbar_label'] != 'NA':
             color_bar.set_label(kwargs['colorbar_label'],
                                 fontsize=kwargs['label_fs'])
 
 
+def make_cmap():
+    from matplotlib import colors
+    cdict = {'blue': ((0.0, 0, 0.7),
+                      (0.5, 0.5, 0.5),
+                      (1.0, 0.5, 0.0)),
+             'green': ((0.0, 0, 0.5),
+                       (0.5, 0.9, 0.9),
+                       (0.8, 0.7, 0.7),
+                       (1.0, 0.5, 0.0)),
+             'red':  ((0.0, 0, 0.5),
+                      (0.1, 0.3, 0.3),
+                      (0.5, 0.2, 0.2),
+                      (0.8, 0.7, 0.7),
+                      (1.0, 1.0, 0.0))
+             }
+
+    return colors.LinearSegmentedColormap('my_colormap', cdict, 256)
+
+
 def _init_heat_map_kwargs(df, kwargs):
-    import matplotlib.pyplot as plt
+    # import matplotlib.pyplot as plt
 
     kwargs.setdefault('figsize', (11, 4))
     kwargs.setdefault('colorbar', True)
@@ -358,7 +384,7 @@ def _init_heat_map_kwargs(df, kwargs):
     kwargs.setdefault('cols_len', len(df.columns))
     kwargs.setdefault('txt_fmt', u'{:.1f}')
     kwargs.setdefault('skipna', False)
-    kwargs.setdefault('cmap', plt.cm.jet)
+    kwargs.setdefault('cmap', make_cmap())
 
 
 def _heat_map_celltext(df, ax, rows, cols, kwargs):
@@ -370,17 +396,24 @@ def _heat_map_celltext(df, ax, rows, cols, kwargs):
 
 
 def _celltext(df, ax, rows, cols, skipna, txt_fmt):
+    def valtxt(i, j):
+        val = df.iget_value(i, j)
+        if hasattr(txt_fmt, '__call__'):
+            return txt_fmt(val)
+        else:
+            return txt_fmt.format(val)
+
     if skipna is True:
         for i in range(rows):
             for j in range(cols):
                 if not math.isnan(df.iget_value(i, j)):
-                    ax.text(j, i, txt_fmt.format(df.iget_value(i, j)),
-                            size='medium', ha='center', va='center')
+                    ax.text(j, i, valtxt(i, j), size='medium', ha='center',
+                            va='center')
     else:
         for i in range(rows):
             for j in range(cols):
-                ax.text(j, i, txt_fmt.format(df.iget_value(i, j)),
-                        size='medium', ha='center', va='center')
+                ax.text(j, i, valtxt(i, j), size='medium', ha='center',
+                        va='center')
 
 
 def _set_ticks_labels(df, ax, ax_fs, rows, cols, kwargs):
