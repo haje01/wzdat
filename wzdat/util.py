@@ -368,7 +368,7 @@ def make_cmap():
 
 
 def _init_heat_map_kwargs(df, kwargs):
-    # import matplotlib.pyplot as plt
+    import matplotlib.pyplot as plt
 
     kwargs.setdefault('figsize', (11, 4))
     kwargs.setdefault('colorbar', True)
@@ -384,7 +384,7 @@ def _init_heat_map_kwargs(df, kwargs):
     kwargs.setdefault('cols_len', len(df.columns))
     kwargs.setdefault('txt_fmt', u'{:.1f}')
     kwargs.setdefault('skipna', False)
-    kwargs.setdefault('cmap', make_cmap())
+    kwargs.setdefault('cmap', plt.cm.summer)
 
 
 def _heat_map_celltext(df, ax, rows, cols, kwargs):
