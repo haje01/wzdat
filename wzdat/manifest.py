@@ -4,10 +4,15 @@
 import os
 import ast
 import time
+import logging
 from datetime import datetime
 
 from wzdat.util import Property, get_notebook_path, get_notebook_dir,\
     dataframe_checksum, HDF, ScbProperty, convert_server_time_to_client
+
+
+class NoHDFWritten(Exception):
+    pass
 
 
 class RecursiveReference(Exception):
@@ -27,16 +32,17 @@ class Manifest(Property):
                                                       '.manifest.ipynb'))
         else:
             self._path = test_path.replace('.ipynb', '.manifest.ipynb')
+        logging.debug(u"Manifest __init__ for {}".format(self._path))
 
         assert os.path.isfile(self._path), "Manifest file '{}' not "\
             "exist.".format(self._path)
 
-        self._output_hdf = self._prev_files_chksum = self._prev_hdf_chksum = \
+        self._prev_files_chksum = self._prev_hdf_chksum = \
             self._dep_files_chksum = self._dep_hdf_chksum = \
             self._out_hdf_chksum = None
-        self._nr, mtext = self._read_manifest()
-        data = ast.literal_eval(mtext) if len(mtext) > 0 else {}
+        data = self._read_manifest()
 
+        self._data = data
         for k, v in data.iteritems():
             self.__dict__['dict'][k] = v
 
@@ -46,23 +52,33 @@ class Manifest(Property):
         if 'depends' in data:
             if load:
                 self._load_depends(data['depends'])
-            else:
-                self._init_depends(data['depends'])
+            for owner, sname in self._iter_depend_hdf():
+                self._check_recursive_refer(owner, sname)
 
         _dict = self.__dict__['dict']
         if 'depends' in _dict and load:
             self._chksum_depends(_dict['depends'])
 
+    def _iter_depend_hdf(self):
+        if 'depends' in self._data and 'hdf' in self._data['depends']:
+            hdf = self._data['depends']['hdf']
+            if type(hdf[0]) is list:
+                for ahdf in hdf:
+                    yield ahdf
+            else:
+                yield hdf
+
     def __enter__(self):
         return self
 
     def __exit__(self, atype, value, traceback):
+        logging.debug("__exit__ for {}".format(self._path))
         if atype is None and self._write:
             self._write_checksums()
 
     def _chksum_depends(self, depends):
         if 'files' in depends:
-            if type(depends.files) not in (list, tuple):
+            if type(depends.files) is not list:
                 self._dep_files_chksum = depends.files.checksum()
             else:
                 self._dep_files_chksum = [files.checksum() for files in
@@ -84,23 +100,35 @@ class Manifest(Property):
 
     @property
     def _output_exist(self):
-        if self._output_hdf is not None:
-            owner, sname = self._output_hdf
+        if 'output' in self._data and 'hdf' in self._data['output']:
+            owner, sname = self._data['output']['hdf']
             with HDF(owner) as hdf:
                 return sname in hdf.store
         return True
 
     @property
-    def _need_output(self):
-        return self._depend_files_changed or self._depend_hdf_changed or\
-            (not self._output_exist)
+    def _need_run(self):
+        '''Test if notebook should be run.'''
+        return self._depend_files_changed or self._depend_hdf_changed
 
     def _write_checksums(self):
-        from IPython.nbformat.current import write
+        from IPython.nbformat.current import write, read
+        from wzdat.notebook_runner import NotebookRunner, NotebookError
+
+        nb = read(open(self._path.encode('utf-8')), 'json')
+        nr = NotebookRunner(nb)
+        try:
+            nr.run_notebook()
+        except NotebookError, e:
+            err = unicode(e)
+            logging.error(err)
+        else:
+            write(nr.nb, open(self._path.encode('utf-8'), 'w'), 'json')
+
         # clear surplus info
-        first_cell = self._nr.nb.worksheets[0].cells[0]
+        first_cell = nr.nb.worksheets[0].cells[0]
         first_cell['outputs'] = []
-        del self._nr.nb.worksheets[0].cells[1:]
+        del nr.nb.worksheets[0].cells[1:]
 
         last_run = datetime.fromtimestamp(time.time())
         last_run = convert_server_time_to_client(last_run)
@@ -126,34 +154,36 @@ class Manifest(Property):
                     self._out_hdf_chksum))
             body.append("    'output': {{\n{}\n    }}".
                         format(',\n'.join(coutput)))
+        else:
+            if 'output' in self._data and 'hdf' in self._data['output']:
+                logging.error(u"NoHDFWritten at {}".format(self._path))
+                raise NoHDFWritten(self._path)
 
         if len(body) > 0:
             import copy
-            newcell = copy.deepcopy(self._nr.nb.worksheets[0].cells[0])
+            newcell = copy.deepcopy(nr.nb.worksheets[0].cells[0])
             cs_body = "# WARNING: Generated Checksums. Do Not Edit.\n{{\n{}\n}}".\
                 format(',\n'.join(body))
             newcell['input'] = cs_body
-            self._nr.nb.worksheets[0].cells.append(newcell)
+            nr.nb.worksheets[0].cells.append(newcell)
 
-        write(self._nr.nb, open(self._path.encode('utf-8'), 'w'), 'json')
+        write(nr.nb, open(self._path.encode('utf-8'), 'w'), 'json')
 
     def _read_manifest(self):
-        from IPython.nbformat.current import read
-        from wzdat.notebook_runner import NotebookRunner
-        nb = read(open(self._path.encode('utf-8')), 'json')
-        r = NotebookRunner(nb)
-        mtext = ''
-        for i, cell in enumerate(r.iter_code_cells()):
-            r.run_cell(cell)
-            # user cell
-            if i == 0:
-                mtext = self._read_manifest_user_cell(cell)
-            # generated checksum cell
-            elif i == 1:
-                chksum = cell['outputs'][0]['text']
-                data = ast.literal_eval(chksum)
-                self._read_manifest_user_chksum_cell(data)
-        return r, mtext
+        import json
+
+        with open(self._path, 'r') as f:
+            nbdata = json.loads(f.read())
+            cells = nbdata['worksheets'][0]['cells']
+            for i, cell in enumerate(cells):
+                # user cell
+                if i == 0:
+                    mdata = ast.literal_eval(''.join(cell['input']))
+                # generated checksum cell
+                elif i == 1:
+                    chksum = ast.literal_eval(''.join(cell['input']))
+                    self._read_manifest_user_chksum_cell(chksum)
+        return mdata
 
     def _read_manifest_user_cell(self, cell):
         if 'outputs' in cell:
@@ -181,91 +211,58 @@ class Manifest(Property):
         dates = files[1]
         return frm, mod, dates
 
-    def _init_depends(self, depends):
-        _dict = self.__dict__['dict']
-        dicdep = _dict['depends'] = Property()
-
-        if 'files' in depends:
-            ftype = type(depends['files'][0])
-            if ftype not in (list, tuple):
-                files = depends['files']
-                frm, mod, dates = self._parse_depends_files(files)
-                dicdep.files = [frm, mod, dates]
-            else:
-                depends_files = []
-                for files in depends['files']:
-                    frm, mod, dates = self._parse_depends_files(files)
-                    depends_files.append([frm, mod, dates])
-                dicdep.files = depends_files
-
-        if 'hdf' in depends:
-            ftype = type(depends['hdf'][0])
-            if ftype not in (list, tuple):
-                owner, sname = depends['hdf']
-                self._check_recursive_refer(owner, sname)
-                dicdep.hdf = [owner, sname]
-            else:
-                depends_hdf = []
-                for hdf in depends['hdf']:
-                    owner, sname = hdf
-                    self._check_recursive_refer(owner, sname)
-                    depends_hdf.append([owner, sname])
-                dicdep.hdf = depends_hdf
-
-    def _load_depends(self, depends):
+    def _load_depends(self, data):
         _dict = self.__dict__['dict']
         _dict['depends'] = Property()
 
-        if 'files' in depends:
-            ftype = type(depends['files'][0])
-            if ftype not in (list, tuple):
-                files = depends['files']
+        if 'files' in data:
+            ftype = type(data['files'][0])
+            if ftype is not list:
+                files = data['files']
                 frm, mod, dates = self._parse_depends_files(files)
                 cmd = 'from {} import {} as _; _.load_info(); depends.files ='\
                     '_.files[_.dates[-{}:]]; _ = None'.format(frm, mod, dates)
                 exec(cmd, globals(), _dict)
             else:
                 exec('depends.files = []', globals(), _dict)
-                for files in depends['files']:
+                for files in data['files']:
                     frm, mod, dates = self._parse_depends_files(files)
                     cmd = 'from {} import {} as _; _.load_info(); depends.files.'\
                         'append(_.files[_.dates[-{}:]]); _ = None'.\
                         format(frm, mod, dates)
                     exec(cmd, globals(), _dict)
 
-        if 'hdf' in depends:
-            ftype = type(depends['hdf'][0])
-            if ftype not in (list, tuple):
-                owner, sname = depends['hdf']
-                self._check_recursive_refer(owner, sname)
+        if 'hdf' in data:
+            ftype = type(data['hdf'][0])
+            if ftype is not list:
+                owner, sname = data['hdf']
                 cmd = 'from wzdat.util import HDF\nwith HDF("{}") as hdf:\n'\
                     '    depends.hdf = hdf.store["{}"]'.format(owner, sname)
                 exec(cmd, globals(), _dict)
             else:
                 exec('from wzdat.util import HDF', globals(), _dict)
                 exec('depends.hdf = []', globals(), _dict)
-                for hdf in depends['hdf']:
+                for hdf in data['hdf']:
                     owner, sname = hdf
-                    self._check_recursive_refer(owner, sname)
                     cmd = 'with HDF("{}") as hdf:\n    depends.hdf.append('\
                         'hdf.store["{}"])'.format(owner, sname)
                     exec(cmd, globals(), _dict)
 
     def _check_recursive_refer(self, owner, sname):
-        if self._output_hdf is not None and self._output_hdf[0] == owner and\
-                self._output_hdf[1] == sname:
-            raise RecursiveReference
+        if 'output' in self._data and 'hdf' in self._data['output']:
+            hdf = self._data['output']['hdf']
+            if hdf[0] == owner and hdf[1] == sname:
+                raise RecursiveReference
 
     def _init_output(self, output):
         _dict = self.__dict__['dict']
         _dict['output'] = ScbProperty(self._on_output_set)
-        if 'hdf' in output:
-            self._output_hdf = output['hdf']
 
     def _on_output_set(self, attr, val):
         if attr == 'hdf':
-            assert self._output_hdf is not None, "Manifest has no output hdf"
-            owner, sname = self._output_hdf
+            assert 'output' in self._data and 'hdf' in self._data['output'],\
+                "Manifest has no output hdf"
+            owner, sname = self._data['output']['hdf']
             with HDF(owner) as hdf:
                 hdf.store[sname] = val
             self._out_hdf_chksum = dataframe_checksum(val)

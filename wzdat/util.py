@@ -14,6 +14,7 @@ from subprocess import check_call, CalledProcessError
 from tempfile import TemporaryFile
 import uuid as _uuid
 import codecs
+from tempfile import gettempdir
 
 from wzdat.make_config import make_config
 from wzdat.const import NAMED_TMP_PREFIX, HDF_FILE_PREFIX, HDF_FILE_EXT
@@ -197,6 +198,26 @@ class HDF(object):
     def __exit__(self, _type, value, tb):
         if self.store is not None:
             self.store.close()
+
+
+class OfflineNBPath(object):
+    def __init__(self, nbpath):
+        from tempfile import gettempdir
+        self.fpath = os.path.join(gettempdir(), '_offline_nbpath_')
+        with open(self.fpath, 'w') as fp:
+            fp.write(nbpath)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, _type, value, tb):
+        os.unlink(self.fpath)
+
+
+def get_offline_nbpath():
+    fpath = os.path.join(gettempdir(), '_offline_nbpath_')
+    with open(fpath, 'r') as f:
+        return f.readline()
 
 
 try:
@@ -822,9 +843,7 @@ def get_notebook_path():
     try:
         kernel_id = connection_file.split('-', 1)[1].split('.')[0]
     except IndexError:
-        # test mode
-        return os.path.join(os.environ['WZDAT_SOL_DIR'],
-                            '__notes__/myprj/test-notebook3.ipynb')
+        return get_offline_nbpath()
 
     url = "http://{}:{}/api/sessions".format(
         get_dashboard_host(), get_ipython_port())
@@ -873,7 +892,7 @@ def iter_notebooks(nbdir):
             yield os.path.join(nbdir, nb)
 
 
-def iter_notebook_manifest(nbdir, skip_nbs=None):
+def iter_notebook_manifest(nbdir, load, skip_nbs=None):
     from wzdat.manifest import Manifest
     for npath in iter_notebooks(nbdir):
         if skip_nbs is not None and npath in skip_nbs:
@@ -881,7 +900,7 @@ def iter_notebook_manifest(nbdir, skip_nbs=None):
         mpath = get_notebook_manifest_path(npath)
         if not os.path.isfile(mpath):
             continue
-        manifest = Manifest(False, False, npath)
+        manifest = Manifest(False, load, npath)
         yield npath, manifest
 
 
