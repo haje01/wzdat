@@ -46,6 +46,13 @@ def test_selector_basic(fxlogs):
     assert len(dump.kinds) == 3
 
 
+def test_selector_dates(fxlogs):
+    l = fxlogs[0]
+    assert len(l.dates) == 10
+    assert len(l.dates[-10:]) == 10
+    assert len(l.dates[-14:]) == 10
+
+
 def test_selector_value(fxlogs):
     log = fxlogs[0]
     f = log.files[0]

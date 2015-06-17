@@ -141,9 +141,7 @@ def get_line_count(path):
 
 def normalize_idx(idx, cnt):
     if idx < 0:
-        idx = cnt + idx
-        if idx < 0:
-            raise IndexError
+        idx = 0
     return min(idx, cnt)
 
 
