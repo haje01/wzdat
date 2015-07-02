@@ -17,6 +17,9 @@ def test_dashboard_home(app):
     rv = app.get('/', follow_redirects=True)
     assert '200 OK' == rv.status
     assert 'WzDat MYPRJ Dashboard' in rv.data
+    assert 'test-notebook' in rv.data
+    assert 'test-notebook2' in rv.data
+    assert 'test-notebook3' not in rv.data
 
 
 def test_dashboard_finder(app):

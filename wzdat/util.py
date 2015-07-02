@@ -11,10 +11,13 @@ import cPickle
 import fnmatch
 import time
 from subprocess import check_call, CalledProcessError
+import tempfile
 from tempfile import TemporaryFile
 import uuid as _uuid
 import codecs
 from tempfile import gettempdir
+
+from crontab import CronTab
 
 from wzdat.make_config import make_config
 from wzdat.const import NAMED_TMP_PREFIX, HDF_FILE_PREFIX, HDF_FILE_EXT
@@ -22,6 +25,8 @@ from wzdat.const import NAMED_TMP_PREFIX, HDF_FILE_PREFIX, HDF_FILE_EXT
 
 LOG_KINDS = ('game', 'auth', 'community')
 PROCESSES = {'game': 3}
+
+CRON_CMD = '/usr/bin/crontab'
 
 
 def unique_tmp_path(prefix, ext='.txt'):
@@ -892,15 +897,19 @@ def iter_notebooks(nbdir):
             yield os.path.join(nbdir, nb)
 
 
-def iter_notebook_manifest(nbdir, load, skip_nbs=None):
-    from wzdat.manifest import Manifest
+def iter_notebook_manifest(nbdir, check_depends, skip_nbs=None):
+    from wzdat.manifest import Manifest, RecursiveReference
     for npath in iter_notebooks(nbdir):
         if skip_nbs is not None and npath in skip_nbs:
             continue
         mpath = get_notebook_manifest_path(npath)
         if not os.path.isfile(mpath):
             continue
-        manifest = Manifest(False, load, npath)
+        try:
+            manifest = Manifest(False, check_depends, npath)
+        except RecursiveReference, e:
+            logging.error(unicode(e).encode('utf8'))
+            continue
         yield npath, manifest
 
 
@@ -941,3 +950,44 @@ def iter_scheduled_notebook(nbdir):
         if 'schedule' in minp:
             schedule = minp['schedule']
             yield nbpath, schedule
+
+
+def register_cron_notebooks():
+    nb_dir = get_notebook_dir()
+    nbpaths = []
+    schedules = []
+    for path, scd in iter_scheduled_notebook(nb_dir):
+        nbpaths.append(path)
+        schedules.append(scd)
+    _register_crons(nbpaths, schedules)
+    return nbpaths, schedules
+
+
+def _register_crons(paths, scheds):
+    logging.debug('register_cron_notebooks')
+    # start new cron file with env vars
+    filed, tpath = tempfile.mkstemp()
+    fileh = os.fdopen(filed, 'wb')
+    assert 'WZDAT_CFG' in os.environ
+    assert 'WZDAT_HOST' in os.environ
+    cfg_path = os.environ['WZDAT_CFG']
+    host = os.environ['WZDAT_HOST']
+    fileh.write('WZDAT_DIR=/wzdat\n')
+    fileh.write('WZDAT_CFG=%s\n' % cfg_path)
+    fileh.write('WZDAT_HOST=%s\n' % host)
+    fileh.close()
+    check_call([CRON_CMD, tpath])
+    os.unlink(tpath)
+
+    cron = CronTab()
+    # clear registered notebooks
+    cron.remove_all('cron-ipynb')
+
+    for i, path in enumerate(paths):
+        sched = scheds[i]
+        fname = os.path.basename(path)
+        cmd = ' '.join(['python', '-m', 'wzdat.jobs run-notebook "%s"' % path,
+                        ' > "/tmp/cron-ipynb-%s" 2>&1' % fname])
+        job = cron.new(cmd)
+        job.setall(sched)
+    cron.write()
