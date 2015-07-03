@@ -99,14 +99,6 @@ class Manifest(Property):
         return self._prev_hdf_chksum != self._dep_hdf_chksum
 
     @property
-    def _output_exist(self):
-        if 'output' in self._data and 'hdf' in self._data['output']:
-            owner, sname = self._data['output']['hdf']
-            with HDF(owner) as hdf:
-                return sname in hdf.store
-        return True
-
-    @property
     def _need_run(self):
         '''Test if notebook should be run.'''
         return self._depend_files_changed or self._depend_hdf_changed

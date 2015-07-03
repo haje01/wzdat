@@ -14,7 +14,6 @@ from wzdat.util import get_notebook_dir, convert_server_time_to_client
 from wzdat.rundb import get_cache_info, get_finder_info
 from wzdat.jobs import cache_finder
 from wzdat.make_config import make_config
-from wzdat.manifest import Manifest, RecursiveReference
 
 app = Flask(__name__)
 
@@ -65,18 +64,18 @@ def dashboard():
     logging.debug("dashboard home")
     projname, dev, cache_time = _page_common_vars()
 
-    from wzdat.util import iter_notebook_manifest
+    from wzdat.util import iter_dashboard_notebook
     iport = int(cfg["host_ipython_port"])
     base_url = 'http://%s:%d/tree' % (HOST, iport)
     nbdir = get_notebook_dir()
     groups = defaultdict(list)
-    for nbpath, manifest in iter_notebook_manifest(nbdir, False):
+    for nbpath, mip in iter_dashboard_notebook(nbdir):
         sdir = os.path.dirname(nbpath).replace(nbdir, '')[1:]
         fn = os.path.basename(nbpath)
         url = os.path.join(base_url, sdir, fn)
         fname = os.path.splitext(os.path.basename(nbpath))[0]
-        if 'dashboard' in manifest and 'group' in manifest.dashboard:
-            gk = manifest.dashboard['group']
+        if 'group' in mip['dashboard']:
+            gk = mip['dashboard']['group']
             groups[gk].append((nbpath, url, fname))
     logging.debug("collected notebooks by group")
 

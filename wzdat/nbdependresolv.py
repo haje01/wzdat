@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Notebook dependency resolver."""
 import os
+import logging
 
 from wzdat.util import iter_notebook_manifest, OfflineNBPath
 from wzdat.ipynb_runner import update_notebook_by_run
@@ -94,6 +95,7 @@ class DependencyTree(object):
 
     def _run_resolved(self, updaterun, notebook, resolved, runs):
         '''Run notebook after all its dependencies resolved.'''
+        logging.debug(u"_run_resolved '{}'".format(notebook.path))
         notebook.reload_manifest()
         need_run = notebook.manifest._need_run
         if need_run and updaterun:

@@ -930,9 +930,10 @@ def iter_notebook_manifest_input(nbdir):
 
 
 def iter_dashboard_notebook(nbdir):
+    """Return dashboard notebook and its manifest input."""
     for npath, mip in iter_notebook_manifest_input(nbdir):
         if 'dashboard' in mip:
-            yield npath
+            yield npath, mip
 
 
 def find_hdf_notebook_path(_owner, _sname):

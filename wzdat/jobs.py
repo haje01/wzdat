@@ -28,8 +28,9 @@ def check_cache():
         evt.mark_handled_events('check_cache', ids)
 
 
-def resolve_notebooks():
+def update_notebooks():
     '''Check notebook's dependency and run if needed.'''
+    logging.debug('update_notebooks')
     nbdir = get_notebook_dir()
     from wzdat.nbdependresolv import DependencyTree
     skip_nbs = [os.path.join(nbdir, 'test-notebook6.ipynb')]
@@ -90,4 +91,4 @@ if __name__ == "__main__":
     argh.dispatch_commands([cache_all, register_cron, run_notebook,
                             gen_dummydata, run_all_cron_notebooks,
                             register_event, check_cache, destroy_table,
-                            resolve_notebooks])
+                            update_notebooks])

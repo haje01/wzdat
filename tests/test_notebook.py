@@ -196,15 +196,15 @@ def test_notebook_cron(fxsoldir):
 
 
 def test_notebook_resolve(fxsoldir, fxnewfile):
-    from wzdat.jobs import resolve_notebooks
-    _, runs = resolve_notebooks()
+    from wzdat.jobs import update_notebooks
+    _, runs = update_notebooks()
 
-    _, runs = resolve_notebooks()
+    _, runs = update_notebooks()
     assert len(runs) == 0
 
     # add new file
     with open(fxnewfile, 'w') as f:
         f.write('2014-03-05 23:30 [ERROR] - Async\n')
 
-    _, runs = resolve_notebooks()
+    _, runs = update_notebooks()
     assert len(runs) == 3
