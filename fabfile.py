@@ -65,7 +65,7 @@ def deploy(_build=False):
         run("git pull")
         if _build:
             build(True)
-        relaunch(True)
+        relaunch_all(True)
 
 
 def dpush():
@@ -149,9 +149,9 @@ def build(_remote=False):
             _build_dev(False)
 
 
-def relaunch(_remote=False):
+def relaunch_all(_remote=False):
     rm_all(_remote)
-    launch(_remote)
+    launch_all(_remote)
 
 
 def cache(_remote=False):
@@ -170,13 +170,13 @@ def ccmd_runcron():
     run('python -m wzdat.jobs run-all-cron-notebooks')
 
 
-def launch(_remote=False):
+def launch_all(_remote=False):
     if _remote is True:
         _container_cmd('launch', True)
     else:
         prjs = os.environ['WZDAT_PRJS'].split(',')
         for prj in prjs:
-            _launch(prj)
+            launch_prj(prj)
 
 
 def _get_pkg():
@@ -220,11 +220,11 @@ def _make_config(cfgpath):
     return _cfg
 
 
-def rm(prj):
+def rm_prj(prj):
     local('docker rm -f wzdat_{prj}'.format(prj=prj))
 
 
-def _launch(prj, dbg=False):
+def launch_prj(prj, dbg=False):
     assert 'WZDAT_DIR' in os.environ
     assert 'WZDAT_SOL_DIR' in os.environ
     wzpkg = _get_pkg()
@@ -241,7 +241,6 @@ def _launch(prj, dbg=False):
         runopt = "-d"
     cfg_path = os.path.join(wzsol, wzpkg, prj, 'config.yml')
     cfg = _make_config(cfg_path)
-    iport = cfg['host_ipython_port']
     iport = cfg['host_ipython_port']
     dport = cfg['host_dashboard_port']
     if 'data_dir' in cfg:

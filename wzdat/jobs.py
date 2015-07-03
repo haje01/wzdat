@@ -1,3 +1,4 @@
+import os
 import logging
 
 import argh
@@ -8,7 +9,7 @@ from wzdat.ipynb_runner import update_notebook_by_run
 from wzdat.rundb import get_cron_notebooks, save_cron, destroy_table as\
     _destroy_table
 from wzdat.util import gen_dummydata as _gen_dummydata, cache_files,\
-    cache_finder
+    cache_finder, get_notebook_dir
 from wzdat import event as evt
 
 cfg = make_config()
@@ -27,6 +28,16 @@ def check_cache():
         evt.mark_handled_events('check_cache', ids)
 
 
+def update_notebooks():
+    '''Check notebook's dependency and run if needed.'''
+    logging.debug('update_notebooks')
+    nbdir = get_notebook_dir()
+    from wzdat.nbdependresolv import DependencyTree
+    skip_nbs = [os.path.join(nbdir, 'test-notebook6.ipynb')]
+    dt = DependencyTree(nbdir, skip_nbs)
+    return dt.resolve(True)
+
+
 def cache_all():
     logging.debug('cache_all')
     cache_files()
@@ -34,12 +45,9 @@ def cache_all():
 
 
 def register_cron():
-    from wzdat.util import get_notebook_dir
-    from wzdat.ipynb_runner import find_cron_notebooks, register_cron_notebooks
-    nb_dir = get_notebook_dir()
-    paths, scheds, _, _ = find_cron_notebooks(nb_dir)
+    from wzdat.util import register_cron_notebooks
     logging.debug("register_cron")
-    register_cron_notebooks(paths, scheds)
+    paths, scheds = register_cron_notebooks()
     save_cron(paths, scheds)
 
 
@@ -82,4 +90,5 @@ def register_event(**kwargs):
 if __name__ == "__main__":
     argh.dispatch_commands([cache_all, register_cron, run_notebook,
                             gen_dummydata, run_all_cron_notebooks,
-                            register_event, check_cache, destroy_table])
+                            register_event, check_cache, destroy_table,
+                            update_notebooks])

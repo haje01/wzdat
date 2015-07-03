@@ -49,14 +49,12 @@ def test_db_update_run():
 
 
 def test_db_save_cron(fxdb):
-    from wzdat.ipynb_runner import find_cron_notebooks
-    from wzdat.util import get_notebook_dir
-    nb_dir = get_notebook_dir()
-    paths, scheds, _, _ = find_cron_notebooks(nb_dir)
+    from wzdat.util import register_cron_notebooks
+    paths, scheds = register_cron_notebooks()
     with Cursor(RUNNER_DB_PATH) as cur:
         rv = cur.execute('SELECT count(*) FROM cron').fetchone()
         assert rv[0] == 0
     save_cron(paths, scheds)
     with Cursor(RUNNER_DB_PATH) as cur:
         rv = cur.execute('SELECT count(*) FROM cron').fetchone()
-        assert rv[0] == 2
+        assert rv[0] == 3

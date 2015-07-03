@@ -37,7 +37,7 @@ notebook_base_dir: $WZDAT_DIR/tests/__notes__
 # Common config for Test(ws_mysol)
 tmp_valid_hour: 24
 named_tmp_valid_hour: 720  # 24 * 30
-server_timezone: UTC
+server_timezone: "Asia/Seoul"
 client_timezone: "Asia/Seoul"
 
 # for Dashboard Error Reporting

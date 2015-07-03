@@ -5,20 +5,16 @@ import re
 import logging
 
 from Queue import Empty
-import tempfile
-from subprocess import check_call
 
-from crontab import CronTab
 from markdown import markdown
 
-from wzdat.util import div, get_notebook_dir, remove_ansicolor
+from wzdat.util import div, remove_ansicolor
 from wzdat import rundb
 
 
 CRON_PTRN =\
     re.compile(r'\s*\[\s*((?:[^\s@]+\s+){4}[^\s@]+)?\s*(?:@(.+))?\s*\]\s*(.+)')
 IGNORE_DIRS = ('.ipynb_checkpoints', '.git')
-CRON_CMD = '/usr/bin/crontab'
 
 from IPython.nbformat.current import read, NotebookNode, write
 from wzdat.notebook_runner import NotebookRunner, NotebookError
@@ -177,28 +173,6 @@ def _progress_cell(path, cur):
     rundb.update_run_info(path, cur)
 
 
-def find_cron_notebooks(nb_dir, static=False):
-    paths = []
-    scheds = []
-    groups = []
-    fnames = []
-    odir = os.getcwd()
-    cron = CronTab()
-    pjob = cron.new('echo')
-    print "Finding cron notebooks in '%s'.." % nb_dir
-    os.chdir(nb_dir)
-    for root, dirs, names in os.walk('.'):
-        dirs[:] = [d for d in dirs if d not in IGNORE_DIRS]
-        root = root[2:]
-        for name in names:
-            if name.endswith('.ipynb'):
-                apath = os.path.join(nb_dir, root, name).decode('utf-8')
-                _parse_notebook_name(paths, scheds, groups, fnames, apath,
-                                     pjob, static)
-    os.chdir(odir)
-    return paths, scheds, groups, fnames
-
-
 def _parse_notebook_name(paths, scheds, groups, fnames, path, pjob, static):
     'collect file name if it confront cron rule'
     if path in paths:
@@ -220,39 +194,3 @@ def _parse_notebook_name(paths, scheds, groups, fnames, path, pjob, static):
             scheds.append(sched)
             groups.append(gname)
             fnames.append(fname)
-
-
-def register_cron_notebooks(paths, scheds):
-    logging.debug('register_cron_notebooks')
-    # start new cron file with env vars
-    filed, tpath = tempfile.mkstemp()
-    fileh = os.fdopen(filed, 'wb')
-    assert 'WZDAT_CFG' in os.environ
-    assert 'WZDAT_HOST' in os.environ
-    cfg_path = os.environ['WZDAT_CFG']
-    host = os.environ['WZDAT_HOST']
-    fileh.write('WZDAT_DIR=/wzdat\n')
-    fileh.write('WZDAT_CFG=%s\n' % cfg_path)
-    fileh.write('WZDAT_HOST=%s\n' % host)
-    fileh.close()
-    check_call([CRON_CMD, tpath])
-    os.unlink(tpath)
-
-    cron = CronTab()
-    # clear registered notebooks
-    cron.remove_all('cron-ipynb')
-
-    for i, path in enumerate(paths):
-        sched = scheds[i]
-        fname = os.path.basename(path)
-        cmd = ' '.join(['python', '-m', 'wzdat.jobs run-notebook "%s"' % path,
-                        ' > "/tmp/cron-ipynb-%s" 2>&1' % fname])
-        job = cron.new(cmd)
-        job.setall(sched)
-    cron.write()
-
-
-if __name__ == '__main__':
-    nb_dir = get_notebook_dir()
-    paths, scheds, _, _ = find_cron_notebooks(nb_dir)
-    register_cron_notebooks(paths, scheds)

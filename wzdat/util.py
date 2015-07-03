@@ -11,10 +11,14 @@ import cPickle
 import fnmatch
 import time
 from subprocess import check_call, CalledProcessError
+import tempfile
 from tempfile import TemporaryFile
 import uuid as _uuid
 import codecs
 from collections import defaultdict
+from tempfile import gettempdir
+
+from crontab import CronTab
 
 from wzdat.make_config import make_config
 from wzdat.const import NAMED_TMP_PREFIX, HDF_FILE_PREFIX, HDF_FILE_EXT
@@ -22,6 +26,8 @@ from wzdat.const import NAMED_TMP_PREFIX, HDF_FILE_PREFIX, HDF_FILE_EXT
 
 LOG_KINDS = ('game', 'auth', 'community')
 PROCESSES = {'game': 3}
+
+CRON_CMD = '/usr/bin/crontab'
 
 
 def unique_tmp_path(prefix, ext='.txt'):
@@ -99,6 +105,13 @@ class Property(object):
             return self.__dict__['dict'][key]
         except KeyError, e:
             raise AttributeError(e)
+
+    def __dir__(self):
+        return self.__dict__['dict'].keys()
+
+    def __iter__(self):
+        for i in self.__dict__['dict'].keys():
+            yield i
 
 
 class Context(Property):
@@ -189,6 +202,26 @@ class HDF(object):
     def __exit__(self, _type, value, tb):
         if self.store is not None:
             self.store.close()
+
+
+class OfflineNBPath(object):
+    def __init__(self, nbpath):
+        from tempfile import gettempdir
+        self.fpath = os.path.join(gettempdir(), '_offline_nbpath_')
+        with open(self.fpath, 'w') as fp:
+            fp.write(nbpath)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, _type, value, tb):
+        os.unlink(self.fpath)
+
+
+def get_offline_nbpath():
+    fpath = os.path.join(gettempdir(), '_offline_nbpath_')
+    with open(fpath, 'r') as f:
+        return f.readline()
 
 
 try:
@@ -527,9 +560,14 @@ def convert_data_file(srcpath, encoding, dstpath):
         # log it, then touch
         logging.error('convert_data_file failed: from {} to {}'
                       .format(srcpath, dstpath))
-        with open(dstpath, 'a'):
-            os.utime(dstpath, None)
+        touch(dstpath)
     return dstpath
+
+
+def touch(path):
+    '''Emulate shell touch'''
+    with open(path, 'a'):
+        os.utime(path, None)
 
 
 def convert_server_time_to_client(dt, stz=None, ctz=None):
@@ -658,12 +696,12 @@ def _gen_dummy_log_lines(_dir, locale, node, kind, dates, procno):
 class ChangeDir(object):
     def __init__(self, *dirs):
         self.cwd = os.getcwd()
-        self.path = os.path.join(*dirs)
+        self._path = os.path.join(*dirs)
 
     def __enter__(self):
-        logging.info('change dir to %s', self.path)
-        assert os.path.isdir(self.path)
-        os.chdir(self.path)
+        logging.info('change dir to %s', self._path)
+        assert os.path.isdir(self._path)
+        os.chdir(self._path)
 
     def __exit__(self, atype, value, tb):
         os.chdir(self.cwd)
@@ -825,3 +863,175 @@ class KeyDefaultDict(defaultdict):
         else:
             ret = self[key] = self.default_factory(key)
             return ret
+
+def get_dashboard_host():
+    return os.environ['WZDAT_HOST'] if 'WZDAT_B2DHOST' not in os.environ else\
+        os.environ['WZDAT_B2DHOST']
+
+
+def get_dashboard_port():
+    cfg = make_config()
+    return cfg['host_dashboard_port']
+
+
+def get_ipython_port():
+    cfg = make_config()
+    return cfg['host_ipython_port']
+
+
+def get_notebook_path():
+    import json
+    import urllib2
+    from IPython.lib import kernel
+    connection_file_path = kernel.get_connection_file()
+    connection_file = os.path.basename(connection_file_path)
+    try:
+        kernel_id = connection_file.split('-', 1)[1].split('.')[0]
+    except IndexError:
+        return get_offline_nbpath()
+
+    url = "http://{}:{}/api/sessions".format(
+        get_dashboard_host(), get_ipython_port())
+    sessions = json.load(urllib2.urlopen(url))
+    for sess in sessions:
+        if sess['kernel']['id'] == kernel_id:
+            path = sess['notebook']['path']
+            name = sess['notebook']['name']
+            return os.path.join(path, name)
+
+
+class ScbProperty(Property):
+    '''
+        Property with callback function to be evoked by set operation.
+    '''
+    def __init__(self, set_cb):
+        super(ScbProperty, self).__init__()
+        self._set_cb = set_cb
+
+    def __setattr__(self, attr, val):
+        self.__dict__['dict'][attr] = val
+        self._set_cb(attr, val)
+
+
+def file_checksum(apath):
+    """Return rough checksum by file size & modifiy date"""
+    return hash(apath, os.stat(apath).st_size)
+
+
+def dataframe_checksum(df):
+    return hash((len(df), df.values.nbytes, df.index.nbytes,
+                 df.columns.nbytes))
+
+
+def get_notebook_manifest_path(nbpath):
+    return nbpath.replace('.ipynb', '.manifest.ipynb')
+
+
+def iter_notebooks(nbdir):
+    nbptrn = '*.ipynb'
+    nbdir = get_notebook_dir()
+    for root, adir, files in os.walk(nbdir):
+        for nb in fnmatch.filter(files, nbptrn):
+            if '-checkpoint' in nb:
+                continue
+            if '.manifest.' in nb:
+                continue
+            yield os.path.join(root, nb).decode('utf8')
+
+
+def iter_notebook_manifest(nbdir, check_depends, skip_nbs=None):
+    from wzdat.manifest import Manifest, RecursiveReference
+    for npath in iter_notebooks(nbdir):
+        if skip_nbs is not None and npath in skip_nbs:
+            continue
+        mpath = get_notebook_manifest_path(npath)
+        if not os.path.isfile(mpath):
+            continue
+        try:
+            manifest = Manifest(False, check_depends, npath)
+        except RecursiveReference, e:
+            logging.error(unicode(e).encode('utf8'))
+            continue
+        yield npath, manifest
+
+
+def iter_notebook_manifest_input(nbdir):
+    import json
+    for npath in iter_notebooks(nbdir):
+        mpath = get_notebook_manifest_path(npath)
+        if not os.path.isfile(mpath):
+            continue
+        with open(mpath, 'r') as f:
+            data = json.loads(f.read())
+            try:
+                minp = ''.join(data['worksheets'][0]['cells'][0]['input'])
+            except (KeyError, IndexError):
+                continue
+            minp = eval(minp)
+            yield npath, minp
+
+
+def iter_dashboard_notebook(nbdir):
+    """Return dashboard notebook and its manifest input."""
+    logging.debug(u"iter_notebook_manifest_input {}".format(nbdir))
+    for npath, mip in iter_notebook_manifest_input(nbdir):
+        if 'dashboard' in mip:
+            yield npath, mip
+
+
+def find_hdf_notebook_path(_owner, _sname):
+    '''return path of hdf source notebook by examining manifest.'''
+    nbdir = get_notebook_dir()
+    for nbpath, minp in iter_notebook_manifest_input(nbdir):
+        if 'output' in minp and 'hdf' in minp['output']:
+            owner, sname = minp['output']['hdf']
+            if owner == _owner and sname == _sname:
+                return nbpath
+
+
+def iter_scheduled_notebook(nbdir):
+    for nbpath, minp in iter_notebook_manifest_input(nbdir):
+        if 'schedule' in minp:
+            schedule = minp['schedule']
+            yield nbpath, schedule
+
+
+def register_cron_notebooks():
+    nb_dir = get_notebook_dir()
+    nbpaths = []
+    schedules = []
+    for path, scd in iter_scheduled_notebook(nb_dir):
+        nbpaths.append(path)
+        schedules.append(scd)
+    _register_crons(nbpaths, schedules)
+    return nbpaths, schedules
+
+
+def _register_crons(paths, scheds):
+    logging.debug('register_cron_notebooks')
+    # start new cron file with env vars
+    filed, tpath = tempfile.mkstemp()
+    fileh = os.fdopen(filed, 'wb')
+    assert 'WZDAT_CFG' in os.environ
+    assert 'WZDAT_HOST' in os.environ
+    cfg_path = os.environ['WZDAT_CFG']
+    host = os.environ['WZDAT_HOST']
+    fileh.write('WZDAT_DIR=/wzdat\n')
+    fileh.write('WZDAT_CFG=%s\n' % cfg_path)
+    fileh.write('WZDAT_HOST=%s\n' % host)
+    fileh.close()
+    check_call([CRON_CMD, tpath])
+    os.unlink(tpath)
+
+    cron = CronTab()
+    # clear registered notebooks
+    cron.remove_all('cron-ipynb')
+
+    for i, path in enumerate(paths):
+        sched = scheds[i]
+        fname = os.path.basename(path)
+        cmd = ' '.join(['python', '-m', 'wzdat.jobs run-notebook "%s"' % path,
+                        ' > "/tmp/cron-ipynb-%s" 2>&1' % fname])
+        job = cron.new(cmd)
+        job.setall(sched)
+    cron.write()

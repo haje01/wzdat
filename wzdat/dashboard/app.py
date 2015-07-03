@@ -4,6 +4,7 @@ import time
 import re
 from datetime import timedelta, datetime
 import logging
+from collections import defaultdict
 
 from flask import Flask, render_template, request, Response, redirect, url_for
 from markdown import markdown
@@ -63,22 +64,20 @@ def dashboard():
     logging.debug("dashboard home")
     projname, dev, cache_time = _page_common_vars()
 
-    from wzdat.ipynb_runner import find_cron_notebooks
+    from wzdat.util import iter_dashboard_notebook
     iport = int(cfg["host_ipython_port"])
     base_url = 'http://%s:%d/tree' % (HOST, iport)
-    notebook_dir = get_notebook_dir()
-    paths, _, _groups, fnames = find_cron_notebooks(notebook_dir, static=True)
-    logging.debug("find_cron_notebooks done")
-    groups = {}
-    for i, path in enumerate(paths):
-        sdir = os.path.dirname(path).replace(notebook_dir, '')[1:]
-        fn = os.path.basename(path)
+    nbdir = get_notebook_dir()
+    groups = defaultdict(list)
+    for nbpath, mip in iter_dashboard_notebook(nbdir):
+        logging.debug(u"dashboard notebook {}".format(nbpath))
+        sdir = os.path.dirname(nbpath).replace(nbdir, '')[1:]
+        fn = os.path.basename(nbpath)
         url = os.path.join(base_url, sdir, fn)
-        gk = _groups[i]
-        fname = os.path.splitext(os.path.basename(fnames[i]))[0]
-        if gk not in groups:
-            groups[gk] = []
-        groups[gk].append((path, url, fname))
+        fname = os.path.splitext(os.path.basename(nbpath))[0]
+        if 'group' in mip['dashboard']:
+            gk = mip['dashboard']['group'].decode('utf8')
+            groups[gk].append((nbpath, url, fname))
     logging.debug("collected notebooks by group")
 
     gnbs = []
@@ -99,8 +98,8 @@ def start_view(nbpath):
     logging.debug('start_view')
     data = json.loads(request.data)
     kwargs = {}
-    notebook_dir = get_notebook_dir()
-    nbpath = os.path.join(notebook_dir, nbpath)
+    nbdir = get_notebook_dir()
+    nbpath = os.path.join(nbdir, nbpath)
     formname = ''
     for kv in data:
         name = kv['name']
@@ -155,8 +154,8 @@ def poll_view(task_id):
 @app.route('/start_rerun/<path:nbpath>', methods=['POST'])
 def start_rerun(nbpath):
     logging.debug('start_rerun')
-    notebook_dir = get_notebook_dir()
-    nbpath = os.path.join(notebook_dir, nbpath)
+    nbdir = get_notebook_dir()
+    nbpath = os.path.join(nbdir, nbpath)
 
     from wzdat.dashboard.tasks import rerun_notebook
     task = rerun_notebook.delay(nbpath)
@@ -229,8 +228,11 @@ def _nb_output_to_html(path):
         nb = reads(f.read(), 'json')
         ws = nb['worksheets']
         if len(nb) > 0:
-            for cell in ws[0]['cells']:
-                _cell_output_to_html(rv, cell)
+            try:
+                for cell in ws[0]['cells']:
+                    _cell_output_to_html(rv, cell)
+            except IndexError:
+                logging.error(u"Imcomplete notebook - {}".format(path))
     return '\n'.join(rv)
 
 
@@ -296,8 +298,8 @@ def _collect_gnbs(gnbs, gk, groups):
     from wzdat import rundb
 
     nbs = []
-    notebook_dir = get_notebook_dir()
-    logging.debug('_collect_gnbs ' + notebook_dir)
+    nbdir = get_notebook_dir()
+    logging.debug('_collect_gnbs ' + nbdir)
     # logging.debug(str(groups[gk]))
     for path, url, fname in groups[gk]:
         out = _nb_output_to_html(path)
@@ -314,7 +316,7 @@ def _collect_gnbs(gnbs, gk, groups):
                       'and rerun.</div>'
             # logging.debug(u'err {}'.format(err))
             ri = (start, elapsed, cur, total, err)
-        path = path.replace(notebook_dir, '')[1:]
+        path = path.replace(nbdir, '')[1:]
         nbs.append((url, fname, out, ri, path))
     gnbs.append((gk, nbs))
     logging.debug('_collect_gnbs done')

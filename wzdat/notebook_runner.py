@@ -81,7 +81,6 @@ class NotebookRunner(object):
 
         self.nb = nb
 
-
     def __del__(self):
         self.kc.stop_channels()
         self.km.shutdown_kernel(now=True)

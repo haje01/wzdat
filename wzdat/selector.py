@@ -28,7 +28,8 @@ from wzdat.value import ValueList, FailValue, Value, check_date_slice
 from wzdat.util import unique_tmp_path, sizeof_fmt, unique_list, \
     remove_empty_file, Property, remove_old_tmps, get_line_count, \
     get_slice_idx, ProgressBar, nprint, Context, convert_data_file,\
-    get_convfile_path, get_tmp_dir, get_conv_dir, load_files_precalc
+    get_convfile_path, get_tmp_dir, get_conv_dir, load_files_precalc,\
+    get_data_dir
 from wzdat.lineinfo import LineInfo, LineInfoImpl_Count, LineInfoImpl_Array
 
 qmode = 'files'
@@ -918,6 +919,17 @@ class FileSelector(FileCommon, IFilterable, IMergeable):
         sampled = sorted(np.random.permutation(cnt)[:cnt * ratio])
         files = [self.files[idx] for idx in sampled]
         return FileSelector(self._ctx, files, self._qmode)
+
+    def checksum(self):
+        """Return rough hash by size & modified date of all files."""
+        stats = []
+        data_dir = get_data_dir()
+        for f in self:
+            fpath = f.abspath.replace(data_dir, '')
+            stats.append(fpath)
+            stats.append(os.stat(f.abspath).st_size)
+            # stats.append(os.stat(f.abspath).st_mtime)
+        return hash(tuple(stats))
 
 
 def _add_zip_flat(zf, abspath):
