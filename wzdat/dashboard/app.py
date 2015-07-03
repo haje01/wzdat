@@ -70,6 +70,7 @@ def dashboard():
     nbdir = get_notebook_dir()
     groups = defaultdict(list)
     for nbpath, mip in iter_dashboard_notebook(nbdir):
+        logging.debug(u"dashboard notebook {}".format(nbpath))
         sdir = os.path.dirname(nbpath).replace(nbdir, '')[1:]
         fn = os.path.basename(nbpath)
         url = os.path.join(base_url, sdir, fn)

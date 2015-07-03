@@ -931,6 +931,7 @@ def iter_notebook_manifest_input(nbdir):
 
 def iter_dashboard_notebook(nbdir):
     """Return dashboard notebook and its manifest input."""
+    logging.debug(u"iter_notebook_manifest_input {}".format(nbdir))
     for npath, mip in iter_notebook_manifest_input(nbdir):
         if 'dashboard' in mip:
             yield npath, mip
