@@ -170,15 +170,6 @@ def ccmd_runcron():
     run('python -m wzdat.jobs run-all-cron-notebooks')
 
 
-def launch(_remote=False):
-    if _remote is True:
-        _container_cmd('launch', True)
-    else:
-        prjs = os.environ['WZDAT_PRJS'].split(',')
-        for prj in prjs:
-            _launch(prj)
-
-
 def _get_pkg():
     assert 'WZDAT_SOL_PKG' in os.environ
     return os.environ['WZDAT_SOL_PKG']
