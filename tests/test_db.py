@@ -57,4 +57,4 @@ def test_db_save_cron(fxdb):
     save_cron(paths, scheds)
     with Cursor(RUNNER_DB_PATH) as cur:
         rv = cur.execute('SELECT count(*) FROM cron').fetchone()
-        assert rv[0] == 2
+        assert rv[0] == 3

@@ -55,9 +55,9 @@ def test_notebook_run():
 def test_notebook_util():
     nbdir = get_notebook_dir()
     nbs = [nb for nb in iter_notebooks(nbdir)]
-    assert len(nbs) == 14
+    assert len(nbs) == 8
     nbms = [(nb, mi) for nb, mi in iter_notebook_manifest_input(nbdir)]
-    assert len(nbms) == 7
+    assert len(nbms) == 8
     path = os.path.join(nbdir, 'test-notebook3.ipynb')
     assert path == find_hdf_notebook_path('haje01', 'test')
 
@@ -184,7 +184,7 @@ def test_notebook_depresolv(fxsoldir):
 def test_notebook_dashboard(fxsoldir):
     nbdir = get_notebook_dir()
     dnbs = [nbpath for nbpath in iter_dashboard_notebook(nbdir)]
-    assert len(dnbs) == 2
+    assert len(dnbs) == 3
 
 
 def test_notebook_cron(fxsoldir):
@@ -192,7 +192,7 @@ def test_notebook_cron(fxsoldir):
     register_cron()
     from crontab import CronTab
     cron = CronTab()
-    assert len(cron.crons) == 2
+    assert len(cron.crons) == 3
 
 
 def test_notebook_resolve(fxsoldir, fxnewfile):
