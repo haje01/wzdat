@@ -72,7 +72,7 @@ class Manifest(Property):
         return self
 
     def __exit__(self, atype, value, traceback):
-        logging.debug("__exit__ for {}".format(self._path))
+        logging.debug(u"__exit__ for {}".format(self._path))
         if atype is None and self._write:
             self._write_checksums()
 
@@ -176,8 +176,11 @@ class Manifest(Property):
                     mdata = ast.literal_eval(''.join(cell['input']))
                 # generated checksum cell
                 elif i == 1:
-                    chksum = ast.literal_eval(''.join(cell['input']))
-                    self._read_manifest_user_chksum_cell(chksum)
+                    try:
+                        chksum = ast.literal_eval(''.join(cell['input']))
+                        self._read_manifest_user_chksum_cell(chksum)
+                    except SyntaxError:
+                        pass
         return mdata
 
     def _read_manifest_user_cell(self, cell):
