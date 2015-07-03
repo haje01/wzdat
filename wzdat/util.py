@@ -890,11 +890,13 @@ def get_notebook_manifest_path(nbpath):
 def iter_notebooks(nbdir):
     nbptrn = '*.ipynb'
     nbdir = get_notebook_dir()
-    for root, dir, files in os.walk(nbdir):
+    for root, adir, files in os.walk(nbdir):
         for nb in fnmatch.filter(files, nbptrn):
             if '-checkpoint' in nb:
                 continue
-            yield os.path.join(nbdir, nb)
+            if '.manifest.' in nb:
+                continue
+            yield os.path.join(root, nb)
 
 
 def iter_notebook_manifest(nbdir, check_depends, skip_nbs=None):
@@ -918,6 +920,7 @@ def iter_notebook_manifest_input(nbdir):
     for npath in iter_notebooks(nbdir):
         mpath = get_notebook_manifest_path(npath)
         if not os.path.isfile(mpath):
+            import pdb; pdb.set_trace()  # XXX BREAKPOINT
             continue
         with open(mpath, 'r') as f:
             data = json.loads(f.read())
