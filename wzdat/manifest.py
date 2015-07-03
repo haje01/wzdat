@@ -34,7 +34,7 @@ class Manifest(Property):
             self._path = explicit_nbpath.replace('.ipynb', '.manifest.ipynb')
         logging.debug(u"Manifest __init__ for {}".format(self._path))
 
-        assert os.path.isfile(self._path), "Manifest file '{}' not "\
+        assert os.path.isfile(self._path), u"Manifest file '{}' not "\
             "exist.".format(self._path)
 
         self._prev_files_chksum = self._prev_hdf_chksum = \
