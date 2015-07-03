@@ -896,7 +896,7 @@ def iter_notebooks(nbdir):
                 continue
             if '.manifest.' in nb:
                 continue
-            yield os.path.join(root, nb)
+            yield os.path.join(root, nb).decode('utf8')
 
 
 def iter_notebook_manifest(nbdir, check_depends, skip_nbs=None):
