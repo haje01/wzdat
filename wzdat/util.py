@@ -920,7 +920,6 @@ def iter_notebook_manifest_input(nbdir):
     for npath in iter_notebooks(nbdir):
         mpath = get_notebook_manifest_path(npath)
         if not os.path.isfile(mpath):
-            import pdb; pdb.set_trace()  # XXX BREAKPOINT
             continue
         with open(mpath, 'r') as f:
             data = json.loads(f.read())
