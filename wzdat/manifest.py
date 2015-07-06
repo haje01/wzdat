@@ -108,7 +108,11 @@ class Manifest(Property):
     @property
     def _need_run(self):
         '''Test if notebook should be run.'''
-        return self._depend_files_changed or self._depend_hdf_changed
+        need = self._depend_files_changed or self._depend_hdf_changed
+        logging.debug(u"{} _need_run {} - files changed: {}, hdf changed: {}".
+                      format(self._path, need, self._depend_files_changed,
+                             self._depend_hdf_changed))
+        return need
 
     def _write_checksums(self):
         from IPython.nbformat.current import write, read

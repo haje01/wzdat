@@ -99,7 +99,6 @@ class DependencyTree(object):
         notebook.reload_manifest()
         need_run = notebook.manifest._need_run
         if need_run and updaterun:
-            import pdb; pdb.set_trace()  # XXX BREAKPOINT
             with OfflineNBPath(notebook.path):
                 update_notebook_by_run(notebook.path)
                 runs.append(notebook)
