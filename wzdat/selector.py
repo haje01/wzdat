@@ -1014,6 +1014,8 @@ def _load_files_root_check_conv(ctx, abspath, converted):
             logging.debug('convfile not exist. make one')
             convert_data_file(abspath, ctx.encoding, convfile)
             converted.append(abspath)
+        else:
+            logging.debug('convfile exist.')
         abspath = convfile
     return abspath
 

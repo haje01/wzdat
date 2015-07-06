@@ -19,6 +19,10 @@ class RecursiveReference(Exception):
     pass
 
 
+class ManifestNotExist(Exception):
+    pass
+
+
 class Manifest(Property):
     def __init__(self, write=True, check_depends=True, explicit_nbpath=None):
         super(Manifest, self).__init__()
@@ -28,15 +32,18 @@ class Manifest(Property):
             nbdir = get_notebook_dir()
             nbrpath = get_notebook_path()
             self._path = os.path.join(nbdir,
-                                      nbrpath.replace('.ipynb',
-                                                      '.manifest.ipynb'))
+                                      nbrpath.replace(u'.ipynb',
+                                                      u'.manifest.ipynb'))
         else:
-            self._path = explicit_nbpath.replace('.ipynb', '.manifest.ipynb')
+            self._path = explicit_nbpath.replace(u'.ipynb', u'.manifest.ipynb')
         logging.debug(u"Manifest __init__ for {}".format(self._path))
 
-        assert os.path.isfile(self._path), "Manifest file '{}' not "\
-            "exist.".format(self._path)
+        if not os.path.isfile(self._path.encode('utf8')):
+            raise ManifestNotExist()
 
+        self._init_checksum(check_depends)
+
+    def _init_checksum(self, check_depends):
         self._prev_files_chksum = self._prev_hdf_chksum = \
             self._dep_files_chksum = self._dep_hdf_chksum = \
             self._out_hdf_chksum = None
@@ -167,7 +174,7 @@ class Manifest(Property):
     def _read_manifest(self):
         import json
 
-        with open(self._path, 'r') as f:
+        with open(self._path.encode('utf8'), 'r') as f:
             nbdata = json.loads(f.read())
             cells = nbdata['worksheets'][0]['cells']
             for i, cell in enumerate(cells):
