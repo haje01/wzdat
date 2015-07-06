@@ -206,7 +206,6 @@ class HDF(object):
 
 class OfflineNBPath(object):
     def __init__(self, nbpath):
-        print(u'OfflineNBPath __init__ {}'.format(nbpath))
         from tempfile import gettempdir
         self.fpath = os.path.join(gettempdir(), '_offline_nbpath_')
         with open(self.fpath, 'w') as fp:
