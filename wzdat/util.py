@@ -206,6 +206,7 @@ class HDF(object):
 
 class OfflineNBPath(object):
     def __init__(self, nbpath):
+        print(u'OfflineNBPath __init__ {}'.format(nbpath))
         from tempfile import gettempdir
         self.fpath = os.path.join(gettempdir(), '_offline_nbpath_')
         with open(self.fpath, 'w') as fp:
@@ -220,6 +221,7 @@ class OfflineNBPath(object):
 
 def get_offline_nbpath():
     fpath = os.path.join(gettempdir(), '_offline_nbpath_')
+    print(u'get_offline_nbpath {}'.format(fpath))
     with open(fpath, 'r') as f:
         return f.readline().decode('utf8')
 
@@ -863,6 +865,7 @@ class KeyDefaultDict(defaultdict):
         else:
             ret = self[key] = self.default_factory(key)
             return ret
+
 
 def get_dashboard_host():
     return os.environ['WZDAT_HOST'] if 'WZDAT_B2DHOST' not in os.environ else\

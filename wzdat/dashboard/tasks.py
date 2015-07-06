@@ -11,7 +11,7 @@ from wzdat.ipynb_runner import run_notebook_view_cell, get_view_cell_cnt,\
 from wzdat.make_config import make_config
 from wzdat.notebook_runner import NotebookRunner
 from wzdat.const import TMP_PREFIX
-from wzdat.util import unique_tmp_path
+from wzdat.util import unique_tmp_path, OfflineNBPath
 from wzdat.selector import get_urls
 
 app = Celery('wdtask', backend='redis://localhost', broker='redis://localhost')
@@ -24,15 +24,15 @@ data_dir = cfg['data_dir']
 def rerun_notebook(nbpath):
     print(u'rerun_notebook {}'.format(nbpath))
     rerun_notebook.update_state(state='PROGRESS', meta=0)
-    update_notebook_by_run(nbpath)
+    with OfflineNBPath(nbpath):
+        update_notebook_by_run(nbpath)
+        nb = read(open(nbpath), 'json')
+        r = NotebookRunner(nb, pylab=True)
+        rv = []
+        for i, cell in enumerate(r.iter_cells()):
+            print(u'run cell {}'.format(i))
+            rerun_notebook_cell(rv, r, cell, i)
     rerun_notebook.update_state(state='PROGRESS', meta=1)
-
-    nb = read(open(nbpath), 'json')
-    r = NotebookRunner(nb, pylab=True)
-    rv = []
-    for i, cell in enumerate(r.iter_cells()):
-        print(u'run cell {}'.format(i))
-        rerun_notebook_cell(rv, r, cell, i)
     print(u'rerun_notebook {} done. returning results..'.format(nbpath))
     return rv
 
