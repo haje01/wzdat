@@ -38,7 +38,7 @@ class Manifest(Property):
             self._path = explicit_nbpath.replace(u'.ipynb', u'.manifest.ipynb')
         logging.debug(u"Manifest __init__ for {}".format(self._path))
 
-        if not os.path.isfile(self._path):
+        if not os.path.isfile(self._path.encode('utf8')):
             raise ManifestNotExist()
 
         self._init_checksum(check_depends)
@@ -174,7 +174,7 @@ class Manifest(Property):
     def _read_manifest(self):
         import json
 
-        with open(self._path, 'r') as f:
+        with open(self._path.encode('utf8'), 'r') as f:
             nbdata = json.loads(f.read())
             cells = nbdata['worksheets'][0]['cells']
             for i, cell in enumerate(cells):

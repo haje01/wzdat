@@ -210,19 +210,19 @@ class OfflineNBPath(object):
         from tempfile import gettempdir
         self.fpath = os.path.join(gettempdir(), '_offline_nbpath_')
         with open(self.fpath, 'w') as fp:
-            fp.write(nbpath)
+            fp.write(nbpath.encode('utf8'))
 
     def __enter__(self):
         return self
 
     def __exit__(self, _type, value, tb):
-        os.unlink(self.fpath)
+        os.unlink(self.fpath.encode('utf8'))
 
 
 def get_offline_nbpath():
     fpath = os.path.join(gettempdir(), '_offline_nbpath_')
     with open(fpath, 'r') as f:
-        return f.readline()
+        return f.readline().decode('utf8')
 
 
 try:
@@ -437,7 +437,7 @@ def get_notebook_dir():
     prj = cfg['prj']
     base = cfg['notebook_base_dir'] if 'notebook_base_dir' in cfg else\
         os.path.join(sol_dir, '__notes__')
-    return os.path.join(base, prj)
+    return os.path.join(base, prj).decode('utf8')
 
 
 def _check_makedir(adir, make):
@@ -884,13 +884,13 @@ def dataframe_checksum(df):
 
 
 def get_notebook_manifest_path(nbpath):
-    return nbpath.replace('.ipynb', '.manifest.ipynb')
+    return nbpath.replace(u'.ipynb', u'.manifest.ipynb')
 
 
 def iter_notebooks(nbdir):
     nbptrn = '*.ipynb'
     nbdir = get_notebook_dir()
-    for root, adir, files in os.walk(nbdir):
+    for root, adir, files in os.walk(nbdir.encode('utf8')):
         for nb in fnmatch.filter(files, nbptrn):
             if '-checkpoint' in nb:
                 continue
@@ -905,7 +905,7 @@ def iter_notebook_manifest(nbdir, check_depends, skip_nbs=None):
         if skip_nbs is not None and npath in skip_nbs:
             continue
         mpath = get_notebook_manifest_path(npath)
-        if not os.path.isfile(mpath):
+        if not os.path.isfile(mpath.encode('utf8')):
             continue
         try:
             manifest = Manifest(False, check_depends, npath)
