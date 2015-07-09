@@ -864,6 +864,7 @@ class KeyDefaultDict(defaultdict):
             ret = self[key] = self.default_factory(key)
             return ret
 
+
 def get_dashboard_host():
     return os.environ['WZDAT_HOST'] if 'WZDAT_B2DHOST' not in os.environ else\
         os.environ['WZDAT_B2DHOST']
@@ -915,7 +916,8 @@ class ScbProperty(Property):
 
 def file_checksum(apath):
     """Return rough checksum by file size & modifiy date"""
-    return hash(apath, os.stat(apath).st_size)
+    fs = os.stat(apath)
+    return hash((apath, fs.st_size, fs.st_mtime))
 
 
 def dataframe_checksum(df):

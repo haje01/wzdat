@@ -7,8 +7,9 @@ from wzdat.manifest import Manifest, RecursiveReference
 from wzdat.util import get_notebook_dir, find_hdf_notebook_path,\
     get_notebook_manifest_path, iter_notebooks, iter_notebook_manifest_input,\
     get_data_dir, dataframe_checksum, HDF, iter_dashboard_notebook, \
-    iter_scheduled_notebook, OfflineNBPath
+    iter_scheduled_notebook, OfflineNBPath, touch
 from wzdat.ipynb_runner import update_notebook_by_run
+from wzdat.rundb import noerror_or_changed_notebook
 
 
 @pytest.yield_fixture
@@ -52,10 +53,22 @@ def test_notebook_run():
     assert os.stat(path).st_mtime > before
 
 
+def test_notebook_error():
+    path = os.path.join(get_notebook_dir(), 'test-notebook-error.ipynb')
+    assert os.path.isfile(path)
+    try:
+        update_notebook_by_run(path)
+    except ValueError:
+        pass
+    assert noerror_or_changed_notebook(path) is False
+    touch(path)
+    assert noerror_or_changed_notebook(path) is True
+
+
 def test_notebook_util():
     nbdir = get_notebook_dir()
     nbs = [nb for nb in iter_notebooks(nbdir)]
-    assert len(nbs) == 8
+    assert len(nbs) == 9
     nbms = [(nb, mi) for nb, mi in iter_notebook_manifest_input(nbdir)]
     assert len(nbms) == 8
     path = os.path.join(nbdir, 'test-notebook3.ipynb')
@@ -91,6 +104,7 @@ def test_notebook_manifest1(fxsoldir):
         assert len(ws['cells']) == 2
         chksums = ws['cells'][1]['input']
         assert 'WARNING' in chksums[0]
+        assert 'last_run' in chksums[2]
         # check depends checksum
         assert 'depends' in chksums[3]
         assert '8875249185536240278' in chksums[4]

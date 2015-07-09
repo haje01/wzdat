@@ -3,8 +3,7 @@ import time
 import pytest
 import sqlite3
 
-from wzdat.rundb import Cursor, _update_run_info, _update_cache_info,\
-    save_cron
+from wzdat.rundb import Cursor, _update_run_info, _update_cache_info
 from wzdat.make_config import make_config
 
 cfg = make_config()
@@ -24,7 +23,6 @@ def test_db_create(fxdb):
         assert is_table_exist('info')
         assert is_table_exist('cache')
         assert is_table_exist('finder')
-        assert is_table_exist('cron')
         assert is_table_exist('event')
 
 
@@ -46,15 +44,3 @@ def test_db_update_run():
                 print str(e)
                 print i, time.time() - st
                 raise
-
-
-def test_db_save_cron(fxdb):
-    from wzdat.util import register_cron_notebooks
-    paths, scheds = register_cron_notebooks()
-    with Cursor(RUNNER_DB_PATH) as cur:
-        rv = cur.execute('SELECT count(*) FROM cron').fetchone()
-        assert rv[0] == 0
-    save_cron(paths, scheds)
-    with Cursor(RUNNER_DB_PATH) as cur:
-        rv = cur.execute('SELECT count(*) FROM cron').fetchone()
-        assert rv[0] == 3

@@ -3,6 +3,7 @@
 import os
 import logging
 
+from wzdat.rundb import noerror_or_changed_notebook
 from wzdat.util import iter_notebook_manifest, OfflineNBPath
 from wzdat.ipynb_runner import update_notebook_by_run
 from wzdat.manifest import Manifest
@@ -97,10 +98,14 @@ class DependencyTree(object):
         '''Run notebook after all its dependencies resolved.'''
         logging.debug(u"_run_resolved '{}'".format(notebook.path))
         notebook.reload_manifest()
-        need_run = notebook.manifest._need_run
+        path = notebook.path
+        # Only run when dependecies changed and notebook has no error or
+        # changed
+        need_run = notebook.manifest._need_run and\
+            noerror_or_changed_notebook(path)
         if need_run and updaterun:
-            with OfflineNBPath(notebook.path):
-                update_notebook_by_run(notebook.path)
+            with OfflineNBPath(path):
+                update_notebook_by_run(path)
                 runs.append(notebook)
 
         resolved.append(notebook)

@@ -6,8 +6,7 @@ import argh
 from wzdat.const import FORWARDER_LOG_PREFIX
 from wzdat.make_config import make_config
 from wzdat.ipynb_runner import update_notebook_by_run
-from wzdat.rundb import get_cron_notebooks, save_cron, destroy_table as\
-    _destroy_table
+from wzdat.rundb import destroy_table as _destroy_table
 from wzdat.util import gen_dummydata as _gen_dummydata, cache_files,\
     cache_finder, get_notebook_dir
 from wzdat import event as evt
@@ -48,13 +47,6 @@ def register_cron():
     from wzdat.util import register_cron_notebooks
     logging.debug("register_cron")
     paths, scheds = register_cron_notebooks()
-    save_cron(paths, scheds)
-
-
-def run_all_cron_notebooks():
-    logging.debug('run_all_cron_notebooks')
-    for nbpath in get_cron_notebooks():
-        run_notebook(nbpath)
 
 
 @argh.arg('path', help="notebook path")
@@ -89,6 +81,5 @@ def register_event(**kwargs):
 
 if __name__ == "__main__":
     argh.dispatch_commands([cache_all, register_cron, run_notebook,
-                            gen_dummydata, run_all_cron_notebooks,
-                            register_event, check_cache, destroy_table,
-                            update_notebooks])
+                            gen_dummydata, register_event, check_cache,
+                            destroy_table, update_notebooks])

@@ -10,6 +10,7 @@ import logging
 import sqlite3
 
 from wzdat.make_config import make_config
+from wzdat.util import file_checksum
 
 cfg = make_config()
 RUNNER_DB_PATH = cfg['runner_db_path']
@@ -67,7 +68,7 @@ def create_db():
         # view notebook info
         cur.execute('CREATE TABLE IF NOT EXISTS info '
                     '(path TEXT PRIMARY KEY, start REAL, error TEXT, elapsed '
-                    'REAL, cur INT, total INT);')
+                    'REAL, cur INT, total INT, nbchksum INT);')
         # remember latest file cache
         cur.execute('CREATE TABLE IF NOT EXISTS cache '
                     '(id INTEGER PRIMARY KEY, time REAL);')
@@ -75,10 +76,6 @@ def create_db():
         cur.execute('CREATE TABLE IF NOT EXISTS finder '
                     '(ft TEXT PRIMARY KEY, dates TEXT, kinds TEXT, nodes'
                     ' TEXT);')
-        # cron notebook info
-        cur.execute('CREATE TABLE IF NOT EXISTS cron '
-                    '(path TEXT PRIMARY KEY, sched TEXT);')
-
         # event
         cur.execute('CREATE TABLE IF NOT EXISTS event '
                     '(id INTEGER PRIMARY KEY, prior INTEGER, type TEXT, info '
@@ -106,14 +103,16 @@ def remove_db_file():
 
 def reset_run(path):
     """Reset run info."""
+    nbchksum = file_checksum(path)
     with Cursor(RUNNER_DB_PATH) as cur:
         cur.execute('SELECT * FROM info WHERE path=?', (path,))
         if cur.fetchone() is None:
-            cur.execute('INSERT INTO info(path, start, total) VALUES(?, 0, 0)',
-                        (path,))
+            cur.execute('INSERT INTO info(path, start, total, nbchksum) '
+                        'VALUES(?, 0, 0, ?)', (path, nbchksum))
         else:
             cur.execute('UPDATE info SET error=NULL, start=0, elapsed=NULL, '
-                        'cur=0, total=0 WHERE path=?', (path,))
+                        'cur=0, total=0, nbchksum=? WHERE path=?',
+                        (nbchksum, path))
 
 
 def start_run(path, total):
@@ -200,24 +199,6 @@ def update_finder_info(info):
                         '(?, ?, ?, ?)', (ft, dates, kinds, nodes))
 
 
-def save_cron(paths, scheds):
-    with Cursor(RUNNER_DB_PATH) as cur:
-        cur.execute('DELETE FROM cron')
-        for i, path in enumerate(paths):
-            cur.execute('SELECT count(*) FROM cron WHERE path=?', (path,))
-            if cur.fetchone()[0] > 0:
-                continue
-            sched = scheds[i]
-            cur.execute('INSERT INTO cron (path, sched) VALUES (?, ?)',
-                        (path, sched))
-
-
-def get_cron_notebooks():
-    with Cursor(RUNNER_DB_PATH) as cur:
-        cur.execute('SELECT path FROM cron')
-        return [r[0] for r in cur.fetchall()]
-
-
 def get_finder_info():
     logging.debug('get_finder_info')
     with Cursor(RUNNER_DB_PATH) as cur:
@@ -236,6 +217,22 @@ def get_finder_info():
             ret.append((ft, dates, kinds, nodes))
 
         return ret
+
+
+def noerror_or_changed_notebook(path):
+    """
+        Return True when the notebook has no error or modified after previous
+        error.
+    """
+    nbchksum = file_checksum(path)
+    with Cursor(RUNNER_DB_PATH) as cur:
+        cur.execute('SELECT error, nbchksum FROM info WHERE path=?', (path,))
+        rv = cur.fetchone()
+        if rv is not None:
+            error, prevchksum = rv
+            if error is not None and prevchksum == nbchksum:
+                return False
+        return True
 
 
 if __name__ == "__main__":
