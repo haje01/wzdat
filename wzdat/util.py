@@ -220,6 +220,7 @@ class OfflineNBPath(object):
 
 def get_offline_nbpath():
     fpath = os.path.join(gettempdir(), '_offline_nbpath_')
+    print(u'get_offline_nbpath {}'.format(fpath))
     with open(fpath, 'r') as f:
         return f.readline().decode('utf8')
 
