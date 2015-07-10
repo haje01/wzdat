@@ -19,7 +19,7 @@
       {% for gnb in notebooks %}
       {% for nb in gnb[1] %}
       <div id="nb-{{gnb[0]}}-{{loop.index}}" style="padding-top: 40px; margin-top: -40px">
-        <h3 class="nb-title {%if nb[3] is not none%}{% if nb[3][4] is not none %}nb-fail{%endif%}{% endif %}">
+        <h3 class="nb-title {%if nb[3] is not none%}{% if nb[3][4] is not none %}nb-fail{%elif nb[3][0] is not none and nb[3][1] is none%}nb-running{%endif%}{% endif %}">
           <span>{{nb[1]}}</span>
           <span class="nb_edit">
             <div class="btn-group" role="group" style="margin-top: -3px">

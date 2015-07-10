@@ -3,7 +3,8 @@
 import os
 import logging
 
-from wzdat.rundb import noerror_or_changed_notebook
+from wzdat.rundb import check_notebook_error_and_changed, reset_run,\
+    get_run_info
 from wzdat.util import iter_notebook_manifest, OfflineNBPath
 from wzdat.ipynb_runner import update_notebook_by_run
 from wzdat.manifest import Manifest
@@ -73,8 +74,21 @@ class DependencyTree(object):
                 continue
             yield nb
 
+    def _clear_externally_stopped(self):
+        for nb in self.notebooks:
+            path = nb.path
+            # reset run info if previous run stopped externally
+            start, elapsed, cur, total, error = get_run_info(path)
+            if error is None and cur > 0 and elapsed is None:
+                reset_run(path)
+
     def resolve(self, updaterun=False):
-        assert len(self.notebooks) > 0
+        if len(self.notebooks) == 0:
+            logging.debug("no notebooks to run.")
+            return
+
+        self._clear_externally_stopped()
+
         resolved = []
         runs = []
         for nb in self.iter_noscd_notebook():
@@ -101,12 +115,16 @@ class DependencyTree(object):
         path = notebook.path
         # Only run when dependecies changed and notebook has no error or
         # changed
-        need_run = notebook.manifest._need_run and\
-            noerror_or_changed_notebook(path)
-        if need_run and updaterun:
-            with OfflineNBPath(path):
-                update_notebook_by_run(path)
-                runs.append(notebook)
+        error, changed = check_notebook_error_and_changed(path)
+        logging.debug("error {}, changed {}".format(error, changed))
+        if updaterun:
+            # run notebook when its depends changed or had fixed after error
+            if notebook.manifest._need_run:  # or (error and changed):
+                with OfflineNBPath(path):
+                    update_notebook_by_run(path)
+                    runs.append(notebook)
+            elif error and not changed:
+                logging.debug(u"_run_resolved - skip unfixed {}".format(path))
 
         resolved.append(notebook)
 
