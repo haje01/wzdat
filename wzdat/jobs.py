@@ -8,7 +8,7 @@ from wzdat.make_config import make_config
 from wzdat.ipynb_runner import update_notebook_by_run
 from wzdat.rundb import destroy_table as _destroy_table
 from wzdat.util import gen_dummydata as _gen_dummydata, cache_files,\
-    cache_finder, get_notebook_dir
+    cache_finder, get_notebook_dir, OfflineNBPath
 from wzdat import event as evt
 
 cfg = make_config()
@@ -29,12 +29,14 @@ def check_cache():
 
 def update_notebooks():
     '''Check notebook's dependency and run if needed.'''
-    logging.debug('update_notebooks')
+    logging.debug('update_notebooks start')
     nbdir = get_notebook_dir()
     from wzdat.nbdependresolv import DependencyTree
     skip_nbs = [os.path.join(nbdir, 'test-notebook6.ipynb')]
     dt = DependencyTree(nbdir, skip_nbs)
-    return dt.resolve(True)
+    ret = dt.resolve(True)
+    logging.debug('update_notebooks done')
+    return ret
 
 
 def cache_all():
@@ -53,7 +55,8 @@ def register_cron():
 def run_notebook(path):
     path = path.decode('utf-8') if type(path) == str else path
     logging.debug(u'run_notebook {}'.format(path))
-    update_notebook_by_run(path)
+    with OfflineNBPath(path):
+        update_notebook_by_run(path)
 
 
 @argh.arg('tbname', help="table name to destroy")

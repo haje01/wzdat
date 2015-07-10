@@ -314,7 +314,7 @@ def _collect_gnbs(gnbs, gk, groups):
             if err is not None:
                 out = '<div class="fail-result">Check error, fix it, '\
                       'and rerun.</div>'
-            # logging.debug(u'err {}'.format(err))
+                # logging.debug(u'err {}'.format(err))
             ri = (start, elapsed, cur, total, err)
         path = path.replace(nbdir, '')[1:]
         nbs.append((url, fname, out, ri, path))
