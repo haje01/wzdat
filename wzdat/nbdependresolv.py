@@ -78,9 +78,11 @@ class DependencyTree(object):
         for nb in self.notebooks:
             path = nb.path
             # reset run info if previous run stopped externally
-            start, elapsed, cur, total, error = get_run_info(path)
-            if error is None and cur > 0 and elapsed is None:
-                reset_run(path)
+            info = get_run_info(path)
+            if info is not None:
+                start, elapsed, cur, total, error = info
+                if error is None and cur > 0 and elapsed is None:
+                    reset_run(path)
 
     def resolve(self, updaterun=False):
         if len(self.notebooks) == 0:
