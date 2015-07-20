@@ -10,6 +10,7 @@ from markdown import markdown
 
 from wzdat.util import div, remove_ansicolor, get_notebook_manifest_path
 from wzdat import rundb
+from wzdat.manifest import Manifest
 
 
 CRON_PTRN =\
@@ -22,18 +23,21 @@ from wzdat.notebook_runner import NotebookRunner, NotebookError
 
 IPYTHON_STARTUP_PATH = "/root/.ipython/profile_default/startup/01-wzdat.py"
 
-ASSERT_MANIFEST_OBJ = """
+
+class ManifestNotUsed(Exception):
+    pass
+
+CHECK_MANIFEST_USED = """
 from wzdat.manifest import Manifest
-from wzdat.notebook_runner import NotebookError
+from wzdat.ipynb_runner import ManifestNotUsed
 _ = globals().copy()
 if len([k for k, v in _.iteritems() if isinstance(v, Manifest)]) == 0:
-    raise NotebookError('Manifest not used with code')
+    raise ManifestNotUsed()
 """
 
 
-def assert_manifest_obj(runner):
-    run_code(runner, ASSERT_MANIFEST_OBJ,
-             NotebookError('Manifest not used error'))
+def check_manifest_used(runner):
+    run_code(runner, CHECK_MANIFEST_USED, ManifestNotUsed())
 
 
 def run_code(runner, code, exception=None):
@@ -135,9 +139,15 @@ def update_notebook_by_run(path):
     try:
         r.run_notebook(lambda cur: _progress_cell(path, cur))
         if has_manifest:
-            assert_manifest_obj(r)
+            check_manifest_used(r)
     except NotebookError, e:
         err = unicode(e)
+    except ManifestNotUsed, e:
+        # if manifest not used by user, run it implicitly to save checksum
+        logging.warn(u"Manifest exists for '{}', but manifest object was not "
+                     "instantiated.".format(path))
+        manifest = Manifest(True, mpath)
+        manifest._write_checksums()
     else:
         write(r.nb, open(path.encode('utf-8'), 'w'), 'json')
     finally:

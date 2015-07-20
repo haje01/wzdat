@@ -68,9 +68,9 @@ def test_notebook_error():
 def test_notebook_util():
     nbdir = get_notebook_dir()
     nbs = [nb for nb in iter_notebooks(nbdir)]
-    assert len(nbs) == 9
+    assert len(nbs) == 10
     nbms = [(nb, mi) for nb, mi in iter_notebook_manifest_input(nbdir)]
-    assert len(nbms) == 8
+    assert len(nbms) == 9
     path = os.path.join(nbdir, 'test-notebook3.ipynb')
     assert path == find_hdf_notebook_path('haje01', 'test')
 
@@ -221,7 +221,7 @@ def test_notebook_resolve(fxsoldir, fxnewfile):
         f.write('2014-03-05 23:30 [ERROR] - Async\n')
 
     _, runs = update_notebooks()
-    assert len(runs) == 3
+    assert len(runs) == 4
 
 
 def test_notebook_manifest_used():
@@ -232,5 +232,6 @@ def test_notebook_manifest_used():
     with OfflineNBPath(path):
         mpath = get_notebook_manifest_path(path)
         assert os.path.isfile(mpath)
-        err = update_notebook_by_run(path)
-        assert 'Manifest not used' in err
+        before = os.stat(mpath).st_mtime
+        update_notebook_by_run(path)
+        assert os.stat(mpath).st_mtime > before

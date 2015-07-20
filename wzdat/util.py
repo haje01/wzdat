@@ -885,11 +885,11 @@ def get_notebook_path():
     import json
     import urllib2
     from IPython.lib import kernel
-    connection_file_path = kernel.get_connection_file()
-    connection_file = os.path.basename(connection_file_path)
     try:
+        connection_file_path = kernel.get_connection_file()
+        connection_file = os.path.basename(connection_file_path)
         kernel_id = connection_file.split('-', 1)[1].split('.')[0]
-    except IndexError:
+    except (RuntimeError, IndexError):
         return get_offline_nbpath()
 
     url = "http://{}:{}/api/sessions".format(
