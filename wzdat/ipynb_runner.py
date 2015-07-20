@@ -8,7 +8,7 @@ from Queue import Empty
 
 from markdown import markdown
 
-from wzdat.util import div, remove_ansicolor
+from wzdat.util import div, remove_ansicolor, get_notebook_manifest_path
 from wzdat import rundb
 
 
@@ -22,8 +22,21 @@ from wzdat.notebook_runner import NotebookRunner, NotebookError
 
 IPYTHON_STARTUP_PATH = "/root/.ipython/profile_default/startup/01-wzdat.py"
 
+ASSERT_MANIFEST_OBJ = """
+from wzdat.manifest import Manifest
+from wzdat.notebook_runner import NotebookError
+_ = globals().copy()
+if len([k for k, v in _.iteritems() if isinstance(v, Manifest)]) == 0:
+    raise NotebookError('Manifest not used with code')
+"""
 
-def run_code(runner, code):
+
+def assert_manifest_obj(runner):
+    run_code(runner, ASSERT_MANIFEST_OBJ,
+             NotebookError('Manifest not used error'))
+
+
+def run_code(runner, code, exception=None):
     runner.shell.execute(code)
     reply = runner.shell.get_msg()
     status = reply['content']['status']
@@ -61,7 +74,10 @@ def run_code(runner, code):
         outs = _run_code_type(outs, runner, msg_type, content)
 
     if status == 'error':
-        raise Exception("Code error")
+        if exception is None:
+            raise Exception('Code error')
+        else:
+            raise exception
 
 
 def _run_code_type(outs, runner, msg_type, content):
@@ -102,6 +118,8 @@ def _run_init(r, path):
 def update_notebook_by_run(path):
     rundb.reset_run(path)
     logging.debug(u'update_notebook_by_run {}'.format(path))
+    mpath = get_notebook_manifest_path(path)
+    has_manifest = os.path.isfile(mpath)
 
     # init runner
     nb = read(open(path.encode('utf-8')), 'json')
@@ -116,12 +134,15 @@ def update_notebook_by_run(path):
     err = None
     try:
         r.run_notebook(lambda cur: _progress_cell(path, cur))
+        if has_manifest:
+            assert_manifest_obj(r)
     except NotebookError, e:
         err = unicode(e)
     else:
         write(r.nb, open(path.encode('utf-8'), 'w'), 'json')
     finally:
         rundb.finish_run(path, err)
+        return err
 
 
 def rerun_notebook_cell(rv, r, cell, cnt):

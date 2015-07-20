@@ -222,3 +222,15 @@ def test_notebook_resolve(fxsoldir, fxnewfile):
 
     _, runs = update_notebooks()
     assert len(runs) == 3
+
+
+def test_notebook_manifest_used():
+    "Raise error if a manifest file exists, but not used within code"
+    nbdir = get_notebook_dir()
+    path = os.path.join(nbdir, 'test-notebook10.ipynb')
+    assert os.path.isfile(path)
+    with OfflineNBPath(path):
+        mpath = get_notebook_manifest_path(path)
+        assert os.path.isfile(mpath)
+        err = update_notebook_by_run(path)
+        assert 'Manifest not used' in err
