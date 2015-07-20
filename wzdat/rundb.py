@@ -103,15 +103,16 @@ def remove_db_file():
 
 def reset_run(path):
     """Reset run info."""
+    logging.debug(u"reset_run for {}".format(path))
     nbchksum = file_checksum(path)
     with Cursor(RUNNER_DB_PATH) as cur:
         cur.execute('SELECT * FROM info WHERE path=?', (path,))
         if cur.fetchone() is None:
             cur.execute('INSERT INTO info(path, start, total, nbchksum) '
-                        'VALUES(?, 0, 0, ?)', (path, nbchksum))
+                        'VALUES(?, NULL, 0, ?)', (path, nbchksum))
         else:
-            cur.execute('UPDATE info SET error=NULL, start=0, elapsed=NULL, '
-                        'cur=0, total=0, nbchksum=? WHERE path=?',
+            cur.execute('UPDATE info SET error=NULL, start=NULL, elapsed=NULL,'
+                        ' cur=0, total=0, nbchksum=? WHERE path=?',
                         (nbchksum, path))
 
 
@@ -219,10 +220,9 @@ def get_finder_info():
         return ret
 
 
-def noerror_or_changed_notebook(path):
+def check_notebook_error_and_changed(path):
     """
-        Return True when the notebook has no error or modified after previous
-        error.
+        Return notebook has error and changed after last run.
     """
     nbchksum = file_checksum(path)
     with Cursor(RUNNER_DB_PATH) as cur:
@@ -230,9 +230,8 @@ def noerror_or_changed_notebook(path):
         rv = cur.fetchone()
         if rv is not None:
             error, prevchksum = rv
-            if error is not None and prevchksum == nbchksum:
-                return False
-        return True
+            return error is not None, prevchksum != nbchksum
+        return False, False
 
 
 if __name__ == "__main__":

@@ -112,6 +112,10 @@ body {
   background-color: #ffe0e0;
 }
 
+.nb-running {
+  background-color: #ffffc0;
+}
+
 .fail-result {
   color: #994422;
   font-size: 12pt;

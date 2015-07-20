@@ -28,7 +28,7 @@ def check_cache():
 
 
 def update_notebooks():
-    '''Check notebook's dependency and run if needed.'''
+    '''Check notebook's dependency and run for dashboard if needed.'''
     logging.debug('update_notebooks start')
     nbdir = get_notebook_dir()
     from wzdat.nbdependresolv import DependencyTree
