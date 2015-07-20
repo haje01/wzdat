@@ -118,7 +118,7 @@ class DependencyTree(object):
         # Only run when dependecies changed and notebook has no error or
         # changed
         error, changed = check_notebook_error_and_changed(path)
-        logging.debug("error {}, changed {}".format(error, changed))
+        logging.debug("nb error {}, nb changed {}".format(error, changed))
         if updaterun:
             # run notebook when its depends changed or had fixed after error
             if notebook.manifest._need_run:  # or (error and changed):
