@@ -453,7 +453,8 @@ def _set_ticks_labels(df, ax, ax_fs, rows, cols, kwargs):
     ax.set_xticks(np.linspace(0, cols - 1, cols))
     ax.set_yticks(np.linspace(0, rows - 1, rows))
     ax.set_xticklabels(df.columns, fontsize=ax_fs)
-    ax.set_yticklabels(df.index, fontsize=ax_fs)
+    ax.set_yticklabels([i.decode('utf8') if type(i) is str else i for i in
+                        df.index], fontsize=ax_fs)
     ax.grid('off')
     xlabel_name = kwargs['xlabel']
     ylabel_name = kwargs['ylabel']
