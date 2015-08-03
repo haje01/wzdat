@@ -1023,6 +1023,7 @@ def _register_crons(paths, scheds):
     fileh.write('WZDAT_DIR=/wzdat\n')
     fileh.write('WZDAT_CFG=%s\n' % cfg_path)
     fileh.write('WZDAT_HOST=%s\n' % host)
+    fileh.write('LANG=en_US.UTF-8\n')
     fileh.close()
     check_call([CRON_CMD, tpath])
     os.unlink(tpath)

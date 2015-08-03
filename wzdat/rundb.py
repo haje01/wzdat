@@ -106,14 +106,14 @@ def reset_run(path):
     logging.debug(u"reset_run for {}".format(path))
     nbchksum = file_checksum(path)
     with Cursor(RUNNER_DB_PATH) as cur:
-        cur.execute('SELECT * FROM info WHERE path=?', (path,))
+        cur.execute(u'SELECT * FROM info WHERE path=?', (path,))
         if cur.fetchone() is None:
-            cur.execute('INSERT INTO info(path, start, total, nbchksum) '
-                        'VALUES(?, NULL, 0, ?)', (path, nbchksum))
+            cur.execute(u'INSERT INTO info(path, start, total, nbchksum) '
+                        u'VALUES(?, NULL, 0, ?)', (path, nbchksum))
         else:
-            cur.execute('UPDATE info SET error=NULL, start=NULL, elapsed=NULL,'
-                        ' cur=0, total=0, nbchksum=? WHERE path=?',
-                        (nbchksum, path))
+            cur.execute(u'UPDATE info SET error=NULL, start=NULL, '
+                        u'elapsed=NULL, cur=0, total=0, nbchksum=? '
+                        u'WHERE path=?', (nbchksum, path))
 
 
 def start_run(path, total):
