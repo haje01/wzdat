@@ -1,6 +1,6 @@
 import pytest
 
-from wzdat.rundb import reset_db
+from wzdat.rundb import r
 from wzdat.dashboard.app import app as dapp
 from wzdat.make_config import make_config
 
@@ -9,7 +9,7 @@ cfg = make_config()
 
 @pytest.yield_fixture(scope='module')
 def app():
-    reset_db()
+    r.delete('*')
     yield dapp.test_client()
 
 

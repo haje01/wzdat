@@ -13,7 +13,8 @@ BeautifulSoup==3.2.1
 tables==3.1.1
 pandas==0.15.0
 ipython==2.3.0
-pysqlite==2.6.3
 pyzmq==14.4.1
 tornado==4.0.2
 requests==2.5.1
+redis==2.10.3
+hiredis==0.2.0

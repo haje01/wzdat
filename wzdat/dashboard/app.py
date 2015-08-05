@@ -1,8 +1,6 @@
 import os
 import json
-import time
 import re
-from datetime import timedelta, datetime
 import logging
 from collections import defaultdict
 
@@ -10,7 +8,8 @@ from flask import Flask, render_template, request, Response, redirect, url_for
 from markdown import markdown
 from IPython.nbformat.current import reads
 
-from wzdat.util import get_notebook_dir, convert_server_time_to_client
+from wzdat.util import get_notebook_dir, parse_client_sdatetime,\
+    get_client_datetime
 from wzdat.rundb import get_cache_info, get_finder_info
 from wzdat.jobs import cache_finder
 from wzdat.make_config import make_config
@@ -45,8 +44,7 @@ def _page_common_vars():
 
     ci = get_cache_info()
     if ci is not None:
-        ct = datetime.fromtimestamp(ci[0])
-        ct = convert_server_time_to_client(ct)
+        ct = parse_client_sdatetime(ci)
         ctime = ct.strftime('%Y-%m-%d %H:%M')
     else:
         ctime = 'N/A'
@@ -324,16 +322,13 @@ def _collect_gnbs(gnbs, gk, groups):
 
 def _get_run_time(ri):
     if ri[0] is not None:
-        executed = timedelta(seconds=int(time.time() - ri[0]))
+        executed = get_client_datetime() - parse_client_sdatetime(ri[0])
     else:
         executed = None
-    if ri[1] is not None:
-        if ri[1] == -1:
-            elapsed = timedelta(seconds=int(ri[1]))
-        else:
-            elapsed = timedelta(seconds=int(ri[1]))
-    else:
+    if ri[1] == 'None':
         elapsed = None
+    else:
+        elapsed = ri[1]
     return executed, elapsed
 
 

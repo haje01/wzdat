@@ -3,13 +3,12 @@ import logging
 
 import argh
 
+from wzdat.rundb import flush_unhandled_events, unhandled_events
 from wzdat.const import FORWARDER_LOG_PREFIX
 from wzdat.make_config import make_config
 from wzdat.ipynb_runner import update_notebook_by_run
-from wzdat.rundb import destroy_table as _destroy_table
 from wzdat.util import gen_dummydata as _gen_dummydata, cache_files,\
     cache_finder, get_notebook_dir, OfflineNBPath
-from wzdat import event as evt
 
 cfg = make_config()
 
@@ -20,11 +19,10 @@ def _remove_forwarder_file(es):
 
 def check_cache():
     # TODO: remove when file-wise caching done
-    es = _remove_forwarder_file(evt.get_unhandled_events())
+    es = _remove_forwarder_file(unhandled_events())
     if len(es) > 0:
         cache_all()
-        ids = [e[0] for e in es]
-        evt.mark_handled_events('check_cache', ids)
+        flush_unhandled_events()
 
 
 def update_notebooks():
@@ -59,12 +57,6 @@ def run_notebook(path):
         update_notebook_by_run(path)
 
 
-@argh.arg('tbname', help="table name to destroy")
-def destroy_table(tbname):
-    """Destroy DB table if exists."""
-    _destroy_table(tbname)
-
-
 @argh.arg('-d', '--dir', help="target directory where dummy data will be"
           "written into. if skipped, cfg['data_dir'] will be chosen.")
 def gen_dummydata(**kwargs):
@@ -85,4 +77,4 @@ def register_event(**kwargs):
 if __name__ == "__main__":
     argh.dispatch_commands([cache_all, register_cron, run_notebook,
                             gen_dummydata, register_event, check_cache,
-                            destroy_table, update_notebooks])
+                            update_notebooks])

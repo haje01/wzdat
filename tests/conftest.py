@@ -1,6 +1,6 @@
 import pytest
 
-from wzdat.rundb import reset_db, create_db
+from wzdat.rundb import r
 from wzdat.make_config import make_config
 
 cfg = make_config()
@@ -27,6 +27,5 @@ def fxlogs():
 
 @pytest.yield_fixture(scope='module')
 def fxdb():
-    reset_db()
+    r.delete('*')
     yield
-    create_db()  # restore destroyed tables

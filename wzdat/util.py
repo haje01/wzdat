@@ -714,15 +714,35 @@ def remove_ansicolor(text):
                   '', text)
 
 
-def get_htimestamp(ts=None):
+def get_datetime(ts=None):
     if ts is None:
         ts = time.time()
-    return datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+    return datetime.fromtimestamp(ts)
 
 
-def parse_htimestamp(ts):
+def get_sdatetime(ts=None):
+    dt = get_datetime(ts)
+    return dt.strftime('%Y-%m-%d %H:%M:%S')
+
+
+def get_client_datetime(ts=None):
+    if ts is None:
+        ts = time.time()
+    return convert_server_time_to_client(datetime.fromtimestamp(ts))
+
+
+def get_client_sdatetime(ts=None):
+    dt = get_client_datetime(ts)
+    return dt.strftime('%Y-%m-%d %H:%M:%S')
+
+
+def parse_sdatetime(dt):
     from dateutil.parser import parse
-    return parse(ts)
+    return parse(dt)
+
+
+def parse_client_sdatetime(dt):
+    return convert_server_time_to_client(parse_sdatetime(dt))
 
 
 def get_cache_path(fmt):
@@ -867,7 +887,7 @@ class KeyDefaultDict(defaultdict):
             return ret
 
 
-def get_dashboard_host():
+def get_wzdat_host():
     return os.environ['WZDAT_HOST'] if 'WZDAT_B2DHOST' not in os.environ else\
         os.environ['WZDAT_B2DHOST']
 
@@ -894,7 +914,7 @@ def get_notebook_path():
         return get_offline_nbpath()
 
     url = "http://{}:{}/api/sessions".format(
-        get_dashboard_host(), get_ipython_port())
+        get_wzdat_host(), get_ipython_port())
     sessions = json.load(urllib2.urlopen(url))
     for sess in sessions:
         if sess['kernel']['id'] == kernel_id:

@@ -6,7 +6,7 @@ import pytest
 
 from wzdat.make_config import make_config, invalidate_config
 from wzdat.util import ChangeDir, get_var_dir, get_tmp_dir, get_hdf_dir,\
-    get_cache_dir, get_conv_dir, get_htimestamp, parse_htimestamp,\
+    get_cache_dir, get_conv_dir, get_client_sdatetime, parse_sdatetime,\
     convert_server_time_to_client, cache_files, find_files_and_save
 
 
@@ -91,8 +91,8 @@ def test_common_config(fxcfg):
 def test_common_datetime():
     ts = time.time()
     dts = datetime.datetime.fromtimestamp(ts)
-    hts = get_htimestamp(ts)
-    assert dts.replace(microsecond=0) == parse_htimestamp(hts)
+    hts = get_client_sdatetime(ts)
+    assert dts.replace(microsecond=0) == parse_sdatetime(hts)
 
     import pytz
     sdt = datetime.datetime(2015, 1, 1, 0, 0, 0, 0)

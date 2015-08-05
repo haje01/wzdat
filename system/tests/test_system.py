@@ -7,9 +7,9 @@ from subprocess import check_output
 
 import pytest
 
-from wzdat import event as evt
-from wzdat.rundb import reset_db
 from wzdat.make_config import make_config
+from wzdat.rundb import flush_unhandled_events, unhandled_events
+from wzdat import event as evt
 
 WEB_RESTART = False
 
@@ -34,9 +34,6 @@ def _reset_data():
     gen_dummydata(ddir)
     # make _var_ dir
     get_var_dir()
-
-    # reset db
-    reset_db()
 
 
 @pytest.yield_fixture()
@@ -71,7 +68,7 @@ def fxdocker():
 
 
 def test_system_file_event(fxdocker):
-    evt.remove_all()
+    flush_unhandled_events()
 
     ret = check_output(['docker', 'ps'])
     rport = re.search(r'.*:(\d+)->873.*', ret).groups()[0]
@@ -94,23 +91,23 @@ def test_system_file_event(fxdocker):
             time.sleep(3)  # wait for all events registered
 
     sync(('kr', 'us', 'jp'))
-    assert 567 == len(evt.get_all())  # logs, exlogs, dumps
+    assert 567 == len(unhandled_events())  # logs, exlogs, dumps
 
     # modify & sync
-    evt.remove_all()
+    flush_unhandled_events()
     fpath = os.path.join(path, 'dummydata/kr/node-1/game_2014-02-24 01.log')
     with open(fpath, 'at') as f:
         f.write('---')
     sync(['kr'])
-    rv = evt.get_all()[0]
+    rv = unhandled_events()[0]
     assert rv[2] == evt.FILE_MOVE_TO
     assert 'game_2014-02-24 01.log' in rv[3]
 
     # delete & sync
-    evt.remove_all()
+    flush_unhandled_events()
     os.remove(fpath)
     sync(['kr'], True)
-    rv = evt.get_all()[0]
+    rv = unhandled_events()[0]
     assert rv[2] == evt.FILE_DELETE
     assert 'game_2014-02-24 01.log' in rv[3]
 

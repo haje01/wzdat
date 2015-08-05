@@ -22,7 +22,7 @@ RUN pip install numpy==1.9.1
 RUN pip install numexpr==2.4
 RUN pip install cython==0.21.1
 RUN wget -qO- https://raw.github.com/PyTables/PyTables/develop/requirements.txt | sed '/^#/ d' | xargs pip install
-RUN wget -qO- https://github.com/haje01/wzdat/raw/master/requirements.txt | sed '/^#/ d'| xargs pip install
+RUN cat requirements.txt | sed '/^#/ d'| xargs pip install
 
 # Dashboard & Web
 RUN pip install uwsgi

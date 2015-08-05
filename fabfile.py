@@ -249,7 +249,7 @@ def launch_prj(prj, dbg=False):
         # for service systems, project logdata dir is  /logdata/{prj}
         datavol = '/logdata/{}'.format(prj)
     cmd = 'docker run {runopt} -p 22 -p {iport}:8090 -p {dport}:80\
-            -p 873 --name "wzdat_{wzprj}"\
+            -p 873 -p 6379:6379 --name "wzdat_{wzprj}"\
             -v {wzdir}:/wzdat -v {wzsol}:/solution\
             -v {datavol}:/logdata\
             -v $HOME/.vimrc:/root/.vimrc\

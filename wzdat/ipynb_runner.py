@@ -148,6 +148,8 @@ def update_notebook_by_run(path):
                      "instantiated.".format(path))
         manifest = Manifest(True, mpath)
         manifest._write_checksums()
+        # this is not an error, so write result
+        write(r.nb, open(path.encode('utf-8'), 'w'), 'json')
     else:
         write(r.nb, open(path.encode('utf-8'), 'w'), 'json')
     finally:
