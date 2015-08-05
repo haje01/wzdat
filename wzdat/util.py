@@ -738,7 +738,11 @@ def get_client_sdatetime(ts=None):
 
 def parse_sdatetime(dt):
     from dateutil.parser import parse
-    return parse(dt)
+    try:
+        return parse(dt)
+    except ValueError:
+        logging.error("parse_sdatetime error - {}".format(dt))
+        raise
 
 
 def parse_client_sdatetime(dt):
