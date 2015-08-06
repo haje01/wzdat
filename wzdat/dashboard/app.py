@@ -3,6 +3,7 @@ import json
 import re
 import logging
 from collections import defaultdict
+from datetime import timedelta
 
 from flask import Flask, render_template, request, Response, redirect, url_for
 from markdown import markdown
@@ -323,12 +324,13 @@ def _collect_gnbs(gnbs, gk, groups):
 def _get_run_time(ri):
     if ri[0] is not None:
         executed = get_client_datetime() - parse_client_sdatetime(ri[0])
+        executed = timedelta(seconds=int(executed.total_seconds()))
     else:
         executed = None
     if ri[1] == 'None':
         elapsed = None
     else:
-        elapsed = ri[1]
+        elapsed = timedelta(seconds=int(float(ri[1])))
     return executed, elapsed
 
 
