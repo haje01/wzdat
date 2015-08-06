@@ -8,13 +8,13 @@ import logging
 import redis
 
 from wzdat.make_config import make_config
-from wzdat.util import file_checksum, get_client_sdatetime, get_wzdat_host,\
+from wzdat.util import file_checksum, get_client_sdatetime,\
     parse_client_sdatetime, get_client_datetime
 from wzdat.const import EVENT_DEFAULT_PRIOR, FORWARDER_LOG_PREFIX
 
 WZDAT_REDIS_DB = 1
 
-r = redis.StrictRedis(host=get_wzdat_host(), port=6379, db=WZDAT_REDIS_DB)
+r = redis.StrictRedis(db=WZDAT_REDIS_DB)
 
 cfg = make_config()
 
