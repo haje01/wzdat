@@ -1,7 +1,9 @@
 import os
 from urlparse import parse_qs
 import imp
+import sys
 import zipfile
+import logging
 
 from celery import Celery
 from IPython.nbformat.current import read
@@ -98,6 +100,8 @@ def _select_files_condition(data, ftype):
     pkg = cfg['sol_pkg']
     prj = cfg['prj']
     mpath = '%s/%s/%s.py' % (pkg, prj, ftype)
+    logging.debug("_select_files_condition - load package: {}".format(mpath))
+    sys.path.append('/solution')
     m = imp.load_source('%s' % ftype,  mpath)
     m.load_info(lambda rate: _progress(select_files, rate))
 

@@ -1,7 +1,7 @@
 """
     Database module for IPython Notebook Runner
 """
-
+import os
 import logging
 
 import redis
@@ -13,9 +13,15 @@ from wzdat.const import EVENT_DEFAULT_PRIOR, FORWARDER_LOG_PREFIX
 
 WZDAT_REDIS_DB = 1
 
-r = redis.StrictRedis(db=WZDAT_REDIS_DB)
+host = os.environ['WZDAT_B2DHOST'] if 'WZDAT_B2DHOST' in os.environ else\
+    'localhost'
+r = redis.StrictRedis(host=host, db=WZDAT_REDIS_DB)
 
 cfg = make_config()
+
+
+def flush_db():
+    r.flushdb()
 
 
 def reset_run(path):
@@ -109,11 +115,11 @@ def register_event(etype, info, prior=EVENT_DEFAULT_PRIOR):
         return
     logging.debug('register_event {} - {}'.format(etype, info))
     raised = get_sdatetime()
-    r.sadd('unhandled', (prior, etype, info, raised))
+    r.rpush('unhandled', (prior, etype, info, raised))
 
 
 def unhandled_events():
-    return r.smembers('unhandled')
+    return r.lrange('unhandled', 0, -1)
 
 
 def flush_unhandled_events():

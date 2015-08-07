@@ -9,7 +9,6 @@ import pytest
 
 from wzdat.make_config import make_config
 from wzdat.rundb import flush_unhandled_events, unhandled_events
-from wzdat import event as evt
 
 WEB_RESTART = False
 
@@ -99,17 +98,19 @@ def test_system_file_event(fxdocker):
     with open(fpath, 'at') as f:
         f.write('---')
     sync(['kr'])
-    rv = unhandled_events()[0]
-    assert rv[2] == evt.FILE_MOVE_TO
-    assert 'game_2014-02-24 01.log' in rv[3]
+    uevs = unhandled_events()[0]
+    rv = eval(uevs)
+    assert rv[1] == 'FILE_MOVE_TO'
+    assert 'game_2014-02-24 01.log' in rv[2]
 
     # delete & sync
     flush_unhandled_events()
     os.remove(fpath)
     sync(['kr'], True)
-    rv = unhandled_events()[0]
-    assert rv[2] == evt.FILE_DELETE
-    assert 'game_2014-02-24 01.log' in rv[3]
+    uevs = unhandled_events()[0]
+    rv = eval(uevs)
+    assert rv[1] == 'FILE_DELETE'
+    assert 'game_2014-02-24 01.log' in rv[2]
 
 
 def test_system_finder(fxdocker):

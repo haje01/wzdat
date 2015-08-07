@@ -34,6 +34,7 @@ RUN sed --in-place 's/user www-data/user root/' /etc/nginx/nginx.conf
 RUN pip install Celery
 RUN apt-get -qq -y install redis-server
 RUN pip install redis
+RUN sed -ri 's/bind 127.0.0.1/bind 0.0.0.0/g' /etc/redis/redis.conf
 ENV C_FORCE_ROOT true
 
 # SQLite
