@@ -8,7 +8,7 @@ import logging
 import redis
 
 from wzdat.make_config import make_config
-from wzdat.util import file_checksum, get_client_sdatetime,\
+from wzdat.util import file_checksum, get_sdatetime,\
     parse_client_sdatetime, get_client_datetime
 from wzdat.const import EVENT_DEFAULT_PRIOR, FORWARDER_LOG_PREFIX
 
@@ -32,7 +32,7 @@ def reset_run(path):
 
 
 def start_run(path, total):
-    start_dt = get_client_sdatetime()
+    start_dt = get_sdatetime()
     info = {'start': start_dt, 'cur': 0, 'total': total, 'error': None}
     r.hmset(u'run:{}'.format(path), info)
 
@@ -63,7 +63,7 @@ def get_run_info(path):
 
 def update_cache_info():
     logging.debug('update_cache_info')
-    r.set('last_cached', get_client_sdatetime())
+    r.set('last_cached', get_sdatetime())
 
 
 def get_cache_info():
@@ -111,7 +111,7 @@ def register_event(etype, info, prior=EVENT_DEFAULT_PRIOR):
     if FORWARDER_LOG_PREFIX in info:
         return
     logging.debug('register_event {} - {}'.format(etype, info))
-    raised = get_client_sdatetime()
+    raised = get_sdatetime()
     r.sadd('unhandled', (prior, etype, info, raised))
 
 
