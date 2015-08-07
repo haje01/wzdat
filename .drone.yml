@@ -8,6 +8,7 @@ env:
     - WZDAT_SOL_PKG=ws_mysol
 
 script:
+    - redis-server /etc/redis/redis.conf
     - pip install -e .
     - pip install pytest pytest-cov
     - python -m wzdat.jobs gen-dummydata
