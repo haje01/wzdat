@@ -12,6 +12,7 @@ cd /wzdat
 pip install -e .
 # Re-install of requirements to apply changes after base image build.
 pip install -r requirements.txt
+redis-server /etc/redis/redis.conf
 cd /solution
 python -m wzdat.rundb create  # create db table if not exists
 python -m wzdat.jobs cache-all
