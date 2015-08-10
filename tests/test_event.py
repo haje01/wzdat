@@ -7,7 +7,7 @@ from wzdat import event as evt
 
 @pytest.yield_fixture(scope='function')
 def db():
-    flush_unhandled_events
+    flush_unhandled_events()
     yield
 
 
