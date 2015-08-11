@@ -10,6 +10,10 @@ prj_map = {}
 assert 'WZDAT_HOST' in os.environ
 
 
+def docker_build_cmd(_nocache):
+    return 'docker build {} '.format('--no-cache' if _nocache else '')
+
+
 class _ChangeDir(object):
     def __init__(self, *dirs):
         self.cwd = os.getcwd()
@@ -104,14 +108,14 @@ def rm_all(_remote=False):
     _cmd('docker rm -f $(docker ps -aq)', _remote)
 
 
-def _build_base(_remote):
+def _build_base(_nocache, _remote):
     _cmd('ln -fs files/base.docker Dockerfile', _remote)
     _cmd('cp ../requirements.txt .', _remote)
-    _cmd('docker build -t haje01/wzdat-base .', _remote)
+    _cmd(docker_build_cmd(_nocache) + '-t haje01/wzdat-base .', _remote)
     _cmd('rm -f Dockerfile', _remote)
 
 
-def _build(_remote):
+def _build(_nocache, _remote):
     if _remote:
         r = run('docker images -q haje01/wzdat-base')
     else:
@@ -120,11 +124,11 @@ def _build(_remote):
         print "No local 'haje01/wzdat-base' image. Trying to find in the "\
             "docker hub."
     _cmd('ln -fs files/self.docker Dockerfile', _remote)
-    _cmd('docker build --no-cache -t haje01/wzdat .', _remote)
+    _cmd(docker_build_cmd(_nocache) + '-t haje01/wzdat .', _remote)
     _cmd('rm -f Dockerfile', _remote)
 
 
-def _build_dev(_remote):
+def _build_dev(_nocache, _remote):
     if _remote:
         r = run('docker images -q haje01/wzdat')
     else:
@@ -133,21 +137,22 @@ def _build_dev(_remote):
         print "No local 'haje01/wzdat' image. Trying to find in the docker"\
             " hub."
     _cmd('ln -fs files/dev/dev.docker Dockerfile', _remote)
-    _cmd('docker build --no-cache -t haje01/wzdat-dev .', _remote)
+    _cmd(docker_build_cmd(_nocache) + '--no-cache -t haje01/wzdat-dev .',
+         _remote)
     _cmd('rm -f Dockerfile', _remote)
 
 
-def build(_remote=False):
+def build(_nocache=False, _remote=False):
     if _remote:
         with cd('system'):
-            _build_base(True)
-            _build(True)
-            _build_dev(True)
+            _build_base(_nocache, True)
+            _build(_nocache, True)
+            _build_dev(_nocache, True)
     else:
         with _ChangeDir('system'):
-            _build_base(False)
-            _build(False)
-            _build_dev(False)
+            _build_base(_nocache, False)
+            _build(_nocache, False)
+            _build_dev(_nocache, False)
 
 
 def relaunch_all(_remote=False):
