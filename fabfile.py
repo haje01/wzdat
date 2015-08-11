@@ -244,13 +244,20 @@ def launch_prj(prj, dbg=False):
     cfg = _make_config(cfg_path)
     iport = cfg['host_ipython_port']
     dport = cfg['host_dashboard_port']
+
+    if 'expose_redis' in cfg and cfg['expose_redis']:
+        exredis = '-p 6379:6379'
+    else:
+        exredis = ''
+
     if 'data_dir' in cfg:
         datavol = '{}'.format(cfg['data_dir'])
     else:
         # for service systems, project logdata dir is  /logdata/{prj}
         datavol = '/logdata/{}'.format(prj)
+
     cmd = 'docker run {runopt} -p 22 -p {iport}:8090 -p {dport}:80\
-            -p 873 -p 6379:6379 --name "wzdat_{wzprj}"\
+            -p 873 {exredis} --name "wzdat_{wzprj}"\
             -v {wzdir}:/wzdat -v {wzsol}:/solution\
             -v {datavol}:/logdata\
             -v $HOME/.vimrc:/root/.vimrc\
@@ -268,7 +275,8 @@ def launch_prj(prj, dbg=False):
                                            wzdir=wzdir, wzsol=wzsol,
                                            wzpkg=wzpkg, wzhost=wzhost,
                                            iport=iport, dport=dport,
-                                           datavol=datavol, cmd=cmd)
+                                           datavol=datavol, cmd=cmd,
+                                           exredis=exredis)
     local(cmd)
 
 
