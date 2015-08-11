@@ -6,9 +6,14 @@ import ast
 import time
 import logging
 from datetime import datetime
+import copy
+import json
+
+from IPython.nbformat.current import write, read
 
 from wzdat.util import Property, get_notebook_path, get_notebook_dir,\
     dataframe_checksum, HDF, ScbProperty, convert_server_time_to_client
+from wzdat.notebook_runner import NotebookRunner, NotebookError
 
 
 class NoHDFWritten(Exception):
@@ -115,9 +120,6 @@ class Manifest(Property):
         return need
 
     def _write_checksums(self):
-        from IPython.nbformat.current import write, read
-        from wzdat.notebook_runner import NotebookRunner, NotebookError
-
         nb = read(open(self._path.encode('utf-8')), 'json')
         nr = NotebookRunner(nb)
         try:
@@ -154,7 +156,6 @@ class Manifest(Property):
                 raise NoHDFWritten(self._path)
 
         if len(body) > 0:
-            import copy
             newcell = copy.deepcopy(nr.nb.worksheets[0].cells[0])
             cs_body = "# WARNING: Generated Checksums. Do Not Edit.\n{{\n{}\n}}".\
                 format(',\n'.join(body))
@@ -176,8 +177,6 @@ class Manifest(Property):
                         format(',\n'.join(cdepends)))
 
     def _read_manifest(self):
-        import json
-
         with open(self._path.encode('utf8'), 'r') as f:
             nbdata = json.loads(f.read())
             cells = nbdata['worksheets'][0]['cells']
