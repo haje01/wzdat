@@ -141,6 +141,7 @@ def update_notebook_by_run(path):
         if has_manifest:
             check_manifest_used(r)
     except NotebookError, e:
+        logging.debug("except NotebookError")
         err = unicode(e)
     except ManifestNotUsed, e:
         # if manifest not used by user, run it implicitly to save checksum

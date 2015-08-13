@@ -41,15 +41,18 @@ def start_run(path, total):
 
 
 def finish_run(path, err):
+    logging.debug(u'finish_run {}'.format(path))
     key = u'run:{}'.format(path)
     if r.exists(key):
         _start_dt, total = r.hmget(key, 'start', 'total')
-        if err is None:
+        if err == 'None':
             start_dt = parse_client_sdatetime(_start_dt)
             elapsed = get_client_datetime() - start_dt
             r.hmset(key, {'elapsed': elapsed.total_seconds(), 'cur': total})
         else:
             r.hmset(key, {'error': err})
+    else:
+        logging.debug(u'key {} not exist'.format(key))
 
 
 def update_run_info(path, curcell):
@@ -105,7 +108,7 @@ def check_notebook_error_and_changed(path):
     key = u'run:{}'.format(path)
     if r.exists(key):
         error, prevchksum = r.hmget(key, 'error', 'nbchksum')
-        return error is not None, int(prevchksum) != nbchksum
+        return error != 'None', int(prevchksum) != nbchksum
     return False, False
 
 
