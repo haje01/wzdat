@@ -11,7 +11,7 @@ from pandas import Series, DataFrame
 import numpy as np
 import matplotlib.pyplot as plt
 from wzdat.util import hdf_path, hdf_exists
-from wzdat.ipynb_runner import NoDataFound
+from wzdat.notebook_runner import NoDataFound
 
 from wzdat.manifest import Manifest, ManifestNotExist
 try:

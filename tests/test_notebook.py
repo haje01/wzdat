@@ -236,3 +236,11 @@ def test_notebook_manifest_used():
         before = os.stat(mpath).st_mtime
         update_notebook_by_run(path)
         assert os.stat(mpath).st_mtime > before
+
+
+def test_notebook_nodata():
+    nbdir = get_notebook_dir()
+    path = os.path.join(nbdir, 'test-notebook-nodata.ipynb')
+    assert os.path.isfile(path)
+    with OfflineNBPath(path):
+        update_notebook_by_run(path)

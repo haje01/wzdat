@@ -8,9 +8,11 @@ from Queue import Empty
 
 from markdown import markdown
 
-from wzdat.util import div, remove_ansicolor, get_notebook_manifest_path
+from wzdat.util import div, remove_ansicolor, get_notebook_manifest_path,\
+    ipython_start_script_path
 from wzdat import rundb
 from wzdat.manifest import Manifest
+from notebook_runner import NoDataFound
 
 
 CRON_PTRN =\
@@ -21,14 +23,7 @@ from IPython.nbformat.current import read, NotebookNode, write
 from wzdat.notebook_runner import NotebookRunner, NotebookError
 
 
-IPYTHON_STARTUP_PATH = "/root/.ipython/profile_default/startup/01-wzdat.py"
-
-
 class ManifestNotUsed(Exception):
-    pass
-
-
-class NoDataFound(Exception):
     pass
 
 
@@ -135,7 +130,7 @@ def update_notebook_by_run(path):
     r = NotebookRunner(nb, pylab=True)
 
     # run config & startup
-    _run_init(r, IPYTHON_STARTUP_PATH)
+    _run_init(r, ipython_start_script_path())
 
     # run cells
     cellcnt = r.cellcnt
@@ -157,7 +152,7 @@ def update_notebook_by_run(path):
         # this is not an error, so write result
         write(r.nb, open(path.encode('utf-8'), 'w'), 'json')
     except NoDataFound, e:
-        logging.debug(u"NoDataFound: " + unicode(e))
+        logging.debug(unicode(e))
         write(r.nb, open(path.encode('utf-8'), 'w'), 'json')
     else:
         write(r.nb, open(path.encode('utf-8'), 'w'), 'json')
@@ -167,6 +162,7 @@ def update_notebook_by_run(path):
 
 
 def rerun_notebook_cell(rv, r, cell, cnt):
+    logging.debug('rerun_notebook_cell')
     _type = cell['cell_type']
     if _type == 'code':
         try:
@@ -186,16 +182,18 @@ def rerun_notebook_cell(rv, r, cell, cnt):
 
 
 def run_notebook_view_cell(rv, r, cell, cnt):
+    logging.debug('run_notebook_view_cell')
     _type = cell['cell_type']
     if _type == 'code':
         code = cell['input']
         if '#!dashboard_view' in code:
             try:
                 r.run_cell(cell)
+                raise NoDataFound('--')
             except NoDataFound:
                 logging.debug("run_cell - NoDataFound")
                 raise
-            finally:
+            else:
                 outs = r.nb['worksheets'][0]['cells'][cnt]['outputs']
                 rv += outs
                 return True

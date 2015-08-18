@@ -9,6 +9,7 @@ from flask import Flask, render_template, request, Response, redirect, url_for
 from markdown import markdown
 from IPython.nbformat.current import reads
 
+from wzdat.notebook_runner import NoDataFound
 from wzdat.util import get_notebook_dir, parse_client_sdatetime,\
     get_client_datetime
 from wzdat.rundb import get_cache_info, get_finder_info
@@ -138,7 +139,12 @@ def poll_view(task_id):
             return 'PROGRESS:' + str(task.result)
         outputs = task.get()
         # logging.debug('outputs {}'.format(outputs))
-    except Exception:
+    except NoDataFound, e:
+        logging.debug(unicode(e))
+        return Response(u'<div class="view"><pre class="ds-err">{}</pre></div>'
+                        .format(unicode(e)))
+    except Exception, e:
+        logging.debug('poll_view - ' + unicode(e))
         err = task.traceback
         logging.error(err)
         err = ansi_escape.sub('', err)

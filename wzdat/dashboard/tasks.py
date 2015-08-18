@@ -60,7 +60,8 @@ def run_view_cell(nbpath, formname, kwargs):
     print('init {}'.format(init))
     try:
         run_code(r, init)
-    except Exception:
+    except Exception, e:
+        print("run_view_cell - init fail {}".format(unicode(e)))
         raise Exception(init)
 
     run_view_cell.update_state(state='PROGRESS', meta=1 / total)
@@ -68,6 +69,7 @@ def run_view_cell(nbpath, formname, kwargs):
     rv = []
     cnt = 0
     for i, cell in enumerate(r.iter_cells()):
+        print('cell {}'.format(i))
         try:
             wasview = run_notebook_view_cell(rv, r, cell, i)
             if wasview:
@@ -76,7 +78,7 @@ def run_view_cell(nbpath, formname, kwargs):
                                            total)
         except NoDataFound, e:
             run_view_cell.update_state(state='PROGRESS', meta=1)
-            return [unicode(e)]
+            return [unicode(e).replace('NoDataFound:', '')]
     return rv
 
 

@@ -24,6 +24,10 @@ from IPython.kernel import KernelManager
 from wzdat.util import remove_ansicolor
 
 
+class NoDataFound(Exception):
+    pass
+
+
 class NotebookError(Exception):
     pass
 
@@ -42,7 +46,6 @@ class NotebookRunner(object):
         'application/javascript': 'html',
         'image/svg+xml': 'svg',
     }
-
 
     def __init__(self, nb, pylab=False, mpl_inline=False, working_dir= None):
         self.km = KernelManager()
@@ -98,7 +101,8 @@ class NotebookRunner(object):
             traceback_text = 'Cell raised uncaught exception: \n' + \
                 '\n'.join(reply['content']['traceback'])
             traceback_text = remove_ansicolor(traceback_text)
-            logging.error(traceback_text)
+            if 'NoDataFound' not in traceback_text:
+                logging.error(traceback_text)
         else:
             logging.info('Cell returned')
 
@@ -161,7 +165,11 @@ class NotebookRunner(object):
         cell['outputs'] = outs
 
         if status == 'error':
-            raise NotebookError(traceback_text)
+            logging.debug(u"run_cell error: " + traceback_text)
+            if 'NoDataFound' in traceback_text:
+                raise NoDataFound(traceback_text.split('\n')[-1])
+            else:
+                raise NotebookError(traceback_text)
 
 
     def iter_code_cells(self):

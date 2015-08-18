@@ -28,6 +28,7 @@ LOG_KINDS = ('game', 'auth', 'community')
 PROCESSES = {'game': 3}
 
 CRON_CMD = '/usr/bin/crontab'
+IPYTHON_STARTUP_PATH = "/root/.ipython/profile_default/startup/01-wzdat.py"
 
 
 def unique_tmp_path(prefix, ext='.txt'):
@@ -223,6 +224,19 @@ def get_offline_nbpath():
     print(u'get_offline_nbpath {}'.format(fpath))
     with open(fpath, 'r') as f:
         return f.readline().decode('utf8')
+
+
+def get_wzdat_dir():
+    if 'WZDAT_DIR' in os.environ:
+        return os.environ['WZDAT_DIR']
+    return os.getcwd()
+
+
+def ipython_start_script_path():
+    path = IPYTHON_STARTUP_PATH
+    if os.path.isfile(path):
+        return path
+    return os.path.join(get_wzdat_dir(), 'system/files/ipython_startup.py')
 
 
 try:
