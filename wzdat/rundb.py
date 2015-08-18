@@ -51,7 +51,7 @@ def finish_run(path, err):
     key = u'run:{}'.format(path)
     if r.exists(key):
         _start_dt, total = r.hmget(key, 'start', 'total')
-        if err == 'None':
+        if err is None:
             start_dt = parse_client_sdatetime(_start_dt)
             elapsed = get_client_datetime() - start_dt
             r.hmset(key, {'elapsed': elapsed.total_seconds(), 'cur': total})
