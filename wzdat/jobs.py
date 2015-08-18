@@ -79,7 +79,8 @@ def register_event(**kwargs):
 
 def run_info():
     for ri in iter_run_info():
-        print ri
+        print ri[0]
+        print '   ' + str(ri[1])
 
 
 if __name__ == "__main__":
