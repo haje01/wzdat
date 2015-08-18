@@ -33,7 +33,7 @@ sol_pkg: ws_mysol
 prj: myprj
 runner_db_path: $WZDAT_DIR/tests/dummydata/_var_/runner.db
 notebook_base_dir: $WZDAT_DIR/tests/__notes__
-expose_redis: False
+expose_redis: True
 
 # Common config for Test(ws_mysol)
 tmp_valid_hour: 24
