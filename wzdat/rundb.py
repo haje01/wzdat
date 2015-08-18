@@ -40,6 +40,11 @@ def start_run(path, total):
     r.hmset(u'run:{}'.format(path), info)
 
 
+def iter_run_info():
+    for ri in r.keys('run:*'):
+        yield r.hgetall(ri)
+
+
 def finish_run(path, err):
     logging.debug(u'finish_run {}'.format(path))
     key = u'run:{}'.format(path)

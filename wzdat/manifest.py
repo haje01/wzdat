@@ -88,6 +88,9 @@ class Manifest(Property):
         if atype is None and self._write:
             self._write_checksums()
 
+    def __del__(self):
+        self._write_checksums()
+
     def _chksum_depends(self, depends):
         if 'files' in depends:
             if type(depends.files) is not list:
@@ -120,6 +123,7 @@ class Manifest(Property):
         return need
 
     def _write_checksums(self):
+        logging.debug(u'_write_checksums {}'.format(self._path))
         nb = read(open(self._path.encode('utf-8')), 'json')
         nr = NotebookRunner(nb)
         try:

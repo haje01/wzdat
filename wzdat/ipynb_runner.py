@@ -8,10 +8,8 @@ from Queue import Empty
 
 from markdown import markdown
 
-from wzdat.util import div, remove_ansicolor, get_notebook_manifest_path,\
-    ipython_start_script_path
+from wzdat.util import div, remove_ansicolor, ipython_start_script_path
 from wzdat import rundb
-from wzdat.manifest import Manifest
 from notebook_runner import NoDataFound
 
 
@@ -21,23 +19,6 @@ IGNORE_DIRS = ('.ipynb_checkpoints', '.git')
 
 from IPython.nbformat.current import read, NotebookNode, write
 from wzdat.notebook_runner import NotebookRunner, NotebookError
-
-
-class ManifestNotUsed(Exception):
-    pass
-
-
-CHECK_MANIFEST_USED = """
-from wzdat.manifest import Manifest
-from wzdat.ipynb_runner import ManifestNotUsed
-_ = globals().copy()
-if len([k for k, v in _.iteritems() if isinstance(v, Manifest)]) == 0:
-    raise ManifestNotUsed()
-"""
-
-
-def check_manifest_used(runner):
-    run_code(runner, CHECK_MANIFEST_USED, ManifestNotUsed())
 
 
 def run_code(runner, code, exception=None):
@@ -122,8 +103,6 @@ def _run_init(r, path):
 def update_notebook_by_run(path):
     rundb.reset_run(path)
     logging.debug(u'update_notebook_by_run {}'.format(path))
-    mpath = get_notebook_manifest_path(path)
-    has_manifest = os.path.isfile(mpath)
 
     # init runner
     nb = read(open(path.encode('utf-8')), 'json')
@@ -138,25 +117,16 @@ def update_notebook_by_run(path):
     err = None
     try:
         r.run_notebook(lambda cur: _progress_cell(path, cur))
-        if has_manifest:
-            check_manifest_used(r)
     except NotebookError, e:
         logging.debug("except NotebookError")
         err = unicode(e)
-    except ManifestNotUsed, e:
-        # if manifest not used by user, run it implicitly to save checksum
-        logging.warn(u"Manifest exists for '{}', but manifest object was not "
-                     "instantiated.".format(path))
-        manifest = Manifest(True, mpath)
-        manifest._write_checksums()
-        # this is not an error, so write result
-        write(r.nb, open(path.encode('utf-8'), 'w'), 'json')
     except NoDataFound, e:
         logging.debug(unicode(e))
         write(r.nb, open(path.encode('utf-8'), 'w'), 'json')
     else:
         write(r.nb, open(path.encode('utf-8'), 'w'), 'json')
     finally:
+        run_code(r, 'manifest_ = None')
         rundb.finish_run(path, err)
         return err
 

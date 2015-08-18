@@ -8,6 +8,7 @@ from wzdat.make_config import make_config, invalidate_config
 from wzdat.util import ChangeDir, get_var_dir, get_tmp_dir, get_hdf_dir,\
     get_cache_dir, get_conv_dir, get_client_sdatetime, parse_sdatetime,\
     convert_server_time_to_client, cache_files, find_files_and_save
+from wzdat import rundb
 
 
 @pytest.yield_fixture()
@@ -113,3 +114,8 @@ def test_common_cache(fxlogs, fxdb):
 
     cache_files()
     assert len(os.listdir(d)) > 0
+
+
+def test_common_rundb():
+    ris = [ri for ri in rundb.iter_run_info()]
+    assert len(ris) == 4

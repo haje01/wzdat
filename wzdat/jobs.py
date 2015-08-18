@@ -3,7 +3,7 @@ import logging
 
 import argh
 
-from wzdat.rundb import flush_unhandled_events, unhandled_events
+from wzdat.rundb import flush_unhandled_events, unhandled_events, iter_run_info
 from wzdat.const import FORWARDER_LOG_PREFIX
 from wzdat.make_config import make_config
 from wzdat.ipynb_runner import update_notebook_by_run, NoDataFound
@@ -77,7 +77,12 @@ def register_event(**kwargs):
     print etype, einfo
 
 
+def run_info():
+    for ri in iter_run_info():
+        print ri
+
+
 if __name__ == "__main__":
     argh.dispatch_commands([cache_all, register_cron, run_notebook,
                             gen_dummydata, register_event, check_cache,
-                            update_notebooks])
+                            update_notebooks, run_info])

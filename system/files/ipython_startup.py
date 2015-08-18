@@ -18,5 +18,4 @@ try:
     manifest_ = Manifest()
 except ManifestNotExist:
     manifest_ = None
-
 import os
