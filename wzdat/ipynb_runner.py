@@ -160,7 +160,6 @@ def run_notebook_view_cell(rv, r, cell, cnt):
         if '#!dashboard_view' in code:
             try:
                 r.run_cell(cell)
-                raise NoDataFound('--')
             except NoDataFound:
                 logging.debug("run_cell - NoDataFound")
                 raise
