@@ -25,7 +25,12 @@ from wzdat.util import remove_ansicolor
 
 
 class NoDataFound(Exception):
-    pass
+    def __init__(self, msg):
+        super(NoDataFound, self).__init__()
+        self.msg = msg
+
+    def __unicode__(self):
+        return self.msg
 
 
 class NotebookError(Exception):
@@ -47,7 +52,7 @@ class NotebookRunner(object):
         'image/svg+xml': 'svg',
     }
 
-    def __init__(self, nb, pylab=False, mpl_inline=False, working_dir= None):
+    def __init__(self, nb, pylab=False, mpl_inline=False, working_dir=None):
         self.km = KernelManager()
 
         args = []

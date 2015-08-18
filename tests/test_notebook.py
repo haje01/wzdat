@@ -9,7 +9,7 @@ from wzdat.util import get_notebook_dir, find_hdf_notebook_path,\
     get_data_dir, dataframe_checksum, HDF, iter_dashboard_notebook, \
     iter_scheduled_notebook, OfflineNBPath, touch
 from wzdat.ipynb_runner import update_notebook_by_run
-from wzdat.rundb import check_notebook_error_and_changed
+from wzdat.rundb import check_notebook_error_and_changed, iter_run_info
 
 
 @pytest.yield_fixture
@@ -52,6 +52,8 @@ def test_notebook_run():
     with OfflineNBPath(path):
         update_notebook_by_run(path)
     assert os.stat(path).st_mtime > before
+    runnbs = [ri[0] for ri in iter_run_info()]
+    assert path in runnbs
 
 
 def test_notebook_error():

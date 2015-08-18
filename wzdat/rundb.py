@@ -132,4 +132,5 @@ def unhandled_events():
 
 
 def flush_unhandled_events():
+    logging.debug('flush_unhandled_events')
     r.delete('unhandled')
