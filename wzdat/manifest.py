@@ -80,17 +80,6 @@ class Manifest(Property):
             else:
                 yield hdf
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, atype, value, traceback):
-        logging.debug(u"__exit__ for {}".format(self._path))
-        if atype is None and self._write:
-            self._write_checksums()
-
-    def __del__(self):
-        self._write_checksums()
-
     def _chksum_depends(self, depends):
         if 'files' in depends:
             if type(depends.files) is not list:

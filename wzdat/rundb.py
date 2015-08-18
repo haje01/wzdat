@@ -42,7 +42,8 @@ def start_run(path, total):
 
 def iter_run_info():
     for ri in r.keys('run:*'):
-        yield r.hgetall(ri)
+        nbpath = ri.split(':')[1]
+        yield nbpath, r.hgetall(ri)
 
 
 def finish_run(path, err):

@@ -126,7 +126,8 @@ def update_notebook_by_run(path):
     else:
         write(r.nb, open(path.encode('utf-8'), 'w'), 'json')
     finally:
-        run_code(r, 'manifest_ = None')
+        run_code(r, "if 'manifest_' in globals() and manifest_ is not None: "
+                 "manifest_._write_checksums()")
         rundb.finish_run(path, err)
         return err
 

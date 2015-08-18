@@ -57,19 +57,20 @@ def test_notebook_run():
 def test_notebook_error():
     path = os.path.join(get_notebook_dir(), 'test-notebook-error.ipynb')
     assert os.path.isfile(path)
-    try:
-        update_notebook_by_run(path)
-    except ValueError:
-        pass
-    assert check_notebook_error_and_changed(path) == (True, False)
-    touch(path)
-    assert check_notebook_error_and_changed(path) == (True, True)
+    with OfflineNBPath(path):
+        try:
+            update_notebook_by_run(path)
+        except ValueError:
+            pass
+        assert check_notebook_error_and_changed(path) == (True, False)
+        touch(path)
+        assert check_notebook_error_and_changed(path) == (True, True)
 
 
 def test_notebook_util():
     nbdir = get_notebook_dir()
     nbs = [nb for nb in iter_notebooks(nbdir)]
-    assert len(nbs) == 10
+    assert len(nbs) == 11
     nbms = [(nb, mi) for nb, mi in iter_notebook_manifest_input(nbdir)]
     assert len(nbms) == 9
     path = os.path.join(nbdir, 'test-notebook3.ipynb')
