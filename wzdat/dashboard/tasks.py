@@ -9,7 +9,7 @@ from celery import Celery
 from IPython.nbformat.current import read
 
 from wzdat.ipynb_runner import run_notebook_view_cell, get_view_cell_cnt,\
-    run_code, update_notebook_by_run, rerun_notebook_cell
+    run_code, update_notebook_by_run, rerun_notebook_cell, NoDataFound
 from wzdat.make_config import make_config
 from wzdat.notebook_runner import NotebookRunner
 from wzdat.const import TMP_PREFIX
@@ -33,7 +33,11 @@ def rerun_notebook(nbpath):
         rv = []
         for i, cell in enumerate(r.iter_cells()):
             print(u'run cell {}'.format(i))
-            rerun_notebook_cell(rv, r, cell, i)
+            try:
+                rerun_notebook_cell(rv, r, cell, i)
+            except NoDataFound, e:
+                logging.debug('NoDataFound')
+                return [unicode(e)]
     rerun_notebook.update_state(state='PROGRESS', meta=1)
     print(u'rerun_notebook {} done. returning results..'.format(nbpath))
     return rv
@@ -64,11 +68,15 @@ def run_view_cell(nbpath, formname, kwargs):
     rv = []
     cnt = 0
     for i, cell in enumerate(r.iter_cells()):
-        wasview = run_notebook_view_cell(rv, r, cell, i)
-        if wasview:
-            cnt += 1
-            run_view_cell.update_state(state='PROGRESS',
-                                       meta=(cnt + 1) / total)
+        try:
+            wasview = run_notebook_view_cell(rv, r, cell, i)
+            if wasview:
+                cnt += 1
+                run_view_cell.update_state(state='PROGRESS', meta=(cnt + 1) /
+                                           total)
+        except NoDataFound, e:
+            run_view_cell.update_state(state='PROGRESS', meta=1)
+            return [unicode(e)]
     return rv
 
 

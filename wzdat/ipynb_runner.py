@@ -27,6 +27,11 @@ IPYTHON_STARTUP_PATH = "/root/.ipython/profile_default/startup/01-wzdat.py"
 class ManifestNotUsed(Exception):
     pass
 
+
+class NoDataFound(Exception):
+    pass
+
+
 CHECK_MANIFEST_USED = """
 from wzdat.manifest import Manifest
 from wzdat.ipynb_runner import ManifestNotUsed
@@ -151,6 +156,9 @@ def update_notebook_by_run(path):
         manifest._write_checksums()
         # this is not an error, so write result
         write(r.nb, open(path.encode('utf-8'), 'w'), 'json')
+    except NoDataFound, e:
+        logging.debug(u"NoDataFound: " + unicode(e))
+        write(r.nb, open(path.encode('utf-8'), 'w'), 'json')
     else:
         write(r.nb, open(path.encode('utf-8'), 'w'), 'json')
     finally:
@@ -161,11 +169,16 @@ def update_notebook_by_run(path):
 def rerun_notebook_cell(rv, r, cell, cnt):
     _type = cell['cell_type']
     if _type == 'code':
-        r.run_cell(cell)
-        code = cell['input']
-        if '#!dashboard_view' in code:
-            outs = r.nb['worksheets'][0]['cells'][cnt]['outputs']
-            rv += outs
+        try:
+            r.run_cell(cell)
+        except NoDataFound:
+            logging.debug('rerun_notebook_cell')
+            raise
+        finally:
+            code = cell['input']
+            if '#!dashboard_view' in code:
+                outs = r.nb['worksheets'][0]['cells'][cnt]['outputs']
+                rv += outs
     elif _type == 'markdown':
         src = cell['source']
         if '<!--dashboard_view-->' in src:
@@ -177,10 +190,15 @@ def run_notebook_view_cell(rv, r, cell, cnt):
     if _type == 'code':
         code = cell['input']
         if '#!dashboard_view' in code:
-            r.run_cell(cell)
-            outs = r.nb['worksheets'][0]['cells'][cnt]['outputs']
-            rv += outs
-            return True
+            try:
+                r.run_cell(cell)
+            except NoDataFound:
+                logging.debug("run_cell - NoDataFound")
+                raise
+            finally:
+                outs = r.nb['worksheets'][0]['cells'][cnt]['outputs']
+                rv += outs
+                return True
     elif _type == 'markdown':
         src = cell['source']
         if '<!--dashboard_view-->' in src:

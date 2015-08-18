@@ -6,7 +6,7 @@ import logging
 from wzdat.rundb import check_notebook_error_and_changed, reset_run,\
     get_run_info
 from wzdat.util import iter_notebook_manifest, OfflineNBPath
-from wzdat.ipynb_runner import update_notebook_by_run
+from wzdat.ipynb_runner import update_notebook_by_run, NoDataFound
 from wzdat.manifest import Manifest
 
 
@@ -123,7 +123,10 @@ class DependencyTree(object):
             # run notebook when its depends changed or had fixed after error
             if notebook.manifest._need_run:  # or (error and changed):
                 with OfflineNBPath(path):
-                    update_notebook_by_run(path)
+                    try:
+                        update_notebook_by_run(path)
+                    except NoDataFound, e:
+                        logging.debug(unicode(e))
                     runs.append(notebook)
             elif error and not changed:
                 logging.debug(u"_run_resolved - skip unfixed {}".format(path))
