@@ -38,8 +38,6 @@ def _reset_data():
 @pytest.yield_fixture()
 def fxdocker():
     print 'fxdocker'
-
-    import pdb; pdb.set_trace()  # XXX BREAKPOINT
     cid = None
     cons = check_output(['docker', 'ps']).split('\n')
     for con in cons[1:]:
@@ -91,7 +89,6 @@ def test_system_file_event(fxdocker):
             time.sleep(3)  # wait for all events registered
 
     sync(('kr', 'us', 'jp'))
-    import pdb; pdb.set_trace()  # XXX BREAKPOINT
     assert 567 == len(unhandled_events())  # logs, exlogs, dumps
 
     # modify & sync
