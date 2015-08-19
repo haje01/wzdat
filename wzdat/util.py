@@ -974,7 +974,6 @@ def iter_notebooks(_nbdir=None):
     nbdir = get_notebook_dir() if _nbdir is None else _nbdir
     logging.debug(u'iter_notebooks {}'.format(nbdir))
     for root, adir, files in os.walk(nbdir.encode('utf8')):
-        logging.debug(unicode(files))
         for nb in fnmatch.filter(files, nbptrn):
             if '-checkpoint' in nb:
                 continue
@@ -1029,7 +1028,6 @@ def find_hdf_notebook_path(_owner, _sname):
     nbdir = get_notebook_dir()
     logging.debug(u'find_hdf_notebook_path {}'.format(nbdir))
     for nbpath, minp in iter_notebook_manifest_input(nbdir):
-        logging.debug(nbpath)
         if 'output' in minp and 'hdf' in minp['output']:
             owner, sname = minp['output']['hdf']
             if owner == _owner and sname == _sname:
