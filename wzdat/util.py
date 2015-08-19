@@ -1000,8 +1000,10 @@ def iter_notebook_manifest(nbdir, check_depends, skip_nbs=None):
 
 def iter_notebook_manifest_input(nbdir):
     import json
+    logging.debug('iter_notebook_manifest_input')
     for npath in iter_notebooks(nbdir):
         mpath = get_notebook_manifest_path(npath)
+        logging.debug(u'iter_notebook_manifest_input {} {}'.format(npath, mpath))
         if not os.path.isfile(mpath):
             continue
         with open(mpath, 'r') as f:
