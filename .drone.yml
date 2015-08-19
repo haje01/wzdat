@@ -13,6 +13,8 @@ script:
     - pip install pytest pytest-cov
     - python -m wzdat.jobs gen-dummydata
     - tar xzvf tests/test-notebooks.tar.gz
+    - pwd
+    - ls -alh
     - cd /solution && python -m wzdat.jobs update-notebooks
     - py.test tests/ --cov wzdat --cov-report xml
     # - coveralls
