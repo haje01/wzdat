@@ -24,7 +24,9 @@ def fxsoldir():
 def fxhdftest2():
     with HDF('haje01') as hdf:
         if 'test' not in hdf.store:
+            # check hdf notebook has run
             path = find_hdf_notebook_path('haje01', 'test')
+            assert path is not None
             with OfflineNBPath(path):
                 update_notebook_by_run(path)
         test = hdf.store['test']

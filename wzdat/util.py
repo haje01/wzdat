@@ -1024,7 +1024,9 @@ def iter_dashboard_notebook(nbdir):
 def find_hdf_notebook_path(_owner, _sname):
     '''return path of hdf source notebook by examining manifest.'''
     nbdir = get_notebook_dir()
+    logging.debug(u'find_hdf_notebook_path {}'.format(nbdir))
     for nbpath, minp in iter_notebook_manifest_input(nbdir):
+        logging.debug(nbpath)
         if 'output' in minp and 'hdf' in minp['output']:
             owner, sname = minp['output']['hdf']
             if owner == _owner and sname == _sname:
