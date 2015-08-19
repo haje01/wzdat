@@ -228,19 +228,6 @@ def test_notebook_resolve(fxsoldir, fxnewfile):
     assert len(runs) == 4
 
 
-def test_notebook_manifest_used(fxsoldir):
-    "Raise error if a manifest file exists, but not used within code"
-    nbdir = get_notebook_dir()
-    path = os.path.join(nbdir, 'test-notebook10.ipynb')
-    assert os.path.isfile(path)
-    with OfflineNBPath(path):
-        mpath = get_notebook_manifest_path(path)
-        assert os.path.isfile(mpath)
-        before = os.stat(mpath).st_mtime
-        update_notebook_by_run(path)
-        assert os.stat(mpath).st_mtime > before
-
-
 def test_notebook_nodata():
     nbdir = get_notebook_dir()
     path = os.path.join(nbdir, 'test-notebook-nodata.ipynb')

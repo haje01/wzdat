@@ -26,3 +26,4 @@ tests/tmp/
 remote_hosts
 Dockerfile
 *.rdb
+tests/__notes__
