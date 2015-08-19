@@ -12,7 +12,10 @@ script:
     - pip install -e .
     - pip install pytest pytest-cov
     - python -m wzdat.jobs gen-dummydata
+    - pwd
     - cd tests && tar xzvf test-notebooks.tar.gz
+    - pwd
     - cd tests && python -m wzdat.jobs update-notebooks
+    - pwd
     - py.test tests/ --cov wzdat --cov-report xml
     # - coveralls
