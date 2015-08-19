@@ -139,7 +139,7 @@ def rerun_notebook_cell(rv, r, cell, cnt):
         try:
             r.run_cell(cell)
         except NoDataFound:
-            logging.debug('rerun_notebook_cell')
+            logging.debug('rerun_notebook_cell NoDataFound')
             raise
         finally:
             code = cell['input']
