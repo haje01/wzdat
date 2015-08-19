@@ -94,7 +94,6 @@ def _select_files_dates(m, _start_dt, _end_dt):
     start_dt = end_dt = None
     grab_end = False
     for date in m.dates:
-        print '=='
         if grab_end:
             end_dt = date
             break
@@ -123,8 +122,6 @@ def _select_files_condition(data, ftype):
     _kinds = qs['kinds[]'] if 'kinds[]' in qs else None
 
     start_dt, end_dt = _select_files_dates(m, _start_dt, _end_dt)
-    print '----------'
-    print start_dt, end_dt
     nodes = []
     if _nodes is not None:
         for node in m.nodes:

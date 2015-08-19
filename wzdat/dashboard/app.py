@@ -329,8 +329,11 @@ def _collect_gnbs(gnbs, gk, groups):
 
 def _get_run_time(ri):
     if ri[0] is not None:
-        executed = get_client_datetime() - parse_client_sdatetime(ri[0])
-        executed = timedelta(seconds=int(executed.total_seconds()))
+        try:
+            executed = get_client_datetime() - parse_client_sdatetime(ri[0])
+            executed = timedelta(seconds=int(executed.total_seconds()))
+        except ValueError:
+            executed = None
     else:
         executed = None
     if ri[1] == 'None':
