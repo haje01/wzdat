@@ -27,11 +27,13 @@ from wzdat.util import remove_ansicolor
 class NoDataFound(Exception):
     def __init__(self, msg):
         super(NoDataFound, self).__init__()
-        print(msg.encode('utf8'))  # for notebook output
         self.msg = msg
 
     def __unicode__(self):
         return self.msg
+
+    def __str__(self):
+        return self.msg.encode('utf8')
 
 
 class NotebookError(Exception):

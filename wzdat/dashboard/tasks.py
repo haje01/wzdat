@@ -8,8 +8,9 @@ import logging
 from celery import Celery
 from IPython.nbformat.current import read
 
+from wzdat.notebook_runner import NoDataFound
 from wzdat.ipynb_runner import run_notebook_view_cell, get_view_cell_cnt,\
-    run_code, update_notebook_by_run, rerun_notebook_cell, NoDataFound
+    run_code, update_notebook_by_run, rerun_notebook_cell
 from wzdat.make_config import make_config
 from wzdat.notebook_runner import NotebookRunner
 from wzdat.const import TMP_PREFIX
@@ -78,7 +79,7 @@ def run_view_cell(nbpath, formname, kwargs):
                                            total)
         except NoDataFound, e:
             run_view_cell.update_state(state='PROGRESS', meta=1)
-            return [unicode(e).replace('NoDataFound:', '')]
+            return [unicode(e)]
     return rv
 
 
