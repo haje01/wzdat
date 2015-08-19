@@ -972,6 +972,7 @@ def get_notebook_manifest_path(nbpath):
 def iter_notebooks(_nbdir=None):
     nbptrn = '*.ipynb'
     nbdir = get_notebook_dir() if _nbdir is None else _nbdir
+    logging.debug(u'iter_notebooks {}'.format(nbdir))
     for root, adir, files in os.walk(nbdir.encode('utf8')):
         logging.debug(unicode(files))
         for nb in fnmatch.filter(files, nbptrn):
@@ -1003,7 +1004,6 @@ def iter_notebook_manifest_input(nbdir):
     logging.debug('iter_notebook_manifest_input')
     for npath in iter_notebooks(nbdir):
         mpath = get_notebook_manifest_path(npath)
-        logging.debug(u'iter_notebook_manifest_input {} {}'.format(npath, mpath))
         if not os.path.isfile(mpath):
             continue
         with open(mpath, 'r') as f:
