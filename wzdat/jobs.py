@@ -32,9 +32,8 @@ def update_notebooks():
     from wzdat.nbdependresolv import DependencyTree
     skip_nbs = [os.path.join(nbdir, 'test-notebook6.ipynb')]
     dt = DependencyTree(nbdir, skip_nbs)
-    ret = dt.resolve(True)
+    dt.resolve(True)
     logging.debug('update_notebooks done')
-    return ret
 
 
 def cache_all():
