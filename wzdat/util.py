@@ -969,10 +969,11 @@ def get_notebook_manifest_path(nbpath):
     return nbpath.replace(u'.ipynb', u'.manifest.ipynb')
 
 
-def iter_notebooks(nbdir):
+def iter_notebooks(_nbdir=None):
     nbptrn = '*.ipynb'
-    nbdir = get_notebook_dir()
+    nbdir = get_notebook_dir() if _nbdir is None else _nbdir
     for root, adir, files in os.walk(nbdir.encode('utf8')):
+        logging.debug(unicode(files))
         for nb in fnmatch.filter(files, nbptrn):
             if '-checkpoint' in nb:
                 continue
