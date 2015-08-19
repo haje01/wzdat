@@ -5,7 +5,7 @@ import logging
 
 from wzdat.rundb import check_notebook_error_and_changed, reset_run,\
     get_run_info
-from wzdat.util import iter_notebook_manifest, OfflineNBPath
+from wzdat.util import iter_notebook_manifest, OfflineNBPath, get_notebook_dir
 from wzdat.ipynb_runner import update_notebook_by_run, NoDataFound
 from wzdat.manifest import Manifest
 
@@ -153,3 +153,13 @@ class Notebook(object):
     @property
     def fname(self):
         return os.path.basename(self.path)
+
+
+def update_all_notebooks(skip_nbs=None):
+    logging.debug('update_all_notebooks start')
+    nbdir = get_notebook_dir()
+    from wzdat.nbdependresolv import DependencyTree
+    dt = DependencyTree(nbdir, skip_nbs)
+    rv = dt.resolve(True)
+    logging.debug('update_all_notebooks done')
+    return rv

@@ -9,6 +9,7 @@ from wzdat.make_config import make_config
 from wzdat.ipynb_runner import update_notebook_by_run, NoDataFound
 from wzdat.util import gen_dummydata as _gen_dummydata, cache_files,\
     cache_finder, get_notebook_dir, OfflineNBPath
+from wzdat.nbdependresolv import update_all_notebooks
 
 cfg = make_config()
 
@@ -29,10 +30,8 @@ def update_notebooks():
     '''Check notebook's dependency and run for dashboard if needed.'''
     logging.debug('update_notebooks start')
     nbdir = get_notebook_dir()
-    from wzdat.nbdependresolv import DependencyTree
     skip_nbs = [os.path.join(nbdir, 'test-notebook6.ipynb')]
-    dt = DependencyTree(nbdir, skip_nbs)
-    dt.resolve(True)
+    update_all_notebooks(skip_nbs)
     logging.debug('update_notebooks done')
 
 

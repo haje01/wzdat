@@ -10,6 +10,7 @@ from wzdat.util import get_notebook_dir, find_hdf_notebook_path,\
     iter_scheduled_notebook, OfflineNBPath, touch
 from wzdat.ipynb_runner import update_notebook_by_run
 from wzdat.rundb import check_notebook_error_and_changed, iter_run_info
+from wzdat.nbdependresolv import update_all_notebooks
 
 
 @pytest.yield_fixture
@@ -22,6 +23,10 @@ def fxsoldir():
 @pytest.yield_fixture
 def fxhdftest2():
     with HDF('haje01') as hdf:
+        if 'test' not in hdf.store:
+            path = find_hdf_notebook_path('haje01', 'test')
+            with OfflineNBPath(path):
+                update_notebook_by_run(path)
         test = hdf.store['test']
         if 'test2' not in hdf.store:
             hdf.store['test2'] = test
@@ -214,17 +219,16 @@ def test_notebook_cron(fxsoldir):
 
 
 def test_notebook_resolve(fxsoldir, fxnewfile):
-    from wzdat.jobs import update_notebooks
-    _, runs = update_notebooks()
+    _, runs = update_all_notebooks()
 
-    _, runs = update_notebooks()
+    _, runs = update_all_notebooks()
     assert len(runs) == 0
 
     # add new file
     with open(fxnewfile, 'w') as f:
         f.write('2014-03-05 23:30 [ERROR] - Async\n')
 
-    _, runs = update_notebooks()
+    _, runs = update_all_notebooks()
     assert len(runs) == 4
 
 
