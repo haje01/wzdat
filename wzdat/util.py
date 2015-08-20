@@ -1093,4 +1093,7 @@ def process_memory_used():
 def system_memory_used():
     """Return used system memory in bytes."""
     pm = psutil.virtual_memory()
-    return pm.used
+    if 'darwin' in sys.platform:
+        return pm.used
+    else:
+        return (pm.total - pm.buffers - pm.cached - pm.free)
