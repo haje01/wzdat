@@ -21,7 +21,7 @@ import os
 from IPython.nbformat.current import NotebookNode
 from IPython.kernel import KernelManager
 
-from wzdat.util import remove_ansicolor, process_memory_used, sizeof_fmt
+from wzdat.util import remove_ansicolor, system_memory_used, sizeof_fmt
 
 
 class NoDataFound(Exception):
@@ -105,7 +105,7 @@ class NotebookRunner(object):
         self.shell.execute(cell.input)
         reply = self.shell.get_msg()
         status = reply['content']['status']
-        max_mem = process_memory_used()
+        max_mem = system_memory_used()
         logging.info('  memory used: {}'.format(sizeof_fmt(max_mem)))
         if status == 'error':
             traceback_text = 'Cell raised uncaught exception: \n' + \
@@ -216,14 +216,14 @@ class NotebookRunner(object):
         subsequent cells are run (by default, the notebook execution stops).
         '''
         cur = 0
-        max_memory = process_memory_used()
+        max_memory = system_memory_used()
         for cell in self.iter_code_cells():
             cur += 1
             try:
                 if progress_cb is not None:
                     progress_cb(cur)
                 self.run_cell(cell)
-                mem = process_memory_used()
+                mem = system_memory_used()
                 if mem > max_memory:
                     mem = max_memory
             except NotebookError:

@@ -115,6 +115,7 @@ def update_notebook_by_run(path):
     cellcnt = r.cellcnt
     rundb.start_run(path, cellcnt)
     err = None
+    max_mem = 0
     try:
         max_mem = r.run_notebook(lambda cur: _progress_cell(path, cur))
     except NotebookError, e:
