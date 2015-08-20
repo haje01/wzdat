@@ -116,12 +116,14 @@ def test_notebook_manifest1(fxsoldir):
         chksums = ws['cells'][1]['input']
         assert 'WARNING' in chksums[0]
         assert 'last_run' in chksums[2]
+        # check max mem
+        assert 'max_memory' in chksums[3]
         # check depends checksum
-        assert 'depends' in chksums[3]
-        assert '8875249185536240278' in chksums[4]
+        assert 'depends' in chksums[4]
+        assert '8875249185536240278' in chksums[5]
         # check output checksum
-        assert 'output' in chksums[6]
-        assert '5917511075693791499' in chksums[7]
+        assert 'output' in chksums[7]
+        assert '5917511075693791499' in chksums[8]
 
         manifest = Manifest(False, False, path)
         assert type(manifest.last_run) is datetime

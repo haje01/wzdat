@@ -12,7 +12,8 @@ import json
 from IPython.nbformat.current import write, read
 
 from wzdat.util import Property, get_notebook_path, get_notebook_dir,\
-    dataframe_checksum, HDF, ScbProperty, convert_server_time_to_client
+    dataframe_checksum, HDF, ScbProperty, convert_server_time_to_client,\
+    sizeof_fmt
 from wzdat.notebook_runner import NotebookRunner, NotebookError
 
 
@@ -111,8 +112,8 @@ class Manifest(Property):
                              self._depend_hdf_changed))
         return need
 
-    def _write_checksums(self):
-        logging.debug(u'_write_checksums {}'.format(self._path))
+    def _write_result(self, max_mem):
+        logging.debug(u'_write_result {}'.format(self._path))
         nb = read(open(self._path.encode('utf-8')), 'json')
         nr = NotebookRunner(nb)
         try:
@@ -132,9 +133,10 @@ class Manifest(Property):
         last_run = convert_server_time_to_client(last_run)
         last_run = last_run.strftime("%Y-%m-%d %H:%M:%S")
         body = ["    'last_run': '{}'".format(last_run)]
+        body.append("    'max_memory': '{}'".format(sizeof_fmt(max_mem)))
         if self._dep_files_chksum is not None or\
                 self._dep_hdf_chksum is not None:
-            self._write_checksums_depends(body)
+            self._write_result_depends(body)
 
         if self._out_hdf_chksum is not None:  # could be multiple outputs
             coutput = []
@@ -150,14 +152,14 @@ class Manifest(Property):
 
         if len(body) > 0:
             newcell = copy.deepcopy(nr.nb.worksheets[0].cells[0])
-            cs_body = "# WARNING: Generated Checksums. Do Not Edit.\n{{\n{}\n}}".\
+            cs_body = "# WARNING: Generated results. Do Not Edit.\n{{\n{}\n}}".\
                 format(',\n'.join(body))
             newcell['input'] = cs_body
             nr.nb.worksheets[0].cells.append(newcell)
 
         write(nr.nb, open(self._path.encode('utf-8'), 'w'), 'json')
 
-    def _write_checksums_depends(self, body):
+    def _write_result_depends(self, body):
         cdepends = []
         if self._dep_files_chksum is not None:
             cdepends.append("        'files': {}".

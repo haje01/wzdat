@@ -116,7 +116,7 @@ def update_notebook_by_run(path):
     rundb.start_run(path, cellcnt)
     err = None
     try:
-        r.run_notebook(lambda cur: _progress_cell(path, cur))
+        max_mem = r.run_notebook(lambda cur: _progress_cell(path, cur))
     except NotebookError, e:
         logging.debug("except NotebookError")
         err = unicode(e)
@@ -127,7 +127,7 @@ def update_notebook_by_run(path):
         write(r.nb, open(path.encode('utf-8'), 'w'), 'json')
     finally:
         run_code(r, "if 'manifest_' in globals() and manifest_ is not None: "
-                 "manifest_._write_checksums()")
+                 "manifest_._write_result({})".format(max_mem))
         rundb.finish_run(path, err)
         return err
 

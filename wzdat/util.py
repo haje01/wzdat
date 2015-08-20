@@ -19,6 +19,7 @@ from collections import defaultdict
 from tempfile import gettempdir
 
 from crontab import CronTab
+import psutil
 
 from wzdat.make_config import make_config
 from wzdat.const import NAMED_TMP_PREFIX, HDF_FILE_PREFIX, HDF_FILE_EXT
@@ -1081,3 +1082,15 @@ def _register_crons(paths, scheds):
         job = cron.new(cmd)
         job.setall(sched)
     cron.write()
+
+
+def process_memory_used():
+    """Return used memory by current process in bytes."""
+    p = psutil.Process(os.getpid())
+    return p.memory_info()[0]
+
+
+def system_memory_used():
+    """Return used system memory in bytes."""
+    pm = psutil.virtual_memory()
+    return pm.used

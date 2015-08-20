@@ -110,7 +110,6 @@ def rm_all(_remote=False):
 
 def _build_base(_nocache, _remote):
     _cmd('ln -fs files/base.docker Dockerfile', _remote)
-    _cmd('cp ../requirements.txt .', _remote)
     _cmd(docker_build_cmd(_nocache) + '-t haje01/wzdat-base .', _remote)
     _cmd('rm -f Dockerfile', _remote)
 

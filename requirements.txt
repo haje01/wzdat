@@ -18,3 +18,4 @@ tornado==4.0.2
 requests==2.5.1
 redis==2.10.3
 hiredis==0.2.0
+psutil==3.1.1
