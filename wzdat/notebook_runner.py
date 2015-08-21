@@ -62,17 +62,19 @@ class NotebookRunner(object):
 
         if pylab:
             args.append('--pylab=inline')
-            logging.warn('--pylab is deprecated and will be removed in a future version')
+            logging.warn('--pylab is deprecated and will be removed in a '
+                         'future version')
         elif mpl_inline:
             args.append('--matplotlib=inline')
-            logging.warn('--matplotlib is deprecated and will be removed in a future version')
+            logging.warn('--matplotlib is deprecated and will be removed in a '
+                         'future version')
 
         cwd = os.getcwd()
 
         if working_dir:
             os.chdir(working_dir)
 
-        self.km.start_kernel(extra_arguments = args)
+        self.km.start_kernel(extra_arguments=args)
 
         os.chdir(cwd)
 
@@ -95,7 +97,6 @@ class NotebookRunner(object):
     def __del__(self):
         self.kc.stop_channels()
         self.km.shutdown_kernel(now=True)
-
 
     def run_cell(self, cell):
         '''
@@ -124,16 +125,17 @@ class NotebookRunner(object):
                     if msg['content']['execution_state'] == 'idle':
                         break
             except Empty:
-                # execution state should return to idle before the queue becomes empty,
+                # execution state should return to idle before the queue
+                # becomes empty,
                 # if it doesn't, something bad has happened
                 raise
 
             content = msg['content']
             msg_type = msg['msg_type']
 
-            # IPython 3.0.0-dev writes pyerr/pyout in the notebook format but uses
-            # error/execute_result in the message spec. This does the translation
-            # needed for tests to pass with IPython 3.0.0-dev
+            # IPython 3.0.0-dev writes pyerr/pyout in the notebook format but
+            # uses error/execute_result in the message spec. This does the
+            # translation needed for tests to pass with IPython 3.0.0-dev
             notebook3_format_conversions = {
                 'error': 'pyerr',
                 'execute_result': 'pyout'
@@ -151,26 +153,26 @@ class NotebookRunner(object):
             elif msg_type == 'stream':
                 out.stream = content['name']
                 out.text = content['data']
-                #print(out.text, end='')
+                # print(out.text, end='')
             elif msg_type in ('display_data', 'pyout'):
                 for mime, data in content['data'].items():
                     try:
                         attr = self.MIME_MAP[mime]
                     except KeyError:
-                        raise NotImplementedError('unhandled mime type: %s' % mime)
+                        raise NotImplementedError('unhandled mime type: %s' %
+                                                  mime)
 
                     setattr(out, attr, data)
-                #print(data, end='')
             elif msg_type == 'pyerr':
                 out.ename = content['ename']
                 out.evalue = content['evalue']
                 out.traceback = content['traceback']
-                #logging.error('\n'.join(content['traceback']))
             elif msg_type == 'clear_output':
                 outs = list()
                 continue
             else:
-                raise NotImplementedError('unhandled iopub message: %s' % msg_type)
+                raise NotImplementedError('unhandled iopub message: %s' %
+                                          msg_type)
             outs.append(out)
         cell['outputs'] = outs
 
@@ -180,7 +182,6 @@ class NotebookRunner(object):
                 raise NoDataFound(traceback_text.split('\n')[-1])
             else:
                 raise NotebookError(traceback_text)
-
 
     def iter_code_cells(self):
         '''
@@ -206,8 +207,8 @@ class NotebookRunner(object):
             cnt += len(ws.cells)
         return cnt
 
-
-    def run_notebook(self, progress_cb = None, skip_exceptions=False):
+    def run_notebook(self, memory_used=None, progress_cb=None,
+                     skip_exceptions=False):
         '''
         Run all the cells of a notebook in order and update
         the outputs in-place.
@@ -216,17 +217,16 @@ class NotebookRunner(object):
         subsequent cells are run (by default, the notebook execution stops).
         '''
         cur = 0
-        max_memory = system_memory_used()
+        if memory_used is not None:
+            memory_used.append(system_memory_used())
         for cell in self.iter_code_cells():
             cur += 1
             try:
                 if progress_cb is not None:
                     progress_cb(cur)
                 self.run_cell(cell)
-                mem = system_memory_used()
-                if mem > max_memory:
-                    mem = max_memory
+                if memory_used is not None:
+                    memory_used.append(system_memory_used())
             except NotebookError:
                 if not skip_exceptions:
                     raise
-        return max_memory
