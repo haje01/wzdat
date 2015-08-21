@@ -127,6 +127,7 @@ def update_notebook_by_run(path):
     else:
         write(r.nb, open(path.encode('utf-8'), 'w'), 'json')
     finally:
+        logging.info("update_notebook_by_run finally")
         max_mem = max(memory_used)
         run_code(r, "if 'manifest_' in globals() and manifest_ is not None: "
                  "manifest_._write_result({})".format(max_mem))

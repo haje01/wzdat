@@ -28,16 +28,20 @@ def rerun_notebook(nbpath):
     print(u'rerun_notebook {}'.format(nbpath))
     rerun_notebook.update_state(state='PROGRESS', meta=0)
     with OfflineNBPath(nbpath):
-        update_notebook_by_run(nbpath)
-        nb = read(open(nbpath), 'json')
-        r = NotebookRunner(nb, pylab=True)
-        rv = []
-        for i, cell in enumerate(r.iter_cells()):
-            try:
-                rerun_notebook_cell(rv, r, cell, i)
-            except NoDataFound, e:
-                logging.debug('NoDataFound')
-                return [unicode(e)]
+        try:
+            update_notebook_by_run(nbpath)
+        except NoDataFound, e:
+            logging.debug('NoDataFound')
+            return [unicode(e)]
+        #nb = read(open(nbpath), 'json')
+        #r = NotebookRunner(nb, pylab=True)
+        #rv = []
+        #for i, cell in enumerate(r.iter_cells()):
+            #try:
+                #rerun_notebook_cell(rv, r, cell, i)
+            #except NoDataFound, e:
+                #logging.debug('NoDataFound')
+                #return [unicode(e)]
     rerun_notebook.update_state(state='PROGRESS', meta=1)
     print(u'rerun_notebook {} done. returning results..'.format(nbpath))
     return rv
