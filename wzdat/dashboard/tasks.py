@@ -33,7 +33,6 @@ def rerun_notebook(nbpath):
         r = NotebookRunner(nb, pylab=True)
         rv = []
         for i, cell in enumerate(r.iter_cells()):
-            print(u'run cell {}'.format(i))
             try:
                 rerun_notebook_cell(rv, r, cell, i)
             except NoDataFound, e:

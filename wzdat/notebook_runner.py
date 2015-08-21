@@ -98,11 +98,11 @@ class NotebookRunner(object):
         self.kc.stop_channels()
         self.km.shutdown_kernel(now=True)
 
-    def run_cell(self, cell):
+    def run_cell(self, cell, cidx):
         '''
         Run a notebook cell and update the output of that cell in-place.
         '''
-        # logging.debug('Running cell:\n%s\n', cell.input)
+        logging.debug('  running cell {}'.format(cidx))
         self.shell.execute(cell.input)
         reply = self.shell.get_msg()
         status = reply['content']['status']
@@ -115,7 +115,7 @@ class NotebookRunner(object):
             if 'NoDataFound' not in traceback_text:
                 logging.error(traceback_text)
         else:
-            logging.info('Cell returned')
+            logging.info('run_cell ok')
 
         outs = list()
         while True:
@@ -128,6 +128,7 @@ class NotebookRunner(object):
                 # execution state should return to idle before the queue
                 # becomes empty,
                 # if it doesn't, something bad has happened
+                logging.debug("empty exception")
                 raise
 
             content = msg['content']
@@ -159,6 +160,7 @@ class NotebookRunner(object):
                     try:
                         attr = self.MIME_MAP[mime]
                     except KeyError:
+                        logging.debug("unhandled mime")
                         raise NotImplementedError('unhandled mime type: %s' %
                                                   mime)
 
@@ -171,11 +173,13 @@ class NotebookRunner(object):
                 outs = list()
                 continue
             else:
+                logging.debug("unhandled iopub")
                 raise NotImplementedError('unhandled iopub message: %s' %
                                           msg_type)
             outs.append(out)
         cell['outputs'] = outs
 
+        logging.debug("status: {}".format(status))
         if status == 'error':
             logging.debug(u"run_cell error: " + traceback_text)
             if 'NoDataFound' in traceback_text:
@@ -224,7 +228,7 @@ class NotebookRunner(object):
             try:
                 if progress_cb is not None:
                     progress_cb(cur)
-                self.run_cell(cell)
+                self.run_cell(cell, cur)
                 if memory_used is not None:
                     memory_used.append(system_memory_used())
             except NotebookError:

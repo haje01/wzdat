@@ -31,7 +31,7 @@ def run_code(runner, code, exception=None):
         traceback_text = remove_ansicolor(traceback_text)
         logging.info(traceback_text)
     else:
-        logging.info('Code returned')
+        logging.info('run_code Ok')
 
     outs = list()
     while True:
@@ -134,19 +134,19 @@ def update_notebook_by_run(path):
         return err
 
 
-def rerun_notebook_cell(rv, r, cell, cnt):
+def rerun_notebook_cell(rv, r, cell, idx):
     logging.debug('rerun_notebook_cell')
     _type = cell['cell_type']
     if _type == 'code':
         try:
-            r.run_cell(cell)
+            r.run_cell(cell, idx)
         except NoDataFound:
             logging.debug('rerun_notebook_cell NoDataFound')
             raise
         finally:
             code = cell['input']
             if '#!dashboard_view' in code:
-                outs = r.nb['worksheets'][0]['cells'][cnt]['outputs']
+                outs = r.nb['worksheets'][0]['cells'][idx]['outputs']
                 rv += outs
     elif _type == 'markdown':
         src = cell['source']
@@ -154,19 +154,19 @@ def rerun_notebook_cell(rv, r, cell, cnt):
             rv.append(div(markdown(src), 'view'))
 
 
-def run_notebook_view_cell(rv, r, cell, cnt):
+def run_notebook_view_cell(rv, r, cell, idx):
     logging.debug('run_notebook_view_cell')
     _type = cell['cell_type']
     if _type == 'code':
         code = cell['input']
         if '#!dashboard_view' in code:
             try:
-                r.run_cell(cell)
+                r.run_cell(cell, idx)
             except NoDataFound:
                 logging.debug("run_cell - NoDataFound")
                 raise
             else:
-                outs = r.nb['worksheets'][0]['cells'][cnt]['outputs']
+                outs = r.nb['worksheets'][0]['cells'][idx]['outputs']
                 rv += outs
                 return True
     elif _type == 'markdown':
