@@ -102,7 +102,7 @@ class NotebookRunner(object):
         '''
         Run a notebook cell and update the output of that cell in-place.
         '''
-        logging.debug('  running cell {}'.format(cidx))
+        logging.info('running cell {}'.format(cidx))
         self.shell.execute(cell.input)
         reply = self.shell.get_msg()
         status = reply['content']['status']
@@ -128,7 +128,7 @@ class NotebookRunner(object):
                 # execution state should return to idle before the queue
                 # becomes empty,
                 # if it doesn't, something bad has happened
-                logging.debug("empty exception")
+                logging.error("empty exception")
                 raise
 
             content = msg['content']
@@ -160,7 +160,7 @@ class NotebookRunner(object):
                     try:
                         attr = self.MIME_MAP[mime]
                     except KeyError:
-                        logging.debug("unhandled mime")
+                        logging.error("unhandled mime")
                         raise NotImplementedError('unhandled mime type: %s' %
                                                   mime)
 
@@ -173,15 +173,15 @@ class NotebookRunner(object):
                 outs = list()
                 continue
             else:
-                logging.debug("unhandled iopub")
+                logging.error("unhandled iopub")
                 raise NotImplementedError('unhandled iopub message: %s' %
                                           msg_type)
             outs.append(out)
         cell['outputs'] = outs
 
-        logging.debug("status: {}".format(status))
+        logging.info("status: {}".format(status))
         if status == 'error':
-            logging.debug(u"run_cell error: " + traceback_text)
+            logging.error(u"run_cell error: " + traceback_text)
             if 'NoDataFound' in traceback_text:
                 raise NoDataFound(traceback_text.split('\n')[-1])
             else:

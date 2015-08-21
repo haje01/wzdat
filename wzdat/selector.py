@@ -31,6 +31,7 @@ from wzdat.util import unique_tmp_path, sizeof_fmt, unique_list, \
     get_convfile_path, get_tmp_dir, get_conv_dir, load_files_precalc,\
     get_data_dir
 from wzdat.lineinfo import LineInfo, LineInfoImpl_Count, LineInfoImpl_Array
+from wzdat.notebook_runner import NoDataFound
 
 qmode = 'files'
 cfg = make_config()
@@ -184,7 +185,7 @@ class SingleFile(FileCommon, IPathable):
     def to_frame(self, usecols=None, chunk_cnt=CHUNK_CNT, show_prog=True):
         """Build Pandas DataFrame from file and return it."""
         if self.lcount == 0:
-            return None
+            raise NoDataFound('No data exist.')
         _to_frame_fn = _get_member(self._ctx, 'to_frame', False)
 
         if _to_frame_fn is not None:

@@ -31,7 +31,7 @@ def run_code(runner, code, exception=None):
         traceback_text = remove_ansicolor(traceback_text)
         logging.info(traceback_text)
     else:
-        logging.info('run_code Ok')
+        logging.info('run_code ok')
 
     outs = list()
     while True:
