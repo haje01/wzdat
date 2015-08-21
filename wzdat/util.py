@@ -210,6 +210,7 @@ class OfflineNBPath(object):
     def __init__(self, nbpath):
         from tempfile import gettempdir
         self.fpath = os.path.join(gettempdir(), '_offline_nbpath_')
+        logging.debug('OfflineNBPath init: path {}'.format(self.fpath))
         with open(self.fpath, 'w') as fp:
             fp.write(nbpath.encode('utf8'))
 
@@ -217,12 +218,12 @@ class OfflineNBPath(object):
         return self
 
     def __exit__(self, _type, value, tb):
+        logging.debug("OfflineNBPath __exit__: unlink")
         os.unlink(self.fpath.encode('utf8'))
 
 
 def get_offline_nbpath():
     fpath = os.path.join(gettempdir(), '_offline_nbpath_')
-    print(u'get_offline_nbpath {}'.format(fpath))
     with open(fpath, 'r') as f:
         return f.readline().decode('utf8')
 
@@ -753,6 +754,7 @@ def get_client_sdatetime(ts=None):
 
 def parse_sdatetime(dt):
     from dateutil.parser import parse
+    logging.debug("parse_sdatetime {}".format(dt))
     try:
         return parse(dt)
     except ValueError:
@@ -1006,6 +1008,7 @@ def iter_notebook_manifest_input(nbdir):
         mpath = get_notebook_manifest_path(npath)
         if not os.path.isfile(mpath):
             continue
+        logging.debug(u"read {}".format(mpath))
         with open(mpath, 'r') as f:
             data = json.loads(f.read())
             try:

@@ -6,9 +6,12 @@ import shutil
 from subprocess import check_output
 
 import pytest
+import requests
+
 
 from wzdat.make_config import make_config
 from wzdat.rundb import flush_unhandled_events, unhandled_events
+from wzdat.util import get_notebook_dir
 
 WEB_RESTART = False
 
@@ -113,8 +116,6 @@ def test_system_file_event(fxdocker):
 
 
 def test_system_finder(fxdocker):
-    import requests
-
     # test finder home
     r = requests.get('{}/finder'.format(dashboard_url))
     assert r.status_code == 200
@@ -170,3 +171,31 @@ def test_system_finder(fxdocker):
 def test_system_download(fxdocker):
     # TODO: implement temporary file download test here
     pass
+
+
+def test_system_rerun(fxdocker):
+    sub = 'start_rerun'
+    nbname = 'test-notebook.ipynb'
+    tmpl = '{}/{}/{}'
+    r = requests.post(tmpl.format(dashboard_url, sub, nbname), data=[])
+    assert r.status_code == 200
+    rv = r.text.split('/')
+    assert rv[-2] == nbname
+    task_id = rv[-1]
+
+    time.sleep(1)
+
+    tmpl = '{}/{}/{}/{}'
+    sub = 'poll_rerun'
+    nbdir = get_notebook_dir()
+    nbpath = os.path.join(nbdir, nbname)
+    RESULT_DIV = '<div class="row rerun">'
+    r = requests.post(tmpl.format(dashboard_url, sub, nbpath, task_id),
+                      data=[])
+    while 'PROGRESS' in r.text:
+        time.sleep(1)
+        r = requests.post(tmpl.format(dashboard_url, sub, nbpath, task_id),
+                          data=[])
+        assert r.status_code == 200
+
+    assert RESULT_DIV in r.text

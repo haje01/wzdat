@@ -190,14 +190,15 @@ def poll_rerun(task_info):
             logging.debug('task pending')
             return 'PROGRESS:0'
         elif task.state == 'PROGRESS':
+            logging.debug(u"get_run_info {}".format(nbpath))
             ri = rundb.get_run_info(nbpath)
             if ri is not None:
                 logging.debug(u"run info exist")
                 err = ri[4]
                 # logging.debug(u'err: {}'.format(err))
-                if err is None:
-                    cur = ri[2]
-                    total = ri[3] + 1
+                if err == 'None':
+                    cur = int(ri[2])
+                    total = int(ri[3]) + 1
                     logging.debug(u'cur {} total {}'.format(cur, total))
                     return 'PROGRESS:' + str(cur/float(total))
                 else:
