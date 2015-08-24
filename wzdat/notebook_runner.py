@@ -204,6 +204,10 @@ class NotebookRunner(object):
             for cell in ws.cells:
                 yield cell
 
+    def clear_outputs(self):
+        for cell in self.iter_cells():
+            cell['outputs'] = []
+
     @property
     def cellcnt(self):
         cnt = 0

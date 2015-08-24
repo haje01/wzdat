@@ -10,11 +10,11 @@ from IPython.nbformat.current import read
 
 from wzdat.notebook_runner import NoDataFound
 from wzdat.ipynb_runner import run_notebook_view_cell, get_view_cell_cnt,\
-    run_code, update_notebook_by_run, rerun_notebook_cell
+    run_code, update_notebook_by_run
 from wzdat.make_config import make_config
 from wzdat.notebook_runner import NotebookRunner
 from wzdat.const import TMP_PREFIX
-from wzdat.util import unique_tmp_path, OfflineNBPath
+from wzdat.util import unique_tmp_path
 from wzdat.selector import get_urls
 
 app = Celery('wdtask', backend='redis://localhost', broker='redis://localhost')
@@ -27,24 +27,13 @@ data_dir = cfg['data_dir']
 def rerun_notebook(nbpath):
     print(u'rerun_notebook {}'.format(nbpath))
     rerun_notebook.update_state(state='PROGRESS', meta=0)
-    with OfflineNBPath(nbpath):
-        try:
-            update_notebook_by_run(nbpath)
-        except NoDataFound, e:
-            logging.debug('NoDataFound')
-            return [unicode(e)]
-        #nb = read(open(nbpath), 'json')
-        #r = NotebookRunner(nb, pylab=True)
-        #rv = []
-        #for i, cell in enumerate(r.iter_cells()):
-            #try:
-                #rerun_notebook_cell(rv, r, cell, i)
-            #except NoDataFound, e:
-                #logging.debug('NoDataFound')
-                #return [unicode(e)]
+    try:
+        update_notebook_by_run(nbpath)
+    except NoDataFound, e:
+        logging.debug('NoDataFound')
+        return [unicode(e)]
     rerun_notebook.update_state(state='PROGRESS', meta=1)
     print(u'rerun_notebook {} done. returning results..'.format(nbpath))
-    #return rv
 
 
 @app.task()

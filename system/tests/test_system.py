@@ -11,7 +11,6 @@ import requests
 
 from wzdat.make_config import make_config
 from wzdat.rundb import flush_unhandled_events, unhandled_events
-from wzdat.util import get_notebook_dir
 
 WEB_RESTART = False
 
@@ -175,21 +174,18 @@ def test_system_download(fxdocker):
 
 def test_system_rerun(fxdocker):
     sub = 'start_rerun'
-    nbname = 'test-notebook.ipynb'
+    nbpath = 'test-notebook2.ipynb'
     tmpl = '{}/{}/{}'
-    r = requests.post(tmpl.format(dashboard_url, sub, nbname), data=[])
+    r = requests.post(tmpl.format(dashboard_url, sub, nbpath), data=[])
     assert r.status_code == 200
     rv = r.text.split('/')
-    assert rv[-2] == nbname
+    assert rv[-2] == nbpath
     task_id = rv[-1]
 
     time.sleep(1)
 
     tmpl = '{}/{}/{}/{}'
     sub = 'poll_rerun'
-    nbdir = get_notebook_dir()
-    nbpath = os.path.join(nbdir, nbname)
-    RESULT_DIV = '<div class="row rerun">'
     r = requests.post(tmpl.format(dashboard_url, sub, nbpath, task_id),
                       data=[])
     while 'PROGRESS' in r.text:
@@ -198,4 +194,5 @@ def test_system_rerun(fxdocker):
                           data=[])
         assert r.status_code == 200
 
-    assert RESULT_DIV in r.text
+    assert 'no data' in r.text
+    assert 'hoho' not in r.text
