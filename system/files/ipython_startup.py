@@ -15,7 +15,7 @@ from wzdat.notebook_runner import NoDataFound
 
 from wzdat.manifest import Manifest, ManifestNotExist
 try:
-    manifest_ = Manifest()
+    manifest_ = Manifest(True, True, __nbpath__)
 except ManifestNotExist:
     manifest_ = None
 import os

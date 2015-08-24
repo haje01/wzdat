@@ -156,15 +156,15 @@ def poll_view(task_id):
     return Response(ret)
 
 
-@app.route('/start_rerun/<path:nbpath>', methods=['POST'])
-def start_rerun(nbpath):
+@app.route('/start_rerun/<path:nbrpath>', methods=['POST'])
+def start_rerun(nbrpath):
     logging.debug('start_rerun')
     nbdir = get_notebook_dir()
-    nbpath = os.path.join(nbdir, nbpath)
+    nbapath = os.path.join(nbdir, nbrpath)
 
     from wzdat.dashboard.tasks import rerun_notebook
-    task = rerun_notebook.delay(nbpath)
-    rv = nbpath + '/' + task.task_id
+    task = rerun_notebook.delay(nbapath)
+    rv = nbrpath + '/' + task.task_id
     logging.debug(u'rv {}'.format(rv))
     return Response(rv)
 
@@ -174,14 +174,13 @@ def poll_rerun(task_info):
     task_id = 0
     logging.debug(u'poll_rerun {}'.format(task_info))
     from wzdat import rundb
-    from wzdat.util import div
     from wzdat.dashboard.tasks import rerun_notebook
     task_id = task_info.split('/')[-1]
-    nbpath = '/'.join(task_info.split('/')[:-1])
+    nbrpath = '/'.join(task_info.split('/')[:-1])
+    logging.debug(u'nbpat {}'.format(nbrpath))
 
-    if nbpath[0] != '/':
-        nbpath = '/' + nbpath
-    # logging.debug(u'task_id {}, nbpath {}'.format(task_id, nbpath))
+    nbdir = get_notebook_dir()
+    nbapath = os.path.join(nbdir, nbrpath)
 
     try:
         task = rerun_notebook.AsyncResult(task_id)
@@ -190,8 +189,8 @@ def poll_rerun(task_info):
             logging.debug('task pending')
             return 'PROGRESS:0'
         elif task.state == 'PROGRESS':
-            # logging.debug(u"get_run_info {}".format(nbpath))
-            ri = rundb.get_run_info(nbpath)
+            # logging.debug(u"get_run_info {}".format(nbapath))
+            ri = rundb.get_run_info(nbapath)
             if ri is not None:
                 # logging.debug(u"run info exist")
                 err = ri[4]
@@ -208,8 +207,10 @@ def poll_rerun(task_info):
             else:
                 logging.debug(u"run info not exist")
                 return 'PROGRESS:0'
-        outputs = task.get()
+        nodata = task.get()
         logging.debug('task done')
+        if nodata is not None:
+            return Response(nodata)
         # logging.debug('outputs {}'.format(outputs))
     except Exception, e:
         logging.debug(str(e))
@@ -220,11 +221,30 @@ def poll_rerun(task_info):
         return Response('<div class="view"><pre class="ds-err">%s</pre></div>'
                         % err)
 
-    rv = []
-    _nb_output_to_html_dashboard(div, rv, outputs, 'rerun')
-    ret = '\n'.join(rv)
-    # logging.debug(u'ret {}'.format(ret))
+    ret = _poll_rerun_output(nbapath)
+    logging.debug(ret)
     return Response(ret)
+
+
+def _poll_rerun_output(nbapath):
+    from wzdat.util import div
+    rv = []
+    with open(nbapath, 'r') as f:
+        nb = reads(f.read(), 'json')
+        ws = nb['worksheets']
+        if len(nb) > 0:
+            try:
+                for cell in ws[0]['cells']:
+                    _type = cell['cell_type']
+                    if _type == 'code' and 'outputs' in cell:
+                        code = cell['input']
+                        if '#!dashboard_view' in code:
+                            _nb_output_to_html_dashboard(div, rv,
+                                                         cell['outputs'],
+                                                         'view')
+            except IndexError:
+                logging.error(u"Imcomplete notebook - {}".format(nbapath))
+    return '\n'.join(rv)
 
 
 def _nb_output_to_html(path):

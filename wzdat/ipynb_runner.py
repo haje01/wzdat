@@ -21,7 +21,8 @@ from IPython.nbformat.current import read, NotebookNode, write
 from wzdat.notebook_runner import NotebookRunner, NotebookError
 
 
-def run_code(runner, code, exception=None):
+def run_code(runner, code):
+    logging.debug("run_code")
     runner.shell.execute(code)
     reply = runner.shell.get_msg()
     status = reply['content']['status']
@@ -59,10 +60,7 @@ def run_code(runner, code, exception=None):
         outs = _run_code_type(outs, runner, msg_type, content)
 
     if status == 'error':
-        if exception is None:
-            raise Exception('Code error')
-        else:
-            raise exception
+        raise Exception(traceback_text)
 
 
 def _run_code_type(outs, runner, msg_type, content):
@@ -93,11 +91,14 @@ def _run_code_type(outs, runner, msg_type, content):
     return outs
 
 
-def _run_init(r, path):
-    if os.path.isfile(path):
-        with open(path.encode('utf-8')) as f:
-            init = f.read()
-            run_code(r, init)
+def _run_init(r, nbpath, initpath):
+    init = u'__nbpath__ = u"{}"\n'.format(nbpath)
+    run_code(r, init)
+    run_code(r, "assert '__nbpath__' in globals()")
+    if os.path.isfile(initpath):
+        with open(initpath.encode('utf-8')) as f:
+            init += f.read()
+    run_code(r, init)
 
 
 def update_notebook_by_run(path):
@@ -107,9 +108,10 @@ def update_notebook_by_run(path):
     # init runner
     nb = read(open(path.encode('utf-8')), 'json')
     r = NotebookRunner(nb, pylab=True)
+    r.clear_outputs()
 
     # run config & startup
-    _run_init(r, ipython_start_script_path())
+    _run_init(r, path, ipython_start_script_path())
 
     # run cells
     cellcnt = r.cellcnt
@@ -133,26 +135,6 @@ def update_notebook_by_run(path):
                  "manifest_._write_result({})".format(max_mem))
         rundb.finish_run(path, err)
         return err
-
-
-def rerun_notebook_cell(rv, r, cell, idx):
-    logging.debug('rerun_notebook_cell')
-    _type = cell['cell_type']
-    if _type == 'code':
-        try:
-            r.run_cell(cell, idx)
-        except NoDataFound:
-            logging.debug('rerun_notebook_cell NoDataFound')
-            raise
-        finally:
-            code = cell['input']
-            if '#!dashboard_view' in code:
-                outs = r.nb['worksheets'][0]['cells'][idx]['outputs']
-                rv += outs
-    elif _type == 'markdown':
-        src = cell['source']
-        if '<!--dashboard_view-->' in src:
-            rv.append(div(markdown(src), 'view'))
 
 
 def run_notebook_view_cell(rv, r, cell, idx):

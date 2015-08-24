@@ -11,7 +11,7 @@ import json
 
 from IPython.nbformat.current import write, read
 
-from wzdat.util import Property, get_notebook_path, get_notebook_dir,\
+from wzdat.util import Property, get_notebook_rpath, get_notebook_dir,\
     dataframe_checksum, HDF, ScbProperty, convert_server_time_to_client,\
     sizeof_fmt
 from wzdat.notebook_runner import NotebookRunner, NotebookError
@@ -36,7 +36,7 @@ class Manifest(Property):
 
         if explicit_nbpath is None:
             nbdir = get_notebook_dir()
-            nbrpath = get_notebook_path()
+            nbrpath = get_notebook_rpath()
             self._path = os.path.join(nbdir,
                                       nbrpath.replace(u'.ipynb',
                                                       u'.manifest.ipynb'))

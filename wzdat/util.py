@@ -16,7 +16,6 @@ from tempfile import TemporaryFile
 import uuid as _uuid
 import codecs
 from collections import defaultdict
-from tempfile import gettempdir
 
 from crontab import CronTab
 import psutil
@@ -204,28 +203,6 @@ class HDF(object):
     def __exit__(self, _type, value, tb):
         if self.store is not None:
             self.store.close()
-
-
-class OfflineNBPath(object):
-    def __init__(self, nbpath):
-        from tempfile import gettempdir
-        self.fpath = os.path.join(gettempdir(), '_offline_nbpath_')
-        logging.debug('OfflineNBPath init: path {}'.format(self.fpath))
-        with open(self.fpath, 'w') as fp:
-            fp.write(nbpath.encode('utf8'))
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, _type, value, tb):
-        logging.debug("OfflineNBPath __exit__: unlink")
-        os.unlink(self.fpath.encode('utf8'))
-
-
-def get_offline_nbpath():
-    fpath = os.path.join(gettempdir(), '_offline_nbpath_')
-    with open(fpath, 'r') as f:
-        return f.readline().decode('utf8')
 
 
 def get_wzdat_dir():
@@ -923,7 +900,8 @@ def get_ipython_port():
     return cfg['host_ipython_port']
 
 
-def get_notebook_path():
+def get_notebook_rpath():
+    "Return relative path of current notebook."
     import json
     import urllib2
     from IPython.lib import kernel
@@ -932,7 +910,7 @@ def get_notebook_path():
         connection_file = os.path.basename(connection_file_path)
         kernel_id = connection_file.split('-', 1)[1].split('.')[0]
     except (RuntimeError, IndexError):
-        return get_offline_nbpath()
+        return globals()['__nbpath__']
 
     url = "http://{}:{}/api/sessions".format(
         get_wzdat_host(), get_ipython_port())

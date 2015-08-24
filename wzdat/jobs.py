@@ -8,7 +8,7 @@ from wzdat.const import FORWARDER_LOG_PREFIX
 from wzdat.make_config import make_config
 from wzdat.ipynb_runner import update_notebook_by_run, NoDataFound
 from wzdat.util import gen_dummydata as _gen_dummydata, cache_files,\
-    cache_finder, get_notebook_dir, OfflineNBPath
+    cache_finder, get_notebook_dir
 from wzdat.nbdependresolv import update_all_notebooks
 
 cfg = make_config()
@@ -51,11 +51,10 @@ def register_cron():
 def run_notebook(path):
     path = path.decode('utf-8') if type(path) == str else path
     logging.debug(u'run_notebook {}'.format(path))
-    with OfflineNBPath(path):
-        try:
-            update_notebook_by_run(path)
-        except NoDataFound, e:
-            logging.debug(unicode(e))
+    try:
+        update_notebook_by_run(path)
+    except NoDataFound, e:
+        logging.debug(unicode(e))
 
 
 @argh.arg('-d', '--dir', help="target directory where dummy data will be"
