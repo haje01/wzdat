@@ -155,8 +155,7 @@ def poll_view(task_id):
 @app.route('/start_rerun/<path:nbrpath>', methods=['POST'])
 def start_rerun(nbrpath):
     logging.debug('start_rerun')
-    nbdir = get_notebook_dir()
-    nbapath = os.path.join(nbdir, nbrpath)
+    nbapath = os.path.join(get_notebook_dir(), nbrpath)
 
     from wzdat.dashboard.tasks import rerun_notebook
     task = rerun_notebook.delay(nbapath)
@@ -173,10 +172,7 @@ def poll_rerun(task_info):
     from wzdat.dashboard.tasks import rerun_notebook
     task_id = task_info.split('/')[-1]
     nbrpath = '/'.join(task_info.split('/')[:-1])
-    logging.debug(u'nbpat {}'.format(nbrpath))
-
-    nbdir = get_notebook_dir()
-    nbapath = os.path.join(nbdir, nbrpath)
+    nbapath = os.path.join(get_notebook_dir(), nbrpath)
 
     try:
         task = rerun_notebook.AsyncResult(task_id)
@@ -185,7 +181,6 @@ def poll_rerun(task_info):
             logging.debug('task pending')
             return 'PROGRESS:0'
         elif task.state == 'PROGRESS':
-            # logging.debug(u"get_run_info {}".format(nbapath))
             ri = rundb.get_run_info(nbapath)
             if ri is not None:
                 # logging.debug(u"run info exist")

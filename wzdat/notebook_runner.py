@@ -102,7 +102,7 @@ class NotebookRunner(object):
         '''
         Run a notebook cell and update the output of that cell in-place.
         '''
-        logging.info('running cell {}'.format(cidx))
+        logging.debug('running cell {}'.format(cidx))
         self.shell.execute(cell.input)
         reply = self.shell.get_msg()
         status = reply['content']['status']
@@ -115,7 +115,7 @@ class NotebookRunner(object):
             if 'NoDataFound' not in traceback_text:
                 logging.error(traceback_text)
         else:
-            logging.info('run_cell ok')
+            logging.debug('run_cell ok')
 
         outs = list()
         while True:
@@ -179,7 +179,7 @@ class NotebookRunner(object):
             outs.append(out)
         cell['outputs'] = outs
 
-        logging.info("status: {}".format(status))
+        logging.debug("status: {}".format(status))
         if status == 'error':
             logging.error(u"run_cell error: " + traceback_text)
             if 'NoDataFound' in traceback_text:
