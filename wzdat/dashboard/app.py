@@ -1,25 +1,22 @@
 import os
 import json
-import re
 import logging
 from collections import defaultdict
 from datetime import timedelta
 
 from flask import Flask, render_template, request, Response, redirect, url_for
-from markdown import markdown
 from IPython.nbformat.current import reads
 
 from wzdat.notebook_runner import NoDataFound
 from wzdat.util import get_notebook_dir, parse_client_sdatetime,\
-    get_client_datetime
+    get_client_datetime, ansi_escape
 from wzdat.rundb import get_cache_info, get_finder_info
 from wzdat.jobs import cache_finder
 from wzdat.make_config import make_config
+from wzdat.ipynb_runner import notebook_outputs_to_html,\
+    notebook_cell_outputs_to_html
 
 app = Flask(__name__)
-
-ansi_escape = re.compile(r'\x1b[^m]*m')
-
 
 cfg = make_config()
 assert 'WZDAT_HOST' in os.environ
@@ -127,7 +124,6 @@ def start_view(nbpath):
 def poll_view(task_id):
     logging.debug('poll_view {}'.format(task_id))
     from wzdat.dashboard.tasks import run_view_cell
-    from wzdat.util import div
 
     try:
         task = run_view_cell.AsyncResult(task_id)
@@ -151,7 +147,7 @@ def poll_view(task_id):
         return Response('<div class="view"><pre class="ds-err">%s</pre></div>'
                         % err)
     rv = []
-    _nb_output_to_html_dashboard(div, rv, outputs, 'view')
+    notebook_cell_outputs_to_html(rv, outputs, 'view')
     ret = '\n'.join(rv)
     return Response(ret)
 
@@ -227,7 +223,6 @@ def poll_rerun(task_info):
 
 
 def _poll_rerun_output(nbapath):
-    from wzdat.util import div
     rv = []
     with open(nbapath, 'r') as f:
         nb = reads(f.read(), 'json')
@@ -239,85 +234,11 @@ def _poll_rerun_output(nbapath):
                     if _type == 'code' and 'outputs' in cell:
                         code = cell['input']
                         if '#!dashboard_view' in code:
-                            _nb_output_to_html_dashboard(div, rv,
-                                                         cell['outputs'],
-                                                         'view')
+                            notebook_cell_outputs_to_html(rv, cell['outputs'],
+                                                          'view')
             except IndexError:
                 logging.error(u"Imcomplete notebook - {}".format(nbapath))
     return '\n'.join(rv)
-
-
-def _nb_output_to_html(path):
-    logging.debug('_nb_output_to_html {}'.format(path.encode('utf-8')))
-    rv = []
-    with open(path, 'r') as f:
-        nb = reads(f.read(), 'json')
-        ws = nb['worksheets']
-        if len(nb) > 0:
-            try:
-                for cell in ws[0]['cells']:
-                    _cell_output_to_html(rv, cell)
-            except IndexError:
-                logging.error(u"Imcomplete notebook - {}".format(path))
-    return '\n'.join(rv)
-
-
-def _cell_output_to_html(rv, cell):
-    from wzdat.util import div
-
-    _type = cell['cell_type']
-    _cls = ''
-    if _type == 'code' and 'outputs' in cell:
-        code = cell['input']
-        if '#!dashboard_control' in code or '#!dashboard_view' in code:
-            if '#!dashboard_control' in code:
-                _cls = 'control'
-            elif '#!dashboard_view' in code:
-                _cls = 'view'
-            _nb_output_to_html_dashboard(div, rv, cell['outputs'], _cls)
-    elif _type == 'markdown':
-        src = cell['source']
-        if '<!--dashboard' in src:
-            _cls = ''
-            if '<!--dashboard_view-->' in src:
-                _cls = 'view'
-            rv.append(div(markdown(src), _cls))
-
-
-def _cell_output_to_html_dashboard(output, image_cell):
-    _type = output['output_type']
-    if _type == 'stream':
-        return output['text']
-    elif _type == 'display_data':
-        if 'png' in output:
-            data = output['png']
-            return '<img src="data:image/png;base64,%s"></img>' % data
-    elif _type == 'pyout':
-        if 'html' in output:
-            return '<div class="rendered_html">%s</div>' % output['html']
-        elif not image_cell:
-            return output['text']
-
-
-def _nb_output_to_html_dashboard(div, rv, outputs, _cls):
-    # check this is image cell
-    image_cell = False
-    for output in outputs:
-        _type = type(output)
-        if _type in (unicode, str):
-            continue
-        _type = output['output_type']
-        if _type == 'display_data':
-            image_cell = True
-
-    for output in outputs:
-        _type = type(output)
-        if _type in (unicode, str):
-            html = output
-        else:
-            html = _cell_output_to_html_dashboard(output, image_cell)
-        if html is not None:
-            rv.append(div(html, _cls))
 
 
 def _collect_gnbs(gnbs, gk, groups):
@@ -328,7 +249,7 @@ def _collect_gnbs(gnbs, gk, groups):
     logging.debug('_collect_gnbs ' + nbdir)
     # logging.debug(str(groups[gk]))
     for path, url, fname in groups[gk]:
-        out = _nb_output_to_html(path)
+        out = notebook_outputs_to_html(path)
         # logging.debug('get_run_info {}'.format(path.encode('utf-8')))
         ri = rundb.get_run_info(path)
         # logging.debug('get_run_info {}'.format(ri))

@@ -8,7 +8,8 @@ from Queue import Empty
 
 from markdown import markdown
 
-from wzdat.util import div, remove_ansicolor, ipython_start_script_path
+from wzdat.util import div, remove_ansicolor, ipython_start_script_path,\
+    ansi_escape
 from wzdat import rundb
 from notebook_runner import NoDataFound
 
@@ -17,7 +18,7 @@ CRON_PTRN =\
     re.compile(r'\s*\[\s*((?:[^\s@]+\s+){4}[^\s@]+)?\s*(?:@(.+))?\s*\]\s*(.+)')
 IGNORE_DIRS = ('.ipynb_checkpoints', '.git')
 
-from IPython.nbformat.current import read, NotebookNode, write
+from IPython.nbformat.current import read, NotebookNode, write, reads
 from wzdat.notebook_runner import NotebookRunner, NotebookError
 
 
@@ -199,3 +200,88 @@ def _parse_notebook_name(paths, scheds, groups, fnames, path, pjob, static):
             scheds.append(sched)
             groups.append(gname)
             fnames.append(fname)
+
+
+def notebook_outputs_to_html(path):
+    logging.debug('_nb_output_to_html {}'.format(path.encode('utf-8')))
+    rv = []
+    with open(path, 'r') as f:
+        nb = reads(f.read(), 'json')
+        ws = nb['worksheets']
+        if len(nb) > 0:
+            try:
+                for cell in ws[0]['cells']:
+                    cont = _cell_output_to_html(rv, cell)
+                    if not cont:
+                        break
+            except IndexError:
+                logging.error(u"Imcomplete notebook - {}".format(path))
+    return '\n'.join(rv)
+
+
+def _nodata_msg_to_html(rv, output):
+    nodata_msg = ansi_escape.sub('', output['traceback'][-1])
+    rv.append(nodata_msg)
+    return False
+
+
+def _cell_output_to_html(rv, cell):
+    '''Append html output for cell and return whether continue or not'''
+    _type = cell['cell_type']
+    _cls = ''
+    if _type == 'code' and 'outputs' in cell:
+        outputs = cell['outputs']
+        if outputs[1]['ename'] == u'NoDataFound':
+            return _nodata_msg_to_html(rv, outputs[1])
+
+        code = cell['input']
+        if '#!dashboard_control' in code or '#!dashboard_view' in code:
+            if '#!dashboard_control' in code:
+                _cls = 'control'
+            elif '#!dashboard_view' in code:
+                _cls = 'view'
+            notebook_cell_outputs_to_html(rv, outputs, _cls)
+    elif _type == 'markdown':
+        src = cell['source']
+        if '<!--dashboard' in src:
+            _cls = ''
+            if '<!--dashboard_view-->' in src:
+                _cls = 'view'
+            rv.append(div(markdown(src), _cls))
+    return True
+
+
+def notebook_cell_outputs_to_html(rv, outputs, _cls):
+    # check this is image cell
+    image_cell = False
+    for output in outputs:
+        _type = type(output)
+        if _type in (unicode, str):
+            continue
+        _type = output['output_type']
+        if _type == 'display_data':
+            image_cell = True
+
+    for output in outputs:
+        _type = type(output)
+        if _type in (unicode, str):
+            html = output
+        else:
+            html = _notebook_cell_output_to_html(output, image_cell)
+        if html is not None:
+            rv.append(div(html, _cls))
+
+
+def _notebook_cell_output_to_html(output, image_cell):
+    _type = output['output_type']
+    if _type == 'stream':
+        return output['text']
+    elif _type == 'display_data':
+        if 'png' in output:
+            data = output['png']
+            return '<img src="data:image/png;base64,%s"></img>' % data
+    elif _type == 'pyout':
+        if 'html' in output:
+            return '<div class="rendered_html">%s</div>' % output['html']
+        elif not image_cell:
+            return output['text']

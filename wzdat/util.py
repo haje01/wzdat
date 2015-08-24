@@ -30,6 +30,8 @@ PROCESSES = {'game': 3}
 CRON_CMD = '/usr/bin/crontab'
 IPYTHON_STARTUP_PATH = "/root/.ipython/profile_default/startup/01-wzdat.py"
 
+ansi_escape = re.compile(r'\x1b[^m]*m')
+
 
 def unique_tmp_path(prefix, ext='.txt'):
     """Return temp file path with given extension."""

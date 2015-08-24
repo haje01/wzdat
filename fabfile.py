@@ -64,10 +64,15 @@ def gpull():
         run("git pull")
 
 
-def deploy(_build=False):
+def dpull():
+    with cd('~/wzdat'):
+        run("docker pull")
+
+
+def deploy(_dpull=False):
     with cd('~/wzdat'):
         run("git pull")
-        if _build:
+        if _dpull:
             build(True)
         relaunch_all(True)
 
