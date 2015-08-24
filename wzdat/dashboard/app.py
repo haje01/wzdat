@@ -156,15 +156,14 @@ def poll_view(task_id):
     return Response(ret)
 
 
-@app.route('/start_rerun/<path:nbpath>', methods=['POST'])
-def start_rerun(nbpath):
+@app.route('/start_rerun/<path:nbrpath>', methods=['POST'])
+def start_rerun(nbrpath):
     logging.debug('start_rerun')
-    nbdir = get_notebook_dir()
-    nbpath = os.path.join(nbdir, nbpath)
+    nbapath = os.path.join(get_notebook_dir(), nbrpath)
 
     from wzdat.dashboard.tasks import rerun_notebook
-    task = rerun_notebook.delay(nbpath)
-    rv = nbpath + '/' + task.task_id
+    task = rerun_notebook.delay(nbapath)
+    rv = nbrpath + '/' + task.task_id
     logging.debug(u'rv {}'.format(rv))
     return Response(rv)
 
@@ -177,10 +176,11 @@ def poll_rerun(task_info):
     from wzdat.util import div
     from wzdat.dashboard.tasks import rerun_notebook
     task_id = task_info.split('/')[-1]
-    nbpath = '/'.join(task_info.split('/')[:-1])
+    nbrpath = '/'.join(task_info.split('/')[:-1])
 
-    if nbpath[0] != '/':
-        nbpath = '/' + nbpath
+    # if nbpath[0] != '/':
+    #     nbpath = '/' + nbpath
+    nbapath = os.path.join(get_notebook_dir(), nbrpath)
     # logging.debug(u'task_id {}, nbpath {}'.format(task_id, nbpath))
 
     try:
@@ -191,7 +191,7 @@ def poll_rerun(task_info):
             return 'PROGRESS:0'
         elif task.state == 'PROGRESS':
             # logging.debug(u"get_run_info {}".format(nbpath))
-            ri = rundb.get_run_info(nbpath)
+            ri = rundb.get_run_info(nbapath)
             if ri is not None:
                 # logging.debug(u"run info exist")
                 err = ri[4]
@@ -208,7 +208,7 @@ def poll_rerun(task_info):
             else:
                 logging.debug(u"run info not exist")
                 return 'PROGRESS:0'
-        outputs = task.get()
+        task.get()
         logging.debug('task done')
         # logging.debug('outputs {}'.format(outputs))
     except Exception, e:
@@ -220,9 +220,10 @@ def poll_rerun(task_info):
         return Response('<div class="view"><pre class="ds-err">%s</pre></div>'
                         % err)
 
-    rv = []
-    _nb_output_to_html_dashboard(div, rv, outputs, 'rerun')
-    ret = '\n'.join(rv)
+    ret = _nb_output_to_html(nbapath)
+    logging.debug(ret)
+    #_nb_output_to_html_dashboard(div, rv, outputs, 'rerun')
+    #ret = '\n'.join(rv)
     # logging.debug(u'ret {}'.format(ret))
     return Response(ret)
 

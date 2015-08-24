@@ -44,7 +44,7 @@ def rerun_notebook(nbpath):
                 #return [unicode(e)]
     rerun_notebook.update_state(state='PROGRESS', meta=1)
     print(u'rerun_notebook {} done. returning results..'.format(nbpath))
-    return rv
+    #return rv
 
 
 @app.task()

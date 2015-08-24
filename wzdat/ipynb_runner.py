@@ -29,9 +29,9 @@ def run_code(runner, code, exception=None):
         traceback_text = 'Code raised uncaught exception: \n' + \
             '\n'.join(reply['content']['traceback'])
         traceback_text = remove_ansicolor(traceback_text)
-        logging.info(traceback_text)
+        logging.error(traceback_text)
     else:
-        logging.info('run_code ok')
+        logging.debug('run_code ok')
 
     outs = list()
     while True:
@@ -127,7 +127,7 @@ def update_notebook_by_run(path):
     else:
         write(r.nb, open(path.encode('utf-8'), 'w'), 'json')
     finally:
-        logging.info("update_notebook_by_run finally")
+        logging.debug("update_notebook_by_run finally")
         max_mem = max(memory_used)
         run_code(r, "if 'manifest_' in globals() and manifest_ is not None: "
                  "manifest_._write_result({})".format(max_mem))
