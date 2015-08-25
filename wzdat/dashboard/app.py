@@ -213,7 +213,6 @@ def poll_rerun(task_info):
                         % err)
 
     ret = _poll_rerun_output(nbapath)
-    logging.debug(ret)
     return Response(ret)
 
 
