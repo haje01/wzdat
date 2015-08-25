@@ -203,7 +203,7 @@ def _parse_notebook_name(paths, scheds, groups, fnames, path, pjob, static):
 
 
 def notebook_outputs_to_html(path):
-    logging.debug('_nb_output_to_html {}'.format(path.encode('utf-8')))
+    logging.debug('notebook_outputs_to_html {}'.format(path.encode('utf-8')))
     rv = []
     with open(path, 'r') as f:
         nb = reads(f.read(), 'json')
@@ -215,7 +215,7 @@ def notebook_outputs_to_html(path):
                     if not cont:
                         break
             except IndexError:
-                logging.error(u"Imcomplete notebook - {}".format(path))
+                logging.error(u"Incomplete notebook - {}".format(path))
     return '\n'.join(rv)
 
 
@@ -228,11 +228,14 @@ def _nodata_msg_to_html(rv, output):
 def _cell_output_to_html(rv, cell):
     '''Append html output for cell and return whether continue or not'''
     _type = cell['cell_type']
+    logging.debug("_cell_output_to_html {}".format(_type))
     _cls = ''
     if _type == 'code' and 'outputs' in cell:
         outputs = cell['outputs']
-        if outputs[1]['ename'] == u'NoDataFound':
-            return _nodata_msg_to_html(rv, outputs[1])
+        if len(outputs) > 0:
+            fout = outputs[0]
+            if 'ename' in fout == u'NoDataFound':
+                return _nodata_msg_to_html(rv, fout)
 
         code = cell['input']
         if '#!dashboard_control' in code or '#!dashboard_view' in code:
@@ -240,6 +243,7 @@ def _cell_output_to_html(rv, cell):
                 _cls = 'control'
             elif '#!dashboard_view' in code:
                 _cls = 'view'
+            logging.debug("_cell_output_to_html {}".format(_cls))
             notebook_cell_outputs_to_html(rv, outputs, _cls)
     elif _type == 'markdown':
         src = cell['source']
