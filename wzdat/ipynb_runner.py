@@ -228,7 +228,7 @@ def _nodata_msg_to_html(rv, output):
 def _cell_output_to_html(rv, cell):
     '''Append html output for cell and return whether continue or not'''
     _type = cell['cell_type']
-    logging.debug("_cell_output_to_html {}".format(_type))
+    # logging.debug("_cell_output_to_html {}".format(_type))
     _cls = ''
     if _type == 'code' and 'outputs' in cell:
         outputs = cell['outputs']
@@ -243,7 +243,7 @@ def _cell_output_to_html(rv, cell):
                 _cls = 'control'
             elif '#!dashboard_view' in code:
                 _cls = 'view'
-            logging.debug("_cell_output_to_html {}".format(_cls))
+            # logging.debug("_cell_output_to_html {}".format(_cls))
             notebook_cell_outputs_to_html(rv, outputs, _cls)
     elif _type == 'markdown':
         src = cell['source']

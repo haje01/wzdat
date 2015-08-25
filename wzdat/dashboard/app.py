@@ -167,7 +167,7 @@ def start_rerun(nbrpath):
 @app.route('/poll_rerun/<path:task_info>', methods=['POST'])
 def poll_rerun(task_info):
     task_id = 0
-    logging.debug(u'poll_rerun {}'.format(task_info))
+    # logging.debug(u'poll_rerun {}'.format(task_info))
     from wzdat import rundb
     from wzdat.dashboard.tasks import rerun_notebook
     task_id = task_info.split('/')[-1]
