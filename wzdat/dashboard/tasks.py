@@ -33,7 +33,7 @@ def rerun_notebook(nbpath):
         logging.debug('NoDataFound')
         return [unicode(e)]
     rerun_notebook.update_state(state='PROGRESS', meta=1)
-    print(u'rerun_notebook {} done. returning results..'.format(nbpath))
+    print(u'rerun_notebook {} done.'.format(nbpath))
 
 
 @app.task()

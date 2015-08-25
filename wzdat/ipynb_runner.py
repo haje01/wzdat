@@ -233,8 +233,10 @@ def _cell_output_to_html(rv, cell):
     if _type == 'code' and 'outputs' in cell:
         outputs = cell['outputs']
         if len(outputs) > 0:
+            # logging.debug(outputs)
             fout = outputs[0]
-            if 'ename' in fout == u'NoDataFound':
+            if 'ename' in fout and fout['ename'] == u'NoDataFound':
+                logging.debug("NoDataFound in a cell")
                 return _nodata_msg_to_html(rv, fout)
 
         code = cell['input']
