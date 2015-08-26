@@ -22,6 +22,7 @@ def check_cache():
     # TODO: remove when file-wise caching done
     es = _remove_forwarder_file(unhandled_events())
     if len(es) > 0:
+        logging.info(u"update cache for: {}".format(es))
         cache_all()
         flush_unhandled_events()
 
