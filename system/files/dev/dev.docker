@@ -13,5 +13,7 @@ ADD files/dev/rsyncd.secrets /etc/rsyncd.secrets
 RUN chmod 600 /etc/rsyncd.secrets
 RUN mkdir -p /logdata/test
 
+RUN locale-gen --purge ko_KR.UTF-8 en_US.UTF-8
+
 EXPOSE 22 873 8090 8095
 CMD ["/root/start.sh"]
