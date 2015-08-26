@@ -302,8 +302,10 @@ class SingleFile(FileCommon, IPathable):
             df = df.dropna()
         df.index.name = 'dtime'
         # pytable not support unicode for now
-        df['node'] = df['node'].astype(str)
-        df['kind'] = df['kind'].astype(str)
+        if 'node' in df.columns:
+            df['node'] = df['node'].astype(str)
+        if 'kind' in df.columns:
+            df['kind'] = df['kind'].astype(str)
         if 'level' in df.columns:
             df['level'] = df['level'].astype(str)
         return df
