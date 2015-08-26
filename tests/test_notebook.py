@@ -7,7 +7,7 @@ from wzdat.manifest import Manifest, RecursiveReference
 from wzdat.util import get_notebook_dir, find_hdf_notebook_path,\
     get_notebook_manifest_path, iter_notebooks, iter_notebook_manifest_input,\
     get_data_dir, dataframe_checksum, HDF, iter_dashboard_notebook, \
-    iter_scheduled_notebook, touch
+    iter_scheduled_notebook, touch, get_run_info
 from wzdat.ipynb_runner import update_notebook_by_run, notebook_outputs_to_html
 from wzdat.rundb import check_notebook_error_and_changed, iter_run_info
 from wzdat.nbdependresolv import update_all_notebooks
@@ -72,13 +72,22 @@ def test_notebook_error():
     touch(path)
     assert check_notebook_error_and_changed(path) == (True, True)
 
+    from wzdat import rundb
+    redis_ri = rundb.get_run_info(path)
+    rundb.remove_run_info(path)
+    manifest_ri = get_run_info(path)
+    # both elapsed time is equal
+    assert redis_ri[1] == manifest_ri[1]
+    # both error msg is equal
+    assert redis_ri[-1] == manifest_ri[-1]
+
 
 def test_notebook_util():
     nbdir = get_notebook_dir()
     nbs = [nb for nb in iter_notebooks(nbdir)]
     assert len(nbs) == 11
     nbms = [(nb, mi) for nb, mi in iter_notebook_manifest_input(nbdir)]
-    assert len(nbms) == 9
+    assert len(nbms) == 10
     path = os.path.join(nbdir, 'test-notebook3.ipynb')
     assert path == find_hdf_notebook_path('haje01', 'test')
 
@@ -112,16 +121,16 @@ def test_notebook_manifest1(fxsoldir):
     chksums = ws['cells'][1]['input']
     assert 'WARNING' in chksums[0]
     assert 'last_run' in chksums[2]
-    # check max mem
-    assert 'max_memory' in chksums[3]
-    # check depends checksum
-    assert 'depends' in chksums[4]
-    assert '8875249185536240278' in chksums[5]
+    assert 'elapsed' in chksums[3]
+    assert 'max_memory' in chksums[4]
+    assert 'error' in chksums[5]
+    assert 'depends' in chksums[6]
+    assert '8875249185536240278' in chksums[7]
     # check output checksum
-    assert 'output' in chksums[7]
-    assert '5917511075693791499' in chksums[8]
+    assert 'output' in chksums[9]
+    assert '5917511075693791499' in chksums[10]
 
-    manifest = Manifest(False, False, path)
+    manifest = Manifest(False, path)
     assert type(manifest.last_run) is datetime
     assert manifest._out_hdf_chksum is None
 
@@ -134,7 +143,7 @@ def test_notebook_manifest2(fxsoldir, fxhdftest2):
     mpath = get_notebook_manifest_path(path)
     assert os.path.isfile(mpath)
     update_notebook_by_run(path)
-    manifest = Manifest(False, True, path)
+    manifest = Manifest(True, path)
     assert len(manifest.depends.files) == 2
     assert len(manifest.depends.hdf) == 2
     assert len(manifest._dep_files_chksum) == 2
@@ -144,7 +153,7 @@ def test_notebook_manifest2(fxsoldir, fxhdftest2):
     path = os.path.join(nbdir, 'test-notebook6.ipynb')
     mpath = get_notebook_manifest_path(path)
     with pytest.raises(RecursiveReference):
-        Manifest(False, False, path)
+        Manifest(False, path)
 
 
 def test_notebook_dependency(fxsoldir, fxnewfile):
@@ -158,7 +167,7 @@ def test_notebook_dependency(fxsoldir, fxnewfile):
             del hdf.store['test']
 
     update_notebook_by_run(path)
-    manifest = Manifest(False, True, path)
+    manifest = Manifest(True, path)
     assert manifest._prev_files_chksum == manifest._dep_files_chksum
     with HDF('haje01') as hdf:
         prev_hdf_chksum = dataframe_checksum(hdf.store['test'])
@@ -169,7 +178,7 @@ def test_notebook_dependency(fxsoldir, fxnewfile):
     with open(fxnewfile, 'w') as f:
         f.write('2014-03-05 23:30 [ERROR] - Async\n')
 
-    manifest = Manifest(False, False, path)
+    manifest = Manifest(False, path)
     assert manifest._depend_files_changed
     assert manifest._prev_files_chksum != manifest._dep_files_chksum
 
