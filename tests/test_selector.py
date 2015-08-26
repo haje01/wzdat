@@ -142,3 +142,11 @@ def test_selector_nodata(fxlogs):
     f = log.files[0].find('no match')
     with pytest.raises(NoDataFound):
         f.to_frame()
+
+
+def test_selector_usecols(fxlogs):
+    log = fxlogs[0]
+    df = log.files[0][:10].to_frame(usecols=['node', 'kind'])
+    assert len(df.columns) == 2
+    assert df.columns[0] == 'node'
+    assert df.columns[1] == 'kind'

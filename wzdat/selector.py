@@ -239,11 +239,11 @@ class SingleFile(FileCommon, IPathable):
             slineno += 1
 
             if slineno >= _c.chunk_cnt:
-                df = self._to_frame_build_data_frame(tfp, hasna)
+                df = self._to_frame_build_data_frame(tfp, hasna, usecols)
                 tfp = None
                 yield df
 
-        df = self._to_frame_build_data_frame(tfp, hasna)
+        df = self._to_frame_build_data_frame(tfp, hasna, usecols)
         if _c.show_prog:
             pg.done()
         yield df
@@ -279,14 +279,24 @@ class SingleFile(FileCommon, IPathable):
         tfp.msgs = []
         return tfp
 
-    def _to_frame_build_data_frame(self, tfp, hasna):
+    def _to_frame_build_data_frame(self, tfp, hasna, usecols):
         # build data frame
-        dfinfo = {'node': tfp.nodes, 'kind': tfp.kinds, 'msg': tfp.msgs}
-        dfcols = ['node', 'kind']
-        if tfp.get_line_type is not None:
+        if usecols is None:
+            usecols = ['node', 'kind', 'level', 'msg']
+        dfinfo = {}
+        dfcols = []
+        if 'node' in usecols:
+            dfinfo['node'] = tfp.nodes
+            dfcols.append('node')
+        if 'kind' in usecols:
+            dfinfo['kind'] = tfp.kinds
+            dfcols.append('kind')
+        if tfp.get_line_type is not None and 'level' in usecols:
             dfinfo['level'] = tfp.levels
             dfcols.append('level')
-        dfcols.append('msg')
+        if 'msg' in usecols:
+            dfinfo['msg'] = tfp.msgs
+            dfcols.append('msg')
         df = DataFrame(dfinfo, index=tfp.dates, columns=dfcols)
         if hasna:
             df = df.dropna()
