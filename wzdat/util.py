@@ -16,6 +16,7 @@ from tempfile import TemporaryFile
 import uuid as _uuid
 import codecs
 from collections import defaultdict
+import json
 
 from crontab import CronTab
 import psutil
@@ -974,7 +975,7 @@ def iter_notebook_manifest(nbdir, check_depends, skip_nbs=None):
         if not os.path.isfile(mpath.encode('utf8')):
             continue
         try:
-            manifest = Manifest(False, check_depends, npath)
+            manifest = Manifest(check_depends, npath)
         except RecursiveReference, e:
             logging.error(unicode(e).encode('utf8'))
             continue
@@ -1080,3 +1081,24 @@ def system_memory_used():
         return pm.used
     else:
         return (pm.total - pm.buffers - pm.cached - pm.free)
+
+
+def get_run_info(nbapath):
+    """Return notebook run info, if redis info not exists try manifest."""
+    from wzdat import rundb
+    ri = rundb.get_run_info(nbapath)
+    if ri is not None:
+        return ri
+    logging.debug("get_run_info - fallback to manifest")
+    mpath = get_notebook_manifest_path(nbapath)
+    if os.path.isfile(mpath.encode('utf8')):
+        with open(mpath, 'r') as f:
+            data = json.loads(f.read())
+            # logging.debug(data)
+            try:
+                inp = ''.join(data['worksheets'][0]['cells'][1]['input'][1:])
+                inp = inp.replace("'", '"')
+                data = json.loads(inp)
+                return data['last_run'], data['elapsed'], 0, 0, data['error']
+            except (KeyError, IndexError), e:
+                logging.error(u"{} at {}".format(e, mpath))

@@ -9,7 +9,7 @@ from IPython.nbformat.current import reads
 
 from wzdat.notebook_runner import NoDataFound
 from wzdat.util import get_notebook_dir, parse_client_sdatetime,\
-    get_client_datetime, ansi_escape
+    get_client_datetime, ansi_escape, get_run_info
 from wzdat.rundb import get_cache_info, get_finder_info
 from wzdat.jobs import cache_finder
 from wzdat.make_config import make_config
@@ -236,17 +236,14 @@ def _poll_rerun_output(nbapath):
 
 
 def _collect_gnbs(gnbs, gk, groups):
-    from wzdat import rundb
-
     nbs = []
     nbdir = get_notebook_dir()
     logging.debug('_collect_gnbs ' + nbdir)
     # logging.debug(str(groups[gk]))
     for path, url, fname in groups[gk]:
         out = notebook_outputs_to_html(path)
-        # logging.debug('get_run_info {}'.format(path.encode('utf-8')))
-        ri = rundb.get_run_info(path)
-        # logging.debug('get_run_info {}'.format(ri))
+        ri = get_run_info(path)
+        logging.debug('get_run_info {}'.format(ri))
         if ri is not None:
             start, elapsed = _get_run_time(ri)
             cur = ri[2]

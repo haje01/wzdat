@@ -103,6 +103,7 @@ class NotebookRunner(object):
         Run a notebook cell and update the output of that cell in-place.
         '''
         logging.debug('running cell {}'.format(cidx))
+        # logging.debug(u'cell.input {}'.format(cell.input))
         self.shell.execute(cell.input)
         reply = self.shell.get_msg()
         status = reply['content']['status']

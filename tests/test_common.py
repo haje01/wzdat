@@ -7,8 +7,10 @@ import pytest
 from wzdat.make_config import make_config, invalidate_config
 from wzdat.util import ChangeDir, get_var_dir, get_tmp_dir, get_hdf_dir,\
     get_cache_dir, get_conv_dir, get_client_sdatetime, parse_sdatetime,\
-    convert_server_time_to_client, cache_files, find_files_and_save
+    convert_server_time_to_client, cache_files, find_files_and_save,\
+    get_run_info, get_notebook_dir
 from wzdat import rundb
+from wzdat.manifest import Manifest
 
 
 @pytest.yield_fixture()
@@ -118,3 +120,18 @@ def test_common_cache(fxlogs, fxdb):
 
 def test_common_rundb():
     assert rundb.iter_run_info() is not None
+
+
+def test_common_runinfo():
+    path = os.path.join(get_notebook_dir(), 'test-notebook.ipynb')
+    rundb.remove_run_info(path)
+    ri = get_run_info(path)
+    assert len(ri) == 5
+
+
+def test_common_manifest():
+    nbdir = get_notebook_dir()
+    path = os.path.join(nbdir, 'test-notebook3.ipynb')
+    manifest = Manifest(False, path)
+    with pytest.raises(TypeError):
+        manifest.output.hdf = 'hdf'

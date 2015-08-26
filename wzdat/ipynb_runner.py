@@ -94,8 +94,6 @@ def _run_code_type(outs, runner, msg_type, content):
 
 def _run_init(r, nbpath, initpath):
     init = u'__nbpath__ = u"{}"\n'.format(nbpath)
-    run_code(r, init)
-    run_code(r, "assert '__nbpath__' in globals()")
     if os.path.isfile(initpath):
         with open(initpath.encode('utf-8')) as f:
             init += f.read()
@@ -132,9 +130,10 @@ def update_notebook_by_run(path):
     finally:
         logging.debug("update_notebook_by_run finally")
         max_mem = max(memory_used)
+        elapsed = rundb.finish_run(path, err)
         run_code(r, "if 'manifest_' in globals() and manifest_ is not None: "
-                 "manifest_._write_result({})".format(max_mem))
-        rundb.finish_run(path, err)
+                 "manifest_._write_result({}, {}, '''{}''')".
+                 format(elapsed, max_mem, err))
         return err
 
 
@@ -225,6 +224,27 @@ def _nodata_msg_to_html(rv, output):
     return False
 
 
+def _cell_output_to_html_check_nodata(rv, outputs):
+    if len(outputs) > 0:
+        # logging.debug(outputs)
+        for output in outputs:
+            if 'ename' in output and output['ename'] == u'NoDataFound':
+                logging.debug("NoDataFound in a cell")
+                return _nodata_msg_to_html(rv, output)
+    return True
+
+
+def _cell_output_to_html_vieworctrl(rv, code, outputs):
+    _cls = ''
+    if '#!dashboard_control' in code or '#!dashboard_view' in code:
+        if '#!dashboard_control' in code:
+            _cls = 'control'
+        elif '#!dashboard_view' in code:
+            _cls = 'view'
+        # logging.debug("_cell_output_to_html {}".format(_cls))
+        notebook_cell_outputs_to_html(rv, outputs, _cls)
+
+
 def _cell_output_to_html(rv, cell):
     '''Append html output for cell and return whether continue or not'''
     _type = cell['cell_type']
@@ -232,21 +252,11 @@ def _cell_output_to_html(rv, cell):
     _cls = ''
     if _type == 'code' and 'outputs' in cell:
         outputs = cell['outputs']
-        if len(outputs) > 0:
-            # logging.debug(outputs)
-            fout = outputs[0]
-            if 'ename' in fout and fout['ename'] == u'NoDataFound':
-                logging.debug("NoDataFound in a cell")
-                return _nodata_msg_to_html(rv, fout)
+        if not _cell_output_to_html_check_nodata(rv, outputs):
+            return False
 
         code = cell['input']
-        if '#!dashboard_control' in code or '#!dashboard_view' in code:
-            if '#!dashboard_control' in code:
-                _cls = 'control'
-            elif '#!dashboard_view' in code:
-                _cls = 'view'
-            # logging.debug("_cell_output_to_html {}".format(_cls))
-            notebook_cell_outputs_to_html(rv, outputs, _cls)
+        _cell_output_to_html_vieworctrl(rv, code, outputs)
     elif _type == 'markdown':
         src = cell['source']
         if '<!--dashboard' in src:

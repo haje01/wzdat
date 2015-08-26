@@ -147,7 +147,7 @@ class Notebook(object):
 
     def reload_manifest(self):
         '''Reload manifest to check to run'''
-        self.manifest = Manifest(False, True, self.path)
+        self.manifest = Manifest(True, self.path)
 
     @property
     def fname(self):

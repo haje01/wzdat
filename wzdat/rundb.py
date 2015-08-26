@@ -54,8 +54,9 @@ def finish_run(path, err):
         logging.debug("_start_dt {}, total {}".format(_start_dt, total))
         if err is None:
             start_dt = parse_client_sdatetime(_start_dt)
-            elapsed = get_client_datetime() - start_dt
-            r.hmset(key, {'elapsed': elapsed.total_seconds(), 'cur': total})
+            elapsed = (get_client_datetime() - start_dt).total_seconds()
+            r.hmset(key, {'elapsed': elapsed, 'cur': total})
+            return elapsed
         else:
             r.hmset(key, {'error': err})
     else:
@@ -72,6 +73,12 @@ def get_run_info(path):
     key = u'run:{}'.format(path)
     if r.exists(key):
         return r.hmget(key, 'start', 'elapsed', 'cur', 'total', 'error')
+
+
+def remove_run_info(path):
+    key = u'run:{}'.format(path)
+    if r.exists(key):
+        return r.delete(key)
 
 
 def update_cache_info():
