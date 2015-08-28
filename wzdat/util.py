@@ -903,7 +903,7 @@ def get_ipython_port():
     return cfg['host_ipython_port']
 
 
-def get_notebook_rpath():
+def get_notebook_rpath(fallback_nbpath=True):
     "Return relative path of current notebook."
     import json
     import urllib2
@@ -913,7 +913,10 @@ def get_notebook_rpath():
         connection_file = os.path.basename(connection_file_path)
         kernel_id = connection_file.split('-', 1)[1].split('.')[0]
     except (RuntimeError, IndexError):
-        return globals()['__nbpath__']
+        if fallback_nbpath:
+            return globals()['__nbpath__']
+        else:
+            raise
 
     url = "http://{}:{}/api/sessions".format(
         get_wzdat_host(), get_ipython_port())
