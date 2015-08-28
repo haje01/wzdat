@@ -10,14 +10,15 @@ pd.set_option('io.hdf.default_format', 'table')  # default hdf format 'table'
 from pandas import Series, DataFrame
 import numpy as np
 import matplotlib.pyplot as plt
-from wzdat.util import hdf_path, hdf_exists, get_notebook_rpath
+from wzdat.util import hdf_path, hdf_exists, get_notebook_rpath, get_notebook_dir
 from wzdat.notebook_runner import NoDataFound
 
 from wzdat.manifest import Manifest, ManifestNotExist
 try:
-    nbpath = __nbpath__ if '__nbpath__' in globals() else\
+    nbrpath = __nbpath__ if '__nbpath__' in globals() else\
         get_notebook_rpath(False)
-    manifest_ = Manifest(True, nbpath)
+    nbapath = os.path.join(get_notebook_dir(), nbrpath)
+    manifest_ = Manifest(True, nbapath)
 except ManifestNotExist:
     manifest_ = None
 import os
