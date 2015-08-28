@@ -110,9 +110,7 @@ def test_notebook_manifest1(fxsoldir):
         df = hdf.store.select('test')
         assert len(df) == 7560
 
-    #
     # check manifest checksum
-    #
     import json
     with open(mpath, 'r') as f:
         data = json.loads(f.read())
@@ -133,6 +131,9 @@ def test_notebook_manifest1(fxsoldir):
     manifest = Manifest(False, path)
     assert type(manifest.last_run) is datetime
     assert manifest._out_hdf_chksum is None
+
+    # rewrite manifest output by hdf_append
+    manifest.output.hdf_append(df, append=False, data_columns=['level'])
 
 
 def test_notebook_manifest2(fxsoldir, fxhdftest2):

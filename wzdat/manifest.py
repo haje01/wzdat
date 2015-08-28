@@ -29,6 +29,24 @@ class ManifestNotExist(Exception):
     pass
 
 
+class OutputProperty(ScbProperty):
+    def __init__(self, manifest, set_cb):
+        super(OutputProperty, self).__init__(set_cb)
+        self._manifest = manifest
+
+    def hdf_append(self, value, format=None, append=True, columns=None,
+                   dropna=None, **kwargs):
+        data = self._manifest._data
+        assert 'output' in data and 'hdf' in data['output'],\
+            "Manifest has no output hdf"
+        owner, sname = data['output']['hdf']
+        logging.debug("hdf_append {}'s {}".format(owner, sname))
+        with HDF(owner) as hdf:
+            hdf.store.append(sname, value, format, append, columns, dropna,
+                             **kwargs)
+        self._out_hdf_chksum = dataframe_checksum(value)
+
+
 class Manifest(Property):
     def __init__(self, check_depends=True, explicit_nbpath=None):
         super(Manifest, self).__init__()
@@ -275,7 +293,8 @@ class Manifest(Property):
 
     def _init_output(self, output):
         _dict = self.__dict__['dict']
-        _dict['output'] = ScbProperty(self._on_output_set)
+        prop = OutputProperty(self, self._on_output_set)
+        _dict['output'] = prop
 
     def _on_output_set(self, attr, val):
         logging.debug("_on_output_set: {} - {}".format(attr, val))
