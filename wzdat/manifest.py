@@ -12,9 +12,9 @@ import json
 from IPython.nbformat.current import write, read
 
 from wzdat.util import Property, get_notebook_rpath, get_notebook_dir,\
-    dataframe_checksum, HDF, ScbProperty, convert_server_time_to_client,\
-    sizeof_fmt
+    dataframe_checksum, HDF, convert_server_time_to_client, sizeof_fmt
 from wzdat.notebook_runner import NotebookRunner, NotebookError
+from wzdat.const import HDF_CHKSUM_FMT
 
 
 class NoHDFWritten(Exception):
@@ -29,22 +29,62 @@ class ManifestNotExist(Exception):
     pass
 
 
-class OutputProperty(ScbProperty):
-    def __init__(self, manifest, set_cb):
-        super(OutputProperty, self).__init__(set_cb)
-        self._manifest = manifest
+class HDFStore(object):
+    def __init__(self, manifest, uname, sname):
+        self.manifest = manifest
+        self.uname = uname
+        self.sname = sname
 
-    def hdf_append(self, value, format=None, append=True, columns=None,
-                   dropna=None, **kwargs):
-        data = self._manifest._data
-        assert 'output' in data and 'hdf' in data['output'],\
-            "Manifest has no output hdf"
-        owner, sname = data['output']['hdf']
-        logging.debug("hdf_append {}'s {}".format(owner, sname))
-        with HDF(owner) as hdf:
-            hdf.store.append(sname, value, format, append, columns, dropna,
-                             **kwargs)
-        self._out_hdf_chksum = dataframe_checksum(value)
+    def select(self, where=None, start=None, stop=None, columns=None,
+               iterator=False, chunksize=None, auto_close=False, **kwargs):
+        logging.debug("HDFStore {}/{} select".format(self.uname, self.sname))
+        with HDF(self.uname) as hdf:
+            # chksum = hdf.store[HDF_CHKSUM_FMT.format(self.sname)][0]
+            # self.manifest._dep_hdf_chksum = chksum
+            return hdf.store.select(self.sname, where=where, start=start,
+                                    stop=stop, columns=columns,
+                                    iterator=iterator, chunksize=chunksize,
+                                    auto_close=auto_close, **kwargs)
+
+    def put(self, value, aformat=None, columns=None, dropna=None, **kwargs):
+        logging.debug("HDFStore put {}/{}".format(self.uname, self.sname))
+        self._append(value, aformat=aformat, append=False, columns=columns,
+                     dropna=dropna, **kwargs)
+
+    def append(self, value, aformat=None, columns=None, dropna=None, **kwargs):
+        logging.debug("HDFStore append {}/{}".format(self.uname, self.sname))
+        self._append(value, aformat=aformat, append=True, columns=columns,
+                     dropna=dropna, **kwargs)
+
+    def _append(self, value, aformat, append, columns, dropna, **kwargs):
+        import pandas as pd
+        ktuple = tuple(((k, v if isinstance(v, tuple) else tuple(v)) for k,
+                        v in kwargs.items()))
+        _args = (dataframe_checksum(value), self.uname, self.sname, aformat,
+                 append, columns, dropna, ktuple)
+        # escape None for hashing
+        args = map(lambda x: 0 if x is None else x, _args)
+        chksum = hash(tuple(args))
+        logging.debug('  chksum: {}'.format(chksum))
+        self.manifest._out_hdf_chksum = chksum
+        logging.debug("HDFStore append - _out_hdf_chksum {}".format(chksum))
+        with HDF(self.uname) as hdf:
+            hdf.store.append(self.sname, value, aformat, append, columns,
+                             dropna, **kwargs)
+            # write checksum
+            hsname = HDF_CHKSUM_FMT.format(self.sname)
+            if append:
+                pchksum = int(hdf.store[hsname])
+                chksum = pchksum + chksum
+            hdf.store.append(hsname, pd.Series([str(chksum)]), append=False)
+
+    def checksum(self):
+        with HDF(self.uname) as hdf:
+            try:
+                return int(hdf.store[HDF_CHKSUM_FMT.format(self.sname)])
+            except KeyError, e:
+                logging.warning("HDFStore - checksum: {}".format(e))
+                return 0
 
 
 class Manifest(Property):
@@ -111,10 +151,9 @@ class Manifest(Property):
                                           depends.files]
         if 'hdf' in depends:
             if type(depends.hdf) is not list:
-                self._dep_hdf_chksum = dataframe_checksum(depends.hdf)
+                self._dep_hdf_chksum = depends.hdf.checksum()
             else:
-                self._dep_hdf_chksum = [dataframe_checksum(hdf) for hdf in
-                                        depends.hdf]
+                self._dep_hdf_chksum = [hdf.checksum() for hdf in depends.hdf]
 
     @property
     def _depend_files_changed(self):
@@ -122,7 +161,18 @@ class Manifest(Property):
 
     @property
     def _depend_hdf_changed(self):
-        return self._prev_hdf_chksum != self._dep_hdf_chksum
+        chksum = self._dep_hdf_chksum
+        pchksum = self._prev_hdf_chksum
+        if type(chksum) is not type(pchksum):
+            return True
+
+        if isinstance(chksum, list):
+            for i, chk in enumerate(chksum):
+                if pchksum[i] != chksum[i]:
+                    return True
+            return False
+        else:
+            return self._prev_hdf_chksum != self._dep_hdf_chksum
 
     @property
     def _need_run(self):
@@ -247,43 +297,45 @@ class Manifest(Property):
 
     def _load_depends(self, data):
         _dict = self.__dict__['dict']
-        _dict['depends'] = Property()
+        prop = Property()
+        _dict['depends'] = prop
 
         if 'files' in data:
-            ftype = type(data['files'][0])
-            if ftype is not list:
-                files = data['files']
-                frm, mod, dates = self._parse_depends_files(files)
-                cmd = 'from {} import {} as _; _.load_info(); depends.files ='\
-                    '_.files[_.dates[-{}:]]; _ = None'.format(frm, mod, dates)
-                exec(cmd, globals(), _dict)
-            else:
-                exec('depends.files = []', globals(), _dict)
-                for files in data['files']:
-                    frm, mod, dates = self._parse_depends_files(files)
-                    cmd = 'from {} import {} as _; _.load_info(); depends.files.'\
-                        'append(_.files[_.dates[-{}:]]); _ = None'.\
-                        format(frm, mod, dates)
-                    exec(cmd, globals(), _dict)
+            self._load_files_depends(data, _dict)
 
         if 'hdf' in data:
-            self._load_hdf_depends(data, _dict)
+            self._load_hdf_depends(data, prop)
 
-    def _load_hdf_depends(self, data, _dict):
-        ftype = type(data['hdf'][0])
+    def _load_files_depends(self, data, _dict):
+        ftype = type(data['files'][0])
         if ftype is not list:
-            owner, sname = data['hdf']
-            cmd = 'from wzdat.util import HDF\nwith HDF("{}") as hdf:\n'\
-                '    depends.hdf = hdf.store["{}"]'.format(owner, sname)
+            files = data['files']
+            frm, mod, dates = self._parse_depends_files(files)
+            cmd = 'from {} import {} as _; _.load_info(); depends.files ='\
+                '_.files[_.dates[-{}:]]; _ = None'.format(frm, mod, dates)
             exec(cmd, globals(), _dict)
         else:
-            exec('from wzdat.util import HDF', globals(), _dict)
-            exec('depends.hdf = []', globals(), _dict)
-            for hdf in data['hdf']:
-                owner, sname = hdf
-                cmd = 'with HDF("{}") as hdf:\n    depends.hdf.append('\
-                    'hdf.store["{}"])'.format(owner, sname)
+            exec('depends.files = []', globals(), _dict)
+            for files in data['files']:
+                frm, mod, dates = self._parse_depends_files(files)
+                cmd = 'from {} import {} as _; _.load_info(); depends.files.'\
+                    'append(_.files[_.dates[-{}:]]); _ = None'.\
+                    format(frm, mod, dates)
                 exec(cmd, globals(), _dict)
+
+    def _load_hdf_depends(self, data, prop):
+        self._init_hdf_store(data, prop)
+
+    def _init_hdf_store(self, data, prop):
+        ftype = type(data['hdf'][0])
+        if ftype is not list:
+            uname, sname = data['hdf']
+            prop.hdf = HDFStore(self, uname, sname)
+        else:
+            hdfs = []
+            for uname, sname in data['hdf']:
+                hdfs.append(HDFStore(self, uname, sname))
+            prop.hdf = hdfs
 
     def _check_recursive_refer(self, owner, sname):
         if 'output' in self._data and 'hdf' in self._data['output']:
@@ -293,16 +345,11 @@ class Manifest(Property):
 
     def _init_output(self, output):
         _dict = self.__dict__['dict']
-        prop = OutputProperty(self, self._on_output_set)
+        prop = Property()
         _dict['output'] = prop
+        self._init_hdf_store(output, prop)
 
     def _on_output_set(self, attr, val):
-        logging.debug("_on_output_set: {} - {}".format(attr, val))
-        if attr == 'hdf':
-            assert 'output' in self._data and 'hdf' in self._data['output'],\
-                "Manifest has no output hdf"
-            owner, sname = self._data['output']['hdf']
-            logging.debug("set {}'s {} with {}".format(owner, sname, val))
-            with HDF(owner) as hdf:
-                hdf.store[sname] = val
-            self._out_hdf_chksum = dataframe_checksum(val)
+        if self._readonly:
+            logging.error("Can't set {} attribute {}".format(attr, val))
+            raise AttributeError("Can't set attribute")

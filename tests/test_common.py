@@ -130,8 +130,15 @@ def test_common_runinfo():
 
 
 def test_common_manifest():
+    import pandas as pd
+
     nbdir = get_notebook_dir()
     path = os.path.join(nbdir, 'test-notebook3.ipynb')
     manifest = Manifest(False, path)
-    with pytest.raises(TypeError):
-        manifest.output.hdf = 'hdf'
+    manifest.output.hdf.put(pd.DataFrame([1, 2, 3]))
+    assert manifest._out_hdf_chksum is not None
+
+    path = os.path.join(nbdir, 'test-notebook4.ipynb')
+    manifest = Manifest(True, path)
+    df = manifest.depends.hdf.select('index>1')
+    assert len(df) == 1

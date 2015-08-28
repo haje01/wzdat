@@ -126,14 +126,22 @@ def test_notebook_manifest1(fxsoldir):
     assert '8875249185536240278' in chksums[7]
     # check output checksum
     assert 'output' in chksums[9]
-    assert '5917511075693791499' in chksums[10]
+    assert '-2394538446589678049' in chksums[10]
 
     manifest = Manifest(False, path)
     assert type(manifest.last_run) is datetime
     assert manifest._out_hdf_chksum is None
 
-    # rewrite manifest output by hdf_append
-    manifest.output.hdf_append(df, append=False, data_columns=['level'])
+    # rewrite manifest output by hdf put
+    manifest.output.hdf.put(df, data_columns=['level'])
+
+    # select manifest output by hdf select
+    path = os.path.join(nbdir, 'test-notebook4.ipynb')
+    manifest = Manifest(True, path)
+    df = manifest.depends.hdf.select("index>Timestamp('2014-03-01') &"
+                                     "level='INFO'", columns=['level', 'node'])
+    assert len(df) == 1125
+    assert len(df.columns) == 2
 
 
 def test_notebook_manifest2(fxsoldir, fxhdftest2):
