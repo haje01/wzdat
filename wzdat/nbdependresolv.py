@@ -129,6 +129,8 @@ class DependencyTree(object):
                 runs.append(notebook)
             elif error and not changed:
                 logging.debug(u"_run_resolved - skip unfixed {}".format(path))
+            else:
+                logging.debug(u"no need to run")
 
         resolved.append(notebook)
 

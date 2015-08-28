@@ -204,7 +204,7 @@ def test_notebook_depresolv(fxsoldir):
     assert nb4.is_depend(nb3)
     assert nb5.is_depend(nb3)
     assert nb5.is_depend(nb4)
-    resolved, _ = dt.resolve()
+    resolved, _ = dt.resolve(True)
     sched_nbs = set([snb for snb, scd in iter_scheduled_notebook(nbdir)])
     resolved_nbs = set([nb.path for nb in resolved])
     assert len(sched_nbs & resolved_nbs) == 0

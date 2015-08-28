@@ -109,7 +109,18 @@ class Manifest(Property):
     @property
     def _need_run(self):
         '''Test if notebook should be run.'''
-        need = self._depend_files_changed or self._depend_hdf_changed
+        # test output validity
+        if 'output' in self._data and 'hdf' in self._data['output']:
+            uname, _sname = self._data['output']['hdf']
+            sname = '/' + _sname
+            with HDF(uname) as hdf:
+                hskeys = hdf.store.keys()
+            output_invalid = sname not in hskeys
+        else:
+            output_invalid = False
+
+        need = self._depend_files_changed or self._depend_hdf_changed or\
+            output_invalid
         logging.debug(u"{} _need_run {} - files changed: {}, hdf changed: {}".
                       format(self._path, need, self._depend_files_changed,
                              self._depend_hdf_changed))
@@ -139,7 +150,7 @@ class Manifest(Property):
         body.append("    'elapsed': '{}'".format(elapsed))
         body.append("    'max_memory': '{}'".format(sizeof_fmt(max_mem)))
         body.append("    'error': {}".format('None' if err is None else
-                                               json.dumps(err)))
+                                             json.dumps(err)))
         if self._dep_files_chksum is not None or\
                 self._dep_hdf_chksum is not None:
             self._write_result_depends(body)
@@ -272,6 +283,7 @@ class Manifest(Property):
             assert 'output' in self._data and 'hdf' in self._data['output'],\
                 "Manifest has no output hdf"
             owner, sname = self._data['output']['hdf']
+            logging.debug("set {}'s {} with {}".format(owner, sname, val))
             with HDF(owner) as hdf:
                 hdf.store[sname] = val
             self._out_hdf_chksum = dataframe_checksum(val)
