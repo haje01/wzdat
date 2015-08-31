@@ -1,3 +1,4 @@
+import os
 import sys
 sys.path.append('/solution')
 import matplotlib as mlp
