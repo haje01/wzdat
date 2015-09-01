@@ -119,6 +119,8 @@ def update_notebook_by_run(path):
     memory_used = []
     try:
         r.run_notebook(memory_used, lambda cur: _progress_cell(path, cur))
+        run_code(r, "if 'manifest_' in globals(): "
+                 "manifest_._check_output_hdf()")
     except NotebookError, e:
         logging.debug("except NotebookError")
         err = unicode(e)
