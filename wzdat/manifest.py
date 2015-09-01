@@ -17,10 +17,6 @@ from wzdat.notebook_runner import NotebookRunner, NotebookError
 from wzdat.const import HDF_CHKSUM_FMT
 
 
-class NoHDFWritten(Exception):
-    pass
-
-
 class RecursiveReference(Exception):
     pass
 
@@ -194,6 +190,12 @@ class Manifest(Property):
                              self._depend_hdf_changed))
         return need
 
+    def _check_output_hdf(self):
+        """Check whether output hdf has been writtin"""
+        if 'output' in self._data and 'hdf' in self._data['output']:
+            if self._out_hdf_chksum is None:
+                raise NotebookError("Output HDF has not been written.")
+
     def _write_result(self, elapsed, max_mem, err):
         logging.debug(u'_write_result {}'.format(self._path))
         nb = read(open(self._path.encode('utf-8')), 'json')
@@ -226,10 +228,6 @@ class Manifest(Property):
         if self._out_hdf_chksum is not None:  # could be multiple outputs
             coutput = "        'hdf': {}".format(self._out_hdf_chksum)
             body.append("    'output': {{\n{}\n    }}".format(coutput))
-        else:
-            if 'output' in self._data and 'hdf' in self._data['output']:
-                logging.error(u"NoHDFWritten at {}".format(self._nbapath))
-                raise NoHDFWritten(self._nbapath.encode('utf8'))
 
         if len(body) > 0:
             newcell = copy.deepcopy(nr.nb.worksheets[0].cells[0])
