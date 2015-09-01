@@ -1105,3 +1105,7 @@ def get_run_info(nbapath):
                 return data['last_run'], data['elapsed'], 0, 0, data['error']
             except (KeyError, IndexError), e:
                 logging.error(u"{} at {}".format(e, mpath))
+
+
+def is_step_only_idx(idx):
+    return idx.start is None and idx.stop is None and idx.step is not None

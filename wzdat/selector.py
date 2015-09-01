@@ -29,7 +29,7 @@ from wzdat.util import unique_tmp_path, sizeof_fmt, unique_list, \
     remove_empty_file, Property, remove_old_tmps, get_line_count, \
     get_slice_idx, ProgressBar, nprint, Context, convert_data_file,\
     get_convfile_path, get_tmp_dir, get_conv_dir, load_files_precalc,\
-    get_data_dir
+    get_data_dir, is_step_only_idx
 from wzdat.lineinfo import LineInfo, LineInfoImpl_Count, LineInfoImpl_Array
 from wzdat.notebook_runner import NoDataFound
 
@@ -683,7 +683,7 @@ class FileSelector(FileCommon, IFilterable, IMergeable):
         global qmode
         qmode = self._qmode
 
-        if isinstance(idx, int):
+        if isinstance(idx, int) or is_step_only_idx(idx):
             return self.files[idx]
         else:
             if isinstance(idx, types.SliceType):

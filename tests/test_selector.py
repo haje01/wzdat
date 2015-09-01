@@ -48,6 +48,9 @@ def test_selector_basic(fxlogs):
     assert len(dump.files) == 27
     assert len(dump.kinds) == 3
 
+    # inverse iterate
+    assert dump.files[::-1][0] == dump.files[-1]
+
 
 def test_selector_dates(fxlogs):
     l = fxlogs[0]

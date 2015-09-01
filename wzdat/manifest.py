@@ -97,7 +97,7 @@ class Manifest(Property):
         else:
             self._nbapath = explicit_nbpath
             self._path = explicit_nbpath.replace(u'.ipynb', u'.manifest.ipynb')
-        logging.debug(u"Manifest __init__ for {}".format(self._nbapath))
+        # logging.debug(u"Manifest __init__ for {}".format(self._nbapath))
 
         if not os.path.isfile(self._path.encode('utf8')):
             raise ManifestNotExist()
@@ -106,7 +106,7 @@ class Manifest(Property):
         logging.debug("Manifest __init__ done")
 
     def _init_checksum(self, check_depends):
-        logging.debug("_init_checksum")
+        # logging.debug("_init_checksum")
         self._prev_files_chksum = self._prev_hdf_chksum = \
             self._dep_files_chksum = self._dep_hdf_chksum = \
             self._out_hdf_chksum = None
