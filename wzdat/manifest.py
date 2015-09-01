@@ -229,7 +229,7 @@ class Manifest(Property):
         else:
             if 'output' in self._data and 'hdf' in self._data['output']:
                 logging.error(u"NoHDFWritten at {}".format(self._nbapath))
-                raise NoHDFWritten(self._nbapath)
+                raise NoHDFWritten(self._nbapath.encode('utf8'))
 
         if len(body) > 0:
             newcell = copy.deepcopy(nr.nb.worksheets[0].cells[0])
