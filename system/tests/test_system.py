@@ -32,7 +32,7 @@ def _reset_data():
         shutil.rmtree(ddir)
 
     # generate new dummy data
-    gen_dummydata(ddir)
+    gen_dummydata(ddir, 10, False)
     # make _var_ dir
     get_var_dir()
 

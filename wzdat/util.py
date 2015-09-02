@@ -581,8 +581,8 @@ def convert_server_time_to_client(dt, stz=None, ctz=None):
     return sdt.astimezone(ctz)
 
 
-def gen_dummydata(td=None, date_cnt=10):
-    if os.path.isdir(td):
+def gen_dummydata(td=None, date_cnt=10, remove_dir=True):
+    if os.path.isdir(td) and remove_dir:
         import shutil
         shutil.rmtree(td)
     if not os.path.exists(td):
@@ -594,6 +594,8 @@ def gen_dummydata(td=None, date_cnt=10):
              date_cnt)]
 
     _gen_dummy_files(td, dates)
+    # make _var_ dir
+    get_var_dir()
 
 
 def _gen_dummy_files(td, dates):
@@ -982,6 +984,9 @@ def iter_notebook_manifest(nbdir, check_depends, skip_nbs=None):
         except RecursiveReference, e:
             logging.error(unicode(e).encode('utf8'))
             continue
+        except SyntaxError, e:
+            logging.error(e)
+            continue
         yield npath, manifest
 
 
@@ -999,7 +1004,10 @@ def iter_notebook_manifest_input(nbdir):
                 minp = ''.join(data['worksheets'][0]['cells'][0]['input'])
             except (KeyError, IndexError):
                 continue
-            minp = eval(minp)
+            try:
+                minp = eval(minp)
+            except SyntaxError:
+                continue
             yield npath, minp
 
 

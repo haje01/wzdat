@@ -135,10 +135,10 @@ def poll_view(task_id):
             return 'PROGRESS:' + str(task.result)
         outputs = task.get()
         # logging.debug('outputs {}'.format(outputs))
-    except NoDataFound, e:
-        logging.debug(unicode(e))
-        return Response(u'<div class="view"><pre class="ds-err">{}</pre></div>'
-                        .format(unicode(e)))
+    #except NoDataFound, e:
+        #logging.debug(unicode(e))
+        #return Response(u'<div class="view"><pre class="ds-err">{}</pre></div>'
+                        #.format(unicode(e)))
     except Exception, e:
         logging.debug('poll_view - ' + unicode(e))
         err = task.traceback
@@ -148,6 +148,7 @@ def poll_view(task_id):
                         % err)
     rv = []
     notebook_cell_outputs_to_html(rv, outputs, 'view')
+    logging.debug(u"poll view  outputs {}".format(outputs))
     ret = '\n'.join(rv)
     return Response(ret)
 
@@ -183,13 +184,13 @@ def poll_rerun(task_info):
         elif task.state == 'PROGRESS':
             ri = rundb.get_run_info(nbapath)
             if ri is not None:
-                # logging.debug(u"run info exist")
+                logging.debug(u"run info exist")
                 err = ri[4]
-                # logging.debug(u'err: {}'.format(err))
+                logging.debug(u'err: {}'.format(err))
                 if err == 'None':
                     cur = int(ri[2])
                     total = int(ri[3]) + 1
-                    # logging.debug(u'cur {} total {}'.format(cur, total))
+                    logging.debug(u'cur {} total {}'.format(cur, total))
                     return 'PROGRESS:' + str(cur/float(total))
                 else:
                     logging.debug(u"ri error {}".format(err))
@@ -199,10 +200,12 @@ def poll_rerun(task_info):
                 logging.debug(u"run info not exist")
                 return 'PROGRESS:0'
         nodata = task.get()
-        logging.debug('task done')
         if nodata is not None:
             return Response(nodata)
-        # logging.debug('outputs {}'.format(outputs))
+    except NoDataFound, e:
+        logging.debug(unicode(e))
+        return Response(u'<div class="view"><pre class="ds-err">{}</pre></div>'
+                        .format(unicode(e)))
     except Exception, e:
         logging.debug(str(e))
         logging.error(e)
@@ -211,8 +214,8 @@ def poll_rerun(task_info):
         err = ansi_escape.sub('', err)
         return Response('<div class="view"><pre class="ds-err">%s</pre></div>'
                         % err)
-
     ret = _poll_rerun_output(nbapath)
+    logging.debug(str(ret))
     return Response(ret)
 
 
@@ -227,11 +230,12 @@ def _poll_rerun_output(nbapath):
                     _type = cell['cell_type']
                     if _type == 'code' and 'outputs' in cell:
                         code = cell['input']
+                        logging.debug(cell)
                         if '#!dashboard_view' in code:
                             notebook_cell_outputs_to_html(rv, cell['outputs'],
                                                           'view')
             except IndexError:
-                logging.error(u"Imcomplete notebook - {}".format(nbapath))
+                logging.error(u"Incomplete notebook - {}".format(nbapath))
     return '\n'.join(rv)
 
 

@@ -12,7 +12,8 @@ import json
 from IPython.nbformat.current import write, read
 
 from wzdat.util import Property, get_notebook_rpath, get_notebook_dir,\
-    dataframe_checksum, HDF, convert_server_time_to_client, sizeof_fmt
+    dataframe_checksum, HDF, convert_server_time_to_client, sizeof_fmt,\
+    get_notebook_manifest_path
 from wzdat.notebook_runner import NotebookRunner, NotebookError
 from wzdat.const import HDF_CHKSUM_FMT
 
@@ -92,11 +93,10 @@ class Manifest(Property):
             nbrpath = get_notebook_rpath()
             self._nbapath = os.path.join(nbdir, nbrpath)
             self._path = os.path.join(nbdir,
-                                      nbrpath.replace(u'.ipynb',
-                                                      u'.manifest.ipynb'))
+                                      get_notebook_manifest_path(nbrpath))
         else:
             self._nbapath = explicit_nbpath
-            self._path = explicit_nbpath.replace(u'.ipynb', u'.manifest.ipynb')
+            self._path = get_notebook_manifest_path(explicit_nbpath)
         # logging.debug(u"Manifest __init__ for {}".format(self._nbapath))
 
         if not os.path.isfile(self._path.encode('utf8')):
@@ -110,7 +110,12 @@ class Manifest(Property):
         self._prev_files_chksum = self._prev_hdf_chksum = \
             self._dep_files_chksum = self._dep_hdf_chksum = \
             self._out_hdf_chksum = None
-        data = self._read_manifest()
+        try:
+            data = self._read_manifest()
+        except SyntaxError, e:
+            # if user input has error, update manifest to write message
+            self._write_manifest_error(str(e))
+            raise
 
         self._data = data
         for k, v in data.iteritems():
@@ -128,6 +133,20 @@ class Manifest(Property):
         _dict = self.__dict__['dict']
         if 'depends' in _dict and check_depends:
             self._chksum_depends(_dict['depends'])
+
+    def _write_manifest_error(self, err):
+        with open(self._path.encode('utf8'), 'r') as f:
+            nbdata = json.loads(f.read())
+            cells = nbdata['worksheets'][0]['cells']
+            errdt = {
+                "metadata": {},
+                "output_type": "pyout",
+                "prompt_number": 1,
+                "text": "Manifest Error: {}".format(err)
+            }
+            cells[0]['outputs'] = [errdt]
+        with open(self._path.encode('utf8'), 'w') as f:
+            f.write(json.dumps(nbdata))
 
     def _iter_depend_hdf(self):
         if 'depends' in self._data and 'hdf' in self._data['depends']:
@@ -257,7 +276,11 @@ class Manifest(Property):
             for i, cell in enumerate(cells):
                 # user cell
                 if i == 0:
-                    mdata = ast.literal_eval(''.join(cell['input']))
+                    try:
+                        mdata = ast.literal_eval(''.join(cell['input']))
+                    except SyntaxError, e:
+                        logging.error(u"_read_manifest - {}".format(str(e)))
+                        raise
                 # generated checksum cell
                 elif i == 1:
                     try:

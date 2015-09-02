@@ -1,5 +1,7 @@
 import os
 
+import json
+
 import pytest
 from datetime import datetime
 
@@ -85,7 +87,7 @@ def test_notebook_error():
 def test_notebook_util():
     nbdir = get_notebook_dir()
     nbs = [nb for nb in iter_notebooks(nbdir)]
-    assert len(nbs) == 11
+    assert len(nbs) == 12
     nbms = [(nb, mi) for nb, mi in iter_notebook_manifest_input(nbdir)]
     assert len(nbms) == 10
     path = os.path.join(nbdir, 'test-notebook3.ipynb')
@@ -254,3 +256,18 @@ def test_notebook_nodata():
     update_notebook_by_run(path)
     rv = notebook_outputs_to_html(path)
     assert 'NoDataFound' in rv
+
+
+def test_notebook_manifest_error():
+    nbdir = get_notebook_dir()
+    nbapath = os.path.join(nbdir, 'test-notebook-manifest-error.ipynb')
+    try:
+        Manifest(False, nbapath)
+    except SyntaxError:
+        mpath = get_notebook_manifest_path(nbapath)
+        with open(mpath, 'r') as f:
+            data = json.loads(f.read())
+        cells = data['worksheets'][0]['cells']
+        assert 'invalid syntax' in cells[0]['outputs'][0]['text']
+    else:
+        assert False

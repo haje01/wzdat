@@ -683,7 +683,8 @@ class FileSelector(FileCommon, IFilterable, IMergeable):
         global qmode
         qmode = self._qmode
 
-        if isinstance(idx, int) or is_step_only_idx(idx):
+        if isinstance(idx, int) or (isinstance(idx, slice) and
+                                    is_step_only_idx(idx)):
             return self.files[idx]
         else:
             if isinstance(idx, types.SliceType):

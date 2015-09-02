@@ -10,7 +10,7 @@ from IPython.nbformat.current import read
 
 from wzdat.notebook_runner import NoDataFound
 from wzdat.ipynb_runner import run_notebook_view_cell, get_view_cell_cnt,\
-    run_code, update_notebook_by_run
+    run_code, update_notebook_by_run, notebook_outputs_to_html
 from wzdat.make_config import make_config
 from wzdat.notebook_runner import NotebookRunner
 from wzdat.const import TMP_PREFIX
@@ -34,6 +34,7 @@ def rerun_notebook(nbpath):
         return [unicode(e)]
     rerun_notebook.update_state(state='PROGRESS', meta=1)
     print(u'rerun_notebook {} done.'.format(nbpath))
+    return [notebook_outputs_to_html(nbpath)]
 
 
 @app.task()

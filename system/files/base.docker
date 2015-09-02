@@ -64,5 +64,9 @@ RUN pip install python-coveralls
 # Management
 RUN pip install fabric
 
+# Snakemake
+RUN apt-get install -qq -y python3-pip
+RUN pip3 install snakemake
+
 # Update Bash
 RUN apt-get update && apt-get install --only-upgrade bash

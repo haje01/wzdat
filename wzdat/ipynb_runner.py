@@ -220,30 +220,37 @@ def notebook_outputs_to_html(path):
     return '\n'.join(rv)
 
 
-def _nodata_msg_to_html(rv, output):
-    nodata_msg = ansi_escape.sub('', output['traceback'][-1])
-    rv.append(nodata_msg)
-    return False
+#def _nodata_msg_to_html(rv, output):
+    #nodata_msg = ansi_escape.sub('', output['traceback'][-1])
+    #rv.append(nodata_msg)
+    #return False
 
 
-def _cell_output_to_html_check_nodata(rv, outputs):
+def _cell_output_to_html_check_nodata(rv, code, outputs):
     if len(outputs) > 0:
         # logging.debug(outputs)
         for output in outputs:
             if 'ename' in output and output['ename'] == u'NoDataFound':
-                logging.debug("NoDataFound in a cell")
-                return _nodata_msg_to_html(rv, output)
+                _cls = _get_output_class(code)
+                logging.debug("NoDataFound in a cell {}".format(_cls))
+                notebook_cell_outputs_to_html(rv, outputs, _cls)
+                return False
+                # return _nodata_msg_to_html(rv, output)
     return True
+
+
+def _get_output_class(code):
+    if '#!dashboard_control' in code:
+        return 'control'
+    elif '#!dashboard_view' in code:
+        return 'view'
+    return ''
 
 
 def _cell_output_to_html_vieworctrl(rv, code, outputs):
     _cls = ''
     if '#!dashboard_control' in code or '#!dashboard_view' in code:
-        if '#!dashboard_control' in code:
-            _cls = 'control'
-        elif '#!dashboard_view' in code:
-            _cls = 'view'
-        # logging.debug("_cell_output_to_html {}".format(_cls))
+        _cls = _get_output_class(code)
         notebook_cell_outputs_to_html(rv, outputs, _cls)
 
 
@@ -253,11 +260,11 @@ def _cell_output_to_html(rv, cell):
     # logging.debug("_cell_output_to_html {}".format(_type))
     _cls = ''
     if _type == 'code' and 'outputs' in cell:
+        code = cell['input']
         outputs = cell['outputs']
-        if not _cell_output_to_html_check_nodata(rv, outputs):
+        if not _cell_output_to_html_check_nodata(rv, code, outputs):
             return False
 
-        code = cell['input']
         _cell_output_to_html_vieworctrl(rv, code, outputs)
     elif _type == 'markdown':
         src = cell['source']
@@ -271,6 +278,7 @@ def _cell_output_to_html(rv, cell):
 
 def notebook_cell_outputs_to_html(rv, outputs, _cls):
     # check this is image cell
+    logging.debug("notebook_cell_outputs_to_html {}".format(_cls))
     image_cell = False
     for output in outputs:
         _type = type(output)
@@ -282,7 +290,9 @@ def notebook_cell_outputs_to_html(rv, outputs, _cls):
 
     for output in outputs:
         _type = type(output)
+        logging.debug(_type)
         if _type in (unicode, str):
+            # logging.debug(output)
             html = output
         else:
             html = _notebook_cell_output_to_html(output, image_cell)
@@ -292,8 +302,12 @@ def notebook_cell_outputs_to_html(rv, outputs, _cls):
 
 def _notebook_cell_output_to_html(output, image_cell):
     _type = output['output_type']
+    # logging.debug("_notebook_cell_output_to_html {}".format(_type))
+    # logging.debug(output)
     if _type == 'stream':
         return output['text']
+    elif _type == 'pyerr':
+        return ansi_escape.sub('', output['traceback'][-1])
     elif _type == 'display_data':
         if 'png' in output:
             data = output['png']
