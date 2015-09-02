@@ -43,6 +43,7 @@ class DependencyTree(object):
     def _find_and_add_depend(self, nb, hdf):
         hnb = self._find_hdf_out_notebook(hdf)
         if hnb is None:
+            logging.error(u"UnresolvedHDFDependency for {}".format(nb.path))
             raise UnresolvedHDFDependency()
         nb.add_depend(hnb)
 
