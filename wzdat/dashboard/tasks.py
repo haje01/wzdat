@@ -49,6 +49,8 @@ def run_view_cell(nbpath, formname, kwargs):
         with open(ipython_init_path) as f:
             init = f.read()
             run_code(r, init)
+    else:
+        print 'IPython init {} not exist'.format(ipython_init_path)
     init = "from wzdat.dashboard.control import Form; %s = Form();"\
            "form.init(%s)" % (formname, repr(kwargs))
     print('init {}'.format(init))

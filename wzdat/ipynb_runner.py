@@ -133,8 +133,8 @@ def update_notebook_by_run(path):
         logging.debug("update_notebook_by_run finally")
         max_mem = max(memory_used)
         elapsed = rundb.finish_run(path, err)
-        run_code(r, "if 'manifest_' in globals() and manifest_ is not None: "
-                 "manifest_._write_result({}, {}, '''{}''')".
+        run_code(r, u"if 'manifest_' in globals() and manifest_ is not None: "
+                 u"manifest_._write_result({}, {}, '''{}''')".
                  format(elapsed, max_mem, err))
         return err
 

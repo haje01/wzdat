@@ -252,7 +252,7 @@ def _collect_gnbs(gnbs, gk, groups):
             start, elapsed = _get_run_time(ri)
             cur = ri[2]
             total = ri[3]
-            err = ri[4]
+            err = ri[4].decode('utf8')
             if err != 'None':
                 out = '<div class="fail-result">Check error, fix it, '\
                       'and rerun.</div>'
