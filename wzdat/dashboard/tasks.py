@@ -49,6 +49,8 @@ def run_view_cell(nbpath, formname, kwargs):
         with open(ipython_init_path) as f:
             init = f.read()
             run_code(r, init)
+    else:
+        print 'IPython init {} not exist'.format(ipython_init_path)
     init = "from wzdat.dashboard.control import Form; %s = Form();"\
            "form.init(%s)" % (formname, repr(kwargs))
     print('init {}'.format(init))
@@ -73,6 +75,7 @@ def run_view_cell(nbpath, formname, kwargs):
         except NoDataFound, e:
             run_view_cell.update_state(state='PROGRESS', meta=1)
             return [unicode(e)]
+    run_view_cell.update_state(state='PROGRESS', meta=1)
     return rv
 
 

@@ -114,6 +114,30 @@ def test_system_file_event(fxdocker):
     assert 'game_2014-02-24 01.log' in rv[2]
 
 
+def test_system_view(fxdocker):
+    sub = 'start_view'
+    nbpath = 'test-notebook2.ipynb'
+    data = [{"name": "my_fruit", "value": "--"},
+            {"name": "wzd_formname", "value": "form"}]
+    r = requests.post('{}/{}/{}'.format(dashboard_url, sub, nbpath), json=data)
+    assert r.status_code == 200
+    task_id = r.text
+
+    time.sleep(1)
+
+    sub = 'poll_view'
+    r = requests.post('{}/{}/{}'.format(dashboard_url, sub, nbpath, task_id),
+                      data=[])
+    while 'PROGRESS' in r.text:
+        print r.text
+        time.sleep(1)
+        r = requests.post('{}/{}/{}'.format(dashboard_url, sub, nbpath,
+                                            task_id), data=[])
+        assert r.status_code == 200
+    import pdb; pdb.set_trace()  # XXX BREAKPOINT
+    pass
+
+
 def test_system_finder(fxdocker):
     # test finder home
     r = requests.get('{}/finder'.format(dashboard_url))
