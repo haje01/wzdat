@@ -312,6 +312,12 @@ def restart(prj):
           'celery update_notebooks'.format(prj=prj))
 
 
+def restart_all():
+    prjs = os.environ['WZDAT_PRJS'].split(',')
+    for prj in prjs:
+        restart(prj)
+
+
 def _get_prj_and_ports():
     r = local('docker ps -a', capture=True)
     prjs = []
