@@ -10,7 +10,7 @@ from IPython.nbformat.current import read
 
 from wzdat.notebook_runner import NoDataFound
 from wzdat.ipynb_runner import run_notebook_view_cell, get_view_cell_cnt,\
-    run_code, update_notebook_by_run, notebook_outputs_to_html
+    run_code, update_notebook_by_run, notebook_outputs_to_html, run_init
 from wzdat.make_config import make_config
 from wzdat.notebook_runner import NotebookRunner
 from wzdat.const import TMP_PREFIX
@@ -44,13 +44,8 @@ def run_view_cell(nbpath, formname, kwargs):
     r = NotebookRunner(nb, pylab=True)
     total = float(get_view_cell_cnt(r) + 1)
 
-    ipython_init_path = os.path.join(sol_dir, 'ipython_init.py')
-    if os.path.isfile(ipython_init_path):
-        with open(ipython_init_path) as f:
-            init = f.read()
-            run_code(r, init)
-    else:
-        print 'IPython init {} not exist'.format(ipython_init_path)
+    run_init(r, nbpath)
+
     init = "from wzdat.dashboard.control import Form; %s = Form();"\
            "form.init(%s)" % (formname, repr(kwargs))
     print('init {}'.format(init))

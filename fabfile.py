@@ -307,6 +307,11 @@ def log(prj):
     local('docker logs -f wzdat_{prj}'.format(prj=prj))
 
 
+def restart(prj):
+    local('docker exec wzdat_{prj} supervisorctl restart uwsgi '
+          'celery update_notebooks'.format(prj=prj))
+
+
 def _get_prj_and_ports():
     r = local('docker ps -a', capture=True)
     prjs = []

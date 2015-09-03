@@ -106,7 +106,7 @@ class Manifest(Property):
         logging.debug("Manifest __init__ done")
 
     def _init_checksum(self, check_depends):
-        # logging.debug("_init_checksum")
+        logging.debug("_init_checksum")
         self._prev_files_chksum = self._prev_hdf_chksum = \
             self._dep_files_chksum = self._dep_hdf_chksum = \
             self._out_hdf_chksum = None
@@ -135,6 +135,7 @@ class Manifest(Property):
             self._chksum_depends(_dict['depends'])
 
     def _write_manifest_error(self, err):
+        logging.debug(u"_write_manifest_error {}".format(err))
         with open(self._path.encode('utf8'), 'r') as f:
             nbdata = json.loads(f.read())
             cells = nbdata['worksheets'][0]['cells']

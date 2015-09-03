@@ -913,8 +913,10 @@ def get_notebook_rpath(fallback_nbpath=True):
     try:
         connection_file_path = kernel.get_connection_file()
         connection_file = os.path.basename(connection_file_path)
+        logging.debug(u"get_connection_file - {}".format(connection_file))
         kernel_id = connection_file.split('-', 1)[1].split('.')[0]
     except (RuntimeError, IndexError):
+        logging.debug("Kernel ID not found, fallback")
         if fallback_nbpath:
             return globals()['__nbpath__']
         else:

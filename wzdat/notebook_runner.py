@@ -182,10 +182,10 @@ class NotebookRunner(object):
 
         logging.debug("status: {}".format(status))
         if status == 'error':
-            logging.error(u"run_cell error: " + traceback_text)
             if 'NoDataFound' in traceback_text:
                 raise NoDataFound(traceback_text.split('\n')[-1])
             else:
+                logging.debug(u"NotebookError - {}".format(traceback_text))
                 raise NotebookError(traceback_text)
 
     def iter_code_cells(self):

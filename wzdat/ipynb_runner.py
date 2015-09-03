@@ -92,7 +92,8 @@ def _run_code_type(outs, runner, msg_type, content):
     return outs
 
 
-def _run_init(r, nbpath, initpath):
+def run_init(r, nbpath):
+    initpath = ipython_start_script_path()
     init = u'__nbpath__ = u"{}"\n'.format(nbpath)
     if os.path.isfile(initpath):
         with open(initpath.encode('utf-8')) as f:
@@ -110,7 +111,7 @@ def update_notebook_by_run(path):
     r.clear_outputs()
 
     # run config & startup
-    _run_init(r, path, ipython_start_script_path())
+    run_init(r, path)
 
     # run cells
     cellcnt = r.cellcnt
@@ -134,7 +135,7 @@ def update_notebook_by_run(path):
         max_mem = max(memory_used)
         elapsed = rundb.finish_run(path, err)
         run_code(r, u"if 'manifest_' in globals() and manifest_ is not None: "
-                 "manifest_._write_result({}, {}, '''{}''')".
+                 u"manifest_._write_result({}, {}, '''{}''')".
                  format(elapsed, max_mem, err))
         return err
 
