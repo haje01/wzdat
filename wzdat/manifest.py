@@ -179,6 +179,8 @@ class Manifest(Property):
     def _depend_hdf_changed(self):
         chksum = self._dep_hdf_chksum
         pchksum = self._prev_hdf_chksum
+        logging.debug("_depend_hdf_changed pchecksum {}, checksum "
+                      "{}".format(pchksum, chksum))
         if type(chksum) is not type(pchksum):
             return True
 

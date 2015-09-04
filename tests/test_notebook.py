@@ -220,6 +220,14 @@ def test_notebook_depresolv(fxsoldir):
     resolved_nbs = set([nb.path for nb in resolved])
     assert len(sched_nbs & resolved_nbs) == 0
 
+    # test hdf dependency
+    assert nb3.manifest.output.hdf.checksum() ==\
+        nb4.manifest.depends.hdf.checksum()
+    assert nb3.manifest.output.hdf.checksum() ==\
+        nb5.manifest.depends.hdf[0].checksum()
+    assert nb4.manifest.output.hdf.checksum() ==\
+        nb5.manifest.depends.hdf[1].checksum()
+
 
 def test_notebook_dashboard(fxsoldir):
     nbdir = get_notebook_dir()
