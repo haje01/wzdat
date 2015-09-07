@@ -773,7 +773,7 @@ def find_files_and_save(startdir, file_type, use_cache, ffilter=None,
     filecnt = 0
     assert os.path.isdir(startdir)
     for root, dirs, filenames in os.walk(startdir):
-        dirs[:] = [d for d in dirs if d not in ('_var_',)]
+        dirs[:] = [d for d in dirs if not d.startswith('_')]
         _root = [os.path.abspath(root), []]
         root_list.append(_root)
         if len(filenames) > 0:
