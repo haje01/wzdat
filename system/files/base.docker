@@ -70,3 +70,9 @@ RUN pip3 install snakemake
 
 # Update Bash
 RUN apt-get update && apt-get install --only-upgrade bash
+
+# for ML
+RUN pip install scikit-learn==0.16.1
+RUN pip install networkx==1.10
+RUN pip install nltk==3.0.5
+RUN pip install pydot==1.0.2
