@@ -34,7 +34,7 @@ class HDFStore(object):
 
     def select(self, where=None, start=None, stop=None, columns=None,
                iterator=False, chunksize=None, auto_close=False, **kwargs):
-        logging.debug("HDFStore {}/{} select".format(self.uname, self.sname))
+        # logging.debug("HDFStore {}/{} select".format(self.uname, self.sname))
         with HDF(self.uname) as hdf:
             # chksum = hdf.store[HDF_CHKSUM_FMT.format(self.sname)][0]
             # self.manifest._dep_hdf_chksum = chksum
@@ -44,12 +44,12 @@ class HDFStore(object):
                                     auto_close=auto_close, **kwargs)
 
     def put(self, value, aformat=None, columns=None, dropna=None, **kwargs):
-        logging.debug("HDFStore put {}/{}".format(self.uname, self.sname))
+        # logging.debug("HDFStore put {}/{}".format(self.uname, self.sname))
         self._append(value, aformat=aformat, append=False, columns=columns,
                      dropna=dropna, **kwargs)
 
     def append(self, value, aformat=None, columns=None, dropna=None, **kwargs):
-        logging.debug("HDFStore append {}/{}".format(self.uname, self.sname))
+        # logging.debug("HDFStore append {}/{}".format(self.uname, self.sname))
         self._append(value, aformat=aformat, append=True, columns=columns,
                      dropna=dropna, **kwargs)
 
@@ -62,7 +62,7 @@ class HDFStore(object):
         # escape None for hashing
         args = map(lambda x: 0 if x is None else x, _args)
         chksum = hash(tuple(args))
-        logging.debug('  chksum: {}'.format(chksum))
+        # logging.debug('  chksum: {}'.format(chksum))
         self.manifest._out_hdf_chksum = chksum
         logging.debug("HDFStore append - _out_hdf_chksum {}".format(chksum))
         with HDF(self.uname) as hdf:
