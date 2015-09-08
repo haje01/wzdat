@@ -6,6 +6,7 @@ import pytest
 import wzdat
 from wzdat.make_config import make_config
 from wzdat.notebook_runner import NoDataFound
+from wzdat.util import touch
 
 cfg = make_config()
 localhost = os.environ['WZDAT_HOST']
@@ -74,6 +75,11 @@ def test_selector_value(fxlogs):
     assert f.nodes == [log.node.jp_node_1]
     assert f.kinds == [log.kind.auth]
     assert f.dates == [log.date.D2014_02_24]
+
+    chksum = f.checksum()
+    assert chksum is not None
+    touch(f._abspath)
+    assert f.checksum() != chksum
 
     assert f.link.data == '<a href="http://{localhost}:8085/file/jp/node-1/'\
         'log/auth_2014-02-24.log">jp/node-1/log/auth_2014-02-24.log</a>'.\
