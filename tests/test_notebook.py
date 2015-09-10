@@ -9,7 +9,8 @@ from wzdat.manifest import Manifest, RecursiveReference
 from wzdat.util import get_notebook_dir, find_hdf_notebook_path,\
     get_notebook_manifest_path, iter_notebooks, iter_notebook_manifest_input,\
     get_data_dir, dataframe_checksum, HDF, iter_dashboard_notebook, \
-    iter_scheduled_notebook, touch, get_run_info, get_notebook_cells
+    iter_scheduled_notebook, touch, get_run_info, get_notebook_cells,\
+    get_notebook_source
 from wzdat.ipynb_runner import update_notebook_by_run, notebook_outputs_to_html
 from wzdat.rundb import check_notebook_error_and_changed, iter_run_info
 from wzdat.nbdependresolv import update_all_notebooks
@@ -118,7 +119,7 @@ def test_notebook_manifest1(fxsoldir):
         data = json.loads(f.read())
     cells = get_notebook_cells(data)
     assert len(cells) == 2
-    chksums = cells[1]['input']
+    chksums = get_notebook_source(cells[1])
     assert 'WARNING' in chksums[0]
     assert 'last_run' in chksums[2]
     assert 'elapsed' in chksums[3]

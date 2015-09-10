@@ -1003,7 +1003,7 @@ def iter_notebook_manifest_input(nbdir):
         with open(mpath, 'r') as f:
             data = json.loads(f.read())
             try:
-                minp = ''.join(get_notebook_cells(data)[0]['input'])
+                minp = ''.join(data['cells'][0]['source'])
             except (KeyError, IndexError):
                 continue
             try:
@@ -1109,7 +1109,7 @@ def get_run_info(nbapath):
             data = json.loads(f.read())
             # logging.debug(data)
             try:
-                inp = ''.join(get_notebook_cells(data)[1]['input'][1:])
+                inp = ''.join(data['cells'][1]['source'][1:])
                 inp = inp.replace("'", '"')
                 data = json.loads(inp)
                 return data['last_run'], data['elapsed'], 0, 0, data['error']
@@ -1119,11 +1119,3 @@ def get_run_info(nbapath):
 
 def is_step_only_idx(idx):
     return idx.start is None and idx.stop is None and idx.step is not None
-
-
-def get_notebook_cells(nb):
-    fmt = nb['nbformat']
-    if fmt >= 4:
-        return nb['cells']
-    else:
-        return nb['worksheets'][0]['cells']

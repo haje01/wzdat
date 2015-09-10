@@ -9,23 +9,24 @@ from Queue import Empty
 from markdown import markdown
 
 from wzdat.util import div, remove_ansicolor, ipython_start_script_path,\
-    ansi_escape, get_notebook_cells
+    ansi_escape
 from wzdat import rundb
-from notebook_runner import NoDataFound
+from wzdat.const import IPYNB_VER
+from wzdat.notebook_runner import NoDataFound
 
 
 CRON_PTRN =\
     re.compile(r'\s*\[\s*((?:[^\s@]+\s+){4}[^\s@]+)?\s*(?:@(.+))?\s*\]\s*(.+)')
 IGNORE_DIRS = ('.ipynb_checkpoints', '.git')
 
-from IPython.nbformat.current import read, NotebookNode, write, reads
+from nbformat import read, NotebookNode, write, reads
 from wzdat.notebook_runner import NotebookRunner, NotebookError
 
 
 def run_code(runner, code):
     logging.debug("run_code")
-    runner.shell.execute(code)
-    reply = runner.shell.get_msg()
+    runner.kc.execute(code)
+    reply = runner.kc.get_shell_msg()
     status = reply['content']['status']
     if status == 'error':
         traceback_text = 'Code raised uncaught exception: \n' + \
@@ -38,7 +39,7 @@ def run_code(runner, code):
     outs = list()
     while True:
         try:
-            msg = runner.iopub.get_msg(timeout=1)
+            msg = runner.kc.get_iopub_msg(timeout=1)
             if msg['msg_type'] == 'status':
                 if msg['content']['execution_state'] == 'idle':
                     break
@@ -70,7 +71,10 @@ def _run_code_type(outs, runner, msg_type, content):
         return outs
     elif msg_type == 'stream':
         out.stream = content['name']
-        out.text = content['data']
+        if 'text' in content:
+            out.text = content['text']
+        else:
+            out.text = content['data']
     elif msg_type in ('display_data', 'pyout'):
         for mime, data in content['data'].items():
             try:
@@ -106,7 +110,7 @@ def update_notebook_by_run(path):
     logging.debug(u'update_notebook_by_run {}'.format(path))
 
     # init runner
-    nb = read(open(path.encode('utf-8')), 'json')
+    nb = read(open(path.encode('utf-8')), IPYNB_VER)
     r = NotebookRunner(nb, pylab=True)
     r.clear_outputs()
 
@@ -127,9 +131,9 @@ def update_notebook_by_run(path):
         err = unicode(e)
     except NoDataFound, e:
         logging.debug(unicode(e))
-        write(r.nb, open(path.encode('utf-8'), 'w'), 'json')
+        write(r.nb, open(path.encode('utf-8'), 'w'), IPYNB_VER)
     else:
-        write(r.nb, open(path.encode('utf-8'), 'w'), 'json')
+        write(r.nb, open(path.encode('utf-8'), 'w'), IPYNB_VER)
     finally:
         logging.debug("update_notebook_by_run finally")
         max_mem = max(memory_used)
@@ -144,7 +148,7 @@ def run_notebook_view_cell(rv, r, cell, idx):
     logging.debug('run_notebook_view_cell')
     _type = cell['cell_type']
     if _type == 'code':
-        code = cell['input']
+        code = cell['source']
         if '#!dashboard_view' in code:
             try:
                 r.run_cell(cell, idx)
@@ -152,7 +156,7 @@ def run_notebook_view_cell(rv, r, cell, idx):
                 logging.debug("run_cell - NoDataFound")
                 raise
             else:
-                outs = get_notebook_cells(r.nb)[idx]['outputs']
+                outs = r.nb['cells'][idx]['outputs']
                 rv += outs
                 return True
     elif _type == 'markdown':
@@ -167,7 +171,7 @@ def get_view_cell_cnt(r):
     for _, cell in enumerate(r.iter_cells()):
         _type = cell['cell_type']
         if _type == 'code':
-            code = cell['input']
+            code = cell['source']
             if '#!dashboard_view' in code:
                 cnt += 1
         elif _type == 'markdown':
@@ -208,10 +212,10 @@ def notebook_outputs_to_html(path):
     logging.debug('notebook_outputs_to_html {}'.format(path.encode('utf-8')))
     rv = []
     with open(path, 'r') as f:
-        nb = reads(f.read(), 'json')
+        nb = reads(f.read(), IPYNB_VER)
         if len(nb) > 0:
             try:
-                for cell in get_notebook_cells(nb):
+                for cell in nb['cells']:
                     cont = _cell_output_to_html(rv, cell)
                     if not cont:
                         break
@@ -254,7 +258,7 @@ def _cell_output_to_html(rv, cell):
     # logging.debug("_cell_output_to_html {}".format(_type))
     _cls = ''
     if _type == 'code' and 'outputs' in cell:
-        code = cell['input']
+        code = cell['source']
         outputs = cell['outputs']
         if not _cell_output_to_html_check_nodata(rv, code, outputs):
             return False

@@ -21,8 +21,6 @@ RUN apt-get -qq -y install sqlite3 libsqlite3-dev
 RUN pip install numpy==1.9.1
 RUN pip install numexpr==2.4
 RUN pip install cython==0.21.1
-RUN wget -qO- https://raw.github.com/PyTables/PyTables/develop/requirements.txt | sed '/^#/ d' | xargs pip install
-RUN wget -qO- https://raw.githubusercontent.com/haje01/wzdat/master/requirements.txt | sed '/%#/ d' | xargs pip install
 
 # Dashboard & Web
 RUN pip install uwsgi
@@ -70,6 +68,17 @@ RUN pip3 install snakemake
 
 # Update Bash
 RUN apt-get update && apt-get install --only-upgrade bash
+
+# Snappy
+RUN wget -q https://github.com/google/snappy/releases/download/1.1.3/snappy-1.1.3.tar.gz
+RUN tar xzvf snappy-1.1.3.tar.gz
+RUN cd snappy-1.1.3 && ./configure && make && make install && ldconfig
+RUN wget -q https://bintray.com/artifact/download/kubo/generic/snzip-1.0.2.tar.gz
+RUN tar xzvf snzip-1.0.2.tar.gz
+RUN cd snzip-1.0.2 && ./configure && make && make install
+RUN pip install python-snappy
+
+{%WZDAT_REQUIREMENTS%}
 
 # for ML
 RUN pip install scikit-learn==0.16.1

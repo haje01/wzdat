@@ -18,10 +18,11 @@ from time import sleep
 import logging
 import os
 
-from IPython.nbformat.current import NotebookNode
-from IPython.kernel import KernelManager
+from nbformat import NotebookNode
+from nbformat.v4.convert import upgrade_outputs
+from jupyter_client.manager import KernelManager
 
-from wzdat.util import remove_ansicolor, system_memory_used, sizeof_fmt, get_notebook_cells
+from wzdat.util import remove_ansicolor, system_memory_used, sizeof_fmt
 
 
 class NoDataFound(Exception):
@@ -88,9 +89,11 @@ class NotebookRunner(object):
 
         self.kc = self.km.client()
         self.kc.start_channels()
-
-        self.shell = self.kc.shell_channel
-        self.iopub = self.kc.iopub_channel
+        try:
+            self.kc.wait_for_ready()
+        except AttributeError:
+            # IPython < 3
+            self._wait_for_ready_backport()
 
         self.nb = nb
 
@@ -104,8 +107,8 @@ class NotebookRunner(object):
         '''
         logging.debug('running cell {}'.format(cidx))
         # logging.debug(u'cell.input {}'.format(cell.input))
-        self.shell.execute(cell.input)
-        reply = self.shell.get_msg()
+        self.kc.execute(cell.source)
+        reply = self.kc.get_shell_msg()
         status = reply['content']['status']
         max_mem = system_memory_used()
         logging.info('  memory used: {}'.format(sizeof_fmt(max_mem)))
@@ -121,7 +124,7 @@ class NotebookRunner(object):
         outs = list()
         while True:
             try:
-                msg = self.iopub.get_msg(timeout=1)
+                msg = self.kc.get_iopub_msg(timeout=1)
                 if msg['msg_type'] == 'status':
                     if msg['content']['execution_state'] == 'idle':
                         break
@@ -146,15 +149,18 @@ class NotebookRunner(object):
 
             out = NotebookNode(output_type=msg_type)
 
-            if 'execution_count' in content:
-                cell['prompt_number'] = content['execution_count']
-                out.prompt_number = content['execution_count']
+            #if 'execution_count' in content:
+                #cell['prompt_number'] = content['execution_count']
+                #out.prompt_number = content['execution_count']
 
             if msg_type in ('status', 'pyin', 'execute_input'):
                 continue
             elif msg_type == 'stream':
                 out.stream = content['name']
-                out.text = content['data']
+                if 'text' in content:
+                    out.text = content['text']
+                else:
+                    out.text = content['data']
                 # print(out.text, end='')
             elif msg_type in ('display_data', 'pyout'):
                 for mime, data in content['data'].items():
@@ -178,7 +184,8 @@ class NotebookRunner(object):
                 raise NotImplementedError('unhandled iopub message: %s' %
                                           msg_type)
             outs.append(out)
-        cell['outputs'] = outs
+        # NOTE: Ver 4 format still have 'pyout', Why?
+        cell['outputs'] = upgrade_outputs(outs)
 
         logging.debug("status: {}".format(status))
         if status == 'error':
@@ -192,7 +199,7 @@ class NotebookRunner(object):
         '''
         Iterate over the notebook cells containing code.
         '''
-        for cell in get_notebook_cells(self.nb):
+        for cell in self.nb['cells']:
             if cell.cell_type == 'code':
                 yield cell
 
@@ -200,7 +207,8 @@ class NotebookRunner(object):
         '''
         Iterate over the notebook cells.
         '''
-        for cell in get_notebook_cells(self.nb):
+        print(self.nb)
+        for cell in self.nb['cells']:
             yield cell
 
     def clear_outputs(self):
@@ -209,7 +217,7 @@ class NotebookRunner(object):
 
     @property
     def cellcnt(self):
-        return len(get_notebook_cells(self.nb))
+        return len(self.nb['cells'])
 
     def run_notebook(self, memory_used=None, progress_cb=None,
                      skip_exceptions=False):

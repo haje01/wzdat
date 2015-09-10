@@ -5,16 +5,17 @@ from collections import defaultdict
 from datetime import timedelta
 
 from flask import Flask, render_template, request, Response, redirect, url_for
-from IPython.nbformat.current import reads
+from nbformat import reads
 
 from wzdat.notebook_runner import NoDataFound
 from wzdat.util import get_notebook_dir, parse_client_sdatetime,\
-    get_client_datetime, ansi_escape, get_run_info, get_notebook_cells
+    get_client_datetime, ansi_escape, get_run_info
 from wzdat.rundb import get_cache_info, get_finder_info
 from wzdat.jobs import cache_finder
 from wzdat.make_config import make_config
 from wzdat.ipynb_runner import notebook_outputs_to_html,\
     notebook_cell_outputs_to_html
+from wzdat.const import IPYNB_VER
 
 app = Flask(__name__)
 
@@ -217,14 +218,13 @@ def poll_rerun(task_info):
 def _poll_rerun_output(nbapath):
     rv = []
     with open(nbapath, 'r') as f:
-        nb = reads(f.read(), 'json')
-        ws = get_notebook_cells(nb)
+        nb = reads(f.read(), IPYNB_VER)
         if len(nb) > 0:
             try:
-                for cell in ws[0]['cells']:
+                for cell in nb['cells']:
                     _type = cell['cell_type']
                     if _type == 'code' and 'outputs' in cell:
-                        code = cell['input']
+                        code = cell['source']
                         logging.debug(cell)
                         if '#!dashboard_view' in code:
                             notebook_cell_outputs_to_html(rv, cell['outputs'],

@@ -6,14 +6,14 @@ import zipfile
 import logging
 
 from celery import Celery
-from IPython.nbformat.current import read
+from nbformat import read
 
 from wzdat.notebook_runner import NoDataFound
 from wzdat.ipynb_runner import run_notebook_view_cell, get_view_cell_cnt,\
     run_code, update_notebook_by_run, notebook_outputs_to_html, run_init
 from wzdat.make_config import make_config
 from wzdat.notebook_runner import NotebookRunner
-from wzdat.const import TMP_PREFIX
+from wzdat.const import TMP_PREFIX, IPYNB_VER
 from wzdat.util import unique_tmp_path
 from wzdat.selector import get_urls
 
@@ -40,7 +40,7 @@ def rerun_notebook(nbpath):
 @app.task()
 def run_view_cell(nbpath, formname, kwargs):
     print('run_view_cell {}'.format(formname))
-    nb = read(open(nbpath), 'json')
+    nb = read(open(nbpath), IPYNB_VER)
     r = NotebookRunner(nb, pylab=True)
     total = float(get_view_cell_cnt(r) + 1)
 

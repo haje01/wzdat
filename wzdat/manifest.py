@@ -9,13 +9,13 @@ from datetime import datetime
 import copy
 import json
 
-from IPython.nbformat.current import write, read
+from nbformat import write, read
 
 from wzdat.util import Property, get_notebook_rpath, get_notebook_dir,\
     dataframe_checksum, HDF, convert_server_time_to_client, sizeof_fmt,\
-    get_notebook_manifest_path, get_notebook_cells
+    get_notebook_manifest_path
 from wzdat.notebook_runner import NotebookRunner, NotebookError
-from wzdat.const import HDF_CHKSUM_FMT
+from wzdat.const import HDF_CHKSUM_FMT, IPYNB_VER
 
 
 class RecursiveReference(Exception):
@@ -138,7 +138,7 @@ class Manifest(Property):
         logging.debug(u"_write_manifest_error {}".format(err))
         with open(self._path.encode('utf8'), 'r') as f:
             nbdata = json.loads(f.read())
-            cells = get_notebook_cells(nbdata)
+            cells = nbdata['cells']
             errdt = {
                 "metadata": {},
                 "output_type": "pyout",
@@ -220,7 +220,7 @@ class Manifest(Property):
 
     def _write_result(self, elapsed, max_mem, err):
         logging.debug(u'_write_result {}'.format(self._path))
-        nb = read(open(self._path.encode('utf-8')), 'json')
+        nb = read(open(self._path.encode('utf-8')), IPYNB_VER)
         nr = NotebookRunner(nb)
         try:
             nr.run_notebook()
@@ -228,12 +228,12 @@ class Manifest(Property):
             merr = unicode(e)
             logging.error(merr)
         else:
-            write(nr.nb, open(self._path.encode('utf-8'), 'w'), 'json')
+            write(nr.nb, open(self._path.encode('utf-8'), 'w'), IPYNB_VER)
 
         # clear surplus info
-        first_cell = get_notebook_cells(nr.nb)[0]
+        first_cell = nr.nb['cells'][0]
         first_cell['outputs'] = []
-        del get_notebook_cells(nr.nb)[1:]
+        del nr.nb['cells'][1:]
 
         last_run = datetime.fromtimestamp(time.time())
         last_run = convert_server_time_to_client(last_run)
@@ -252,13 +252,13 @@ class Manifest(Property):
             body.append("    'output': {{\n{}\n    }}".format(coutput))
 
         if len(body) > 0:
-            newcell = copy.deepcopy(get_notebook_cells(nr.nb)[0])
+            newcell = copy.deepcopy(nr.nb['cells'][0])
             cs_body = "# WARNING: Generated results. Do Not Edit.\n{{\n{}\n}}".\
                 format(',\n'.join(body))
-            newcell['input'] = cs_body
-            get_notebook_cells(nr.nb).append(newcell)
+            newcell['source'] = cs_body
+            nr.nb['cells'].append(newcell)
 
-        write(nr.nb, open(self._path.encode('utf-8'), 'w'), 'json')
+        write(nr.nb, open(self._path.encode('utf-8'), 'w'), IPYNB_VER)
 
     def _write_result_depends(self, body):
         cdepends = []
@@ -275,19 +275,19 @@ class Manifest(Property):
     def _read_manifest(self):
         with open(self._path.encode('utf8'), 'r') as f:
             nbdata = json.loads(f.read())
-            cells = get_notebook_cells(nbdata)
+            cells = nbdata['cells']
             for i, cell in enumerate(cells):
                 # user cell
                 if i == 0:
                     try:
-                        mdata = ast.literal_eval(''.join(cell['input']))
+                        mdata = ast.literal_eval(''.join(cell['source']))
                     except SyntaxError, e:
                         logging.error(u"_read_manifest - {}".format(str(e)))
                         raise
                 # generated checksum cell
                 elif i == 1:
                     try:
-                        chksum = ast.literal_eval(''.join(cell['input']))
+                        chksum = ast.literal_eval(''.join(cell['source']))
                         self._read_manifest_user_chksum_cell(chksum)
                     except SyntaxError:
                         pass
