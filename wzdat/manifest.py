@@ -13,7 +13,7 @@ from IPython.nbformat.current import write, read
 
 from wzdat.util import Property, get_notebook_rpath, get_notebook_dir,\
     dataframe_checksum, HDF, convert_server_time_to_client, sizeof_fmt,\
-    get_notebook_manifest_path
+    get_notebook_manifest_path, get_notebook_cells
 from wzdat.notebook_runner import NotebookRunner, NotebookError
 from wzdat.const import HDF_CHKSUM_FMT
 
@@ -138,7 +138,7 @@ class Manifest(Property):
         logging.debug(u"_write_manifest_error {}".format(err))
         with open(self._path.encode('utf8'), 'r') as f:
             nbdata = json.loads(f.read())
-            cells = nbdata['worksheets'][0]['cells']
+            cells = get_notebook_cells(nbdata)
             errdt = {
                 "metadata": {},
                 "output_type": "pyout",
@@ -231,9 +231,9 @@ class Manifest(Property):
             write(nr.nb, open(self._path.encode('utf-8'), 'w'), 'json')
 
         # clear surplus info
-        first_cell = nr.nb.worksheets[0].cells[0]
+        first_cell = get_notebook_cells(nr.nb)[0]
         first_cell['outputs'] = []
-        del nr.nb.worksheets[0].cells[1:]
+        del get_notebook_cells(nr.nb)[1:]
 
         last_run = datetime.fromtimestamp(time.time())
         last_run = convert_server_time_to_client(last_run)
@@ -252,11 +252,11 @@ class Manifest(Property):
             body.append("    'output': {{\n{}\n    }}".format(coutput))
 
         if len(body) > 0:
-            newcell = copy.deepcopy(nr.nb.worksheets[0].cells[0])
+            newcell = copy.deepcopy(get_notebook_cells(nr.nb)[0])
             cs_body = "# WARNING: Generated results. Do Not Edit.\n{{\n{}\n}}".\
                 format(',\n'.join(body))
             newcell['input'] = cs_body
-            nr.nb.worksheets[0].cells.append(newcell)
+            get_notebook_cells(nr.nb).append(newcell)
 
         write(nr.nb, open(self._path.encode('utf-8'), 'w'), 'json')
 
@@ -275,7 +275,7 @@ class Manifest(Property):
     def _read_manifest(self):
         with open(self._path.encode('utf8'), 'r') as f:
             nbdata = json.loads(f.read())
-            cells = nbdata['worksheets'][0]['cells']
+            cells = get_notebook_cells(nbdata)
             for i, cell in enumerate(cells):
                 # user cell
                 if i == 0:

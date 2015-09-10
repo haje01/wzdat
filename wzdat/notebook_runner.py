@@ -21,7 +21,7 @@ import os
 from IPython.nbformat.current import NotebookNode
 from IPython.kernel import KernelManager
 
-from wzdat.util import remove_ansicolor, system_memory_used, sizeof_fmt
+from wzdat.util import remove_ansicolor, system_memory_used, sizeof_fmt, get_notebook_cells
 
 
 class NoDataFound(Exception):
@@ -192,18 +192,16 @@ class NotebookRunner(object):
         '''
         Iterate over the notebook cells containing code.
         '''
-        for ws in self.nb.worksheets:
-            for cell in ws.cells:
-                if cell.cell_type == 'code':
-                    yield cell
+        for cell in get_notebook_cells(self.nb):
+            if cell.cell_type == 'code':
+                yield cell
 
     def iter_cells(self):
         '''
         Iterate over the notebook cells.
         '''
-        for ws in self.nb.worksheets:
-            for cell in ws.cells:
-                yield cell
+        for cell in get_notebook_cells(self.nb):
+            yield cell
 
     def clear_outputs(self):
         for cell in self.iter_cells():
@@ -211,10 +209,7 @@ class NotebookRunner(object):
 
     @property
     def cellcnt(self):
-        cnt = 0
-        for ws in self.nb.worksheets:
-            cnt += len(ws.cells)
-        return cnt
+        return len(get_notebook_cells(self.nb))
 
     def run_notebook(self, memory_used=None, progress_cb=None,
                      skip_exceptions=False):

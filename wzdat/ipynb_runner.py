@@ -9,7 +9,7 @@ from Queue import Empty
 from markdown import markdown
 
 from wzdat.util import div, remove_ansicolor, ipython_start_script_path,\
-    ansi_escape
+    ansi_escape, get_notebook_cells
 from wzdat import rundb
 from notebook_runner import NoDataFound
 
@@ -152,7 +152,7 @@ def run_notebook_view_cell(rv, r, cell, idx):
                 logging.debug("run_cell - NoDataFound")
                 raise
             else:
-                outs = r.nb['worksheets'][0]['cells'][idx]['outputs']
+                outs = get_notebook_cells(r.nb)[idx]['outputs']
                 rv += outs
                 return True
     elif _type == 'markdown':
@@ -209,22 +209,15 @@ def notebook_outputs_to_html(path):
     rv = []
     with open(path, 'r') as f:
         nb = reads(f.read(), 'json')
-        ws = nb['worksheets']
         if len(nb) > 0:
             try:
-                for cell in ws[0]['cells']:
+                for cell in get_notebook_cells(nb):
                     cont = _cell_output_to_html(rv, cell)
                     if not cont:
                         break
             except IndexError:
                 logging.error(u"Incomplete notebook - {}".format(path))
     return '\n'.join(rv)
-
-
-#def _nodata_msg_to_html(rv, output):
-    #nodata_msg = ansi_escape.sub('', output['traceback'][-1])
-    #rv.append(nodata_msg)
-    #return False
 
 
 def _cell_output_to_html_check_nodata(rv, code, outputs):

@@ -1407,11 +1407,6 @@ class FileValue(SingleFile):
         return find_in_fileo(self._ctx, [self], self.hsize, word, options,
                              print_prog, include_header)
 
-    def checksum(self):
-        """Return rough hash by size & modified date of all files."""
-        stat = os.stat(self._abspath)
-        return hash((stat.st_size, stat.st_mtime))
-
 
 class Slot(object):
 

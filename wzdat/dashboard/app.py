@@ -9,7 +9,7 @@ from IPython.nbformat.current import reads
 
 from wzdat.notebook_runner import NoDataFound
 from wzdat.util import get_notebook_dir, parse_client_sdatetime,\
-    get_client_datetime, ansi_escape, get_run_info
+    get_client_datetime, ansi_escape, get_run_info, get_notebook_cells
 from wzdat.rundb import get_cache_info, get_finder_info
 from wzdat.jobs import cache_finder
 from wzdat.make_config import make_config
@@ -134,11 +134,6 @@ def poll_view(task_id):
         if task.state == 'PROGRESS':
             return 'PROGRESS:' + str(task.result)
         outputs = task.get()
-        # logging.debug('outputs {}'.format(outputs))
-    #except NoDataFound, e:
-        #logging.debug(unicode(e))
-        #return Response(u'<div class="view"><pre class="ds-err">{}</pre></div>'
-                        #.format(unicode(e)))
     except Exception, e:
         logging.debug('poll_view - ' + unicode(e))
         err = task.traceback
@@ -223,7 +218,7 @@ def _poll_rerun_output(nbapath):
     rv = []
     with open(nbapath, 'r') as f:
         nb = reads(f.read(), 'json')
-        ws = nb['worksheets']
+        ws = get_notebook_cells(nb)
         if len(nb) > 0:
             try:
                 for cell in ws[0]['cells']:

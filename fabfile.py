@@ -114,7 +114,15 @@ def rm_all(_remote=False):
 
 
 def _build_base(_nocache, _remote):
-    _cmd('ln -fs files/base.docker Dockerfile', _remote)
+    with open('../requirements.txt', 'r') as f:
+        reqs = ['RUN pip install {}'.format(line.rstrip()) for line in
+                f.readlines()]
+    reqs.insert(0, '# WzDat requirements')
+    with open('files/base.docker', 'r') as f:
+        dockfile = f.read().replace('{%WZDAT_REQUIREMENTS%}', '\n'.join(reqs))
+    with open('Dockerfile', 'w') as f:
+        f.write(dockfile)
+
     _cmd(docker_build_cmd(_nocache) + '-t haje01/wzdat-base .', _remote)
     _cmd('rm -f Dockerfile', _remote)
 
