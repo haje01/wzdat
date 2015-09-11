@@ -101,7 +101,6 @@ class Manifest(Property):
 
         if not os.path.isfile(self._path.encode('utf8')):
             raise ManifestNotExist()
-
         self._init_checksum(check_depends)
         logging.debug("Manifest __init__ done")
 

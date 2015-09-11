@@ -928,8 +928,7 @@ def get_notebook_rpath(fallback_nbpath=True):
     for sess in sessions:
         if sess['kernel']['id'] == kernel_id:
             path = sess['notebook']['path']
-            name = sess['notebook']['name']
-            return os.path.join(path, name)
+            return path
 
 
 class ScbProperty(Property):
