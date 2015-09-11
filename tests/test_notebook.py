@@ -9,8 +9,7 @@ from wzdat.manifest import Manifest, RecursiveReference
 from wzdat.util import get_notebook_dir, find_hdf_notebook_path,\
     get_notebook_manifest_path, iter_notebooks, iter_notebook_manifest_input,\
     get_data_dir, dataframe_checksum, HDF, iter_dashboard_notebook, \
-    iter_scheduled_notebook, touch, get_run_info, get_notebook_cells,\
-    get_notebook_source
+    iter_scheduled_notebook, touch, get_run_info
 from wzdat.ipynb_runner import update_notebook_by_run, notebook_outputs_to_html
 from wzdat.rundb import check_notebook_error_and_changed, iter_run_info
 from wzdat.nbdependresolv import update_all_notebooks
@@ -88,9 +87,9 @@ def test_notebook_error():
 def test_notebook_util():
     nbdir = get_notebook_dir()
     nbs = [nb for nb in iter_notebooks(nbdir)]
-    assert len(nbs) == 12
+    assert len(nbs) == 13
     nbms = [(nb, mi) for nb, mi in iter_notebook_manifest_input(nbdir)]
-    assert len(nbms) == 10
+    assert len(nbms) == 11
     path = os.path.join(nbdir, 'test-notebook3.ipynb')
     assert path == find_hdf_notebook_path('haje01', 'test')
 
@@ -117,9 +116,9 @@ def test_notebook_manifest1(fxsoldir):
     import json
     with open(mpath, 'r') as f:
         data = json.loads(f.read())
-    cells = get_notebook_cells(data)
+    cells = data['cells']
     assert len(cells) == 2
-    chksums = get_notebook_source(cells[1])
+    chksums = cells[1]['source']
     assert 'WARNING' in chksums[0]
     assert 'last_run' in chksums[2]
     assert 'elapsed' in chksums[3]
@@ -233,7 +232,7 @@ def test_notebook_depresolv(fxsoldir):
 def test_notebook_dashboard(fxsoldir):
     nbdir = get_notebook_dir()
     dnbs = [nbpath for nbpath in iter_dashboard_notebook(nbdir)]
-    assert len(dnbs) == 3
+    assert len(dnbs) == 4
 
 
 def test_notebook_cron(fxsoldir):
@@ -276,7 +275,7 @@ def test_notebook_manifest_error():
         mpath = get_notebook_manifest_path(nbapath)
         with open(mpath, 'r') as f:
             data = json.loads(f.read())
-        cells = get_notebook_cells(data)
+        cells = data['cells']
         assert 'invalid syntax' in cells[0]['outputs'][0]['text']
     else:
         assert False

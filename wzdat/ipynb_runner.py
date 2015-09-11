@@ -277,41 +277,49 @@ def _cell_output_to_html(rv, cell):
 def notebook_cell_outputs_to_html(rv, outputs, _cls):
     # check this is image cell
     logging.debug("notebook_cell_outputs_to_html {}".format(_cls))
-    image_cell = False
+    html = None
+    img_cell = False
     for output in outputs:
-        _type = type(output)
-        if _type in (unicode, str):
-            continue
-        _type = output['output_type']
-        if _type == 'display_data':
-            image_cell = True
+        if 'data' in output.keys():
+            if 'image/png' in output['data']:
+                img_cell = True
 
     for output in outputs:
-        _type = type(output)
-        logging.debug(_type)
-        if _type in (unicode, str):
-            # logging.debug(output)
-            html = output
-        else:
-            html = _notebook_cell_output_to_html(output, image_cell)
+        opkeys = output.keys()
+        if 'name' in opkeys:
+            if 'text' in output:
+                html = ''.join(output['text'])
+        elif 'data' in opkeys:
+            if 'image/png' in output['data']:
+                imgdata = output['data']['image/png']
+                html = '<img src="data:image/png;base64,%s"></img>' % imgdata
+            elif 'text/plain' in output['data'] and not img_cell:
+                html = output['data']['text/plain']
+        elif 'ename' in opkeys:
+            html = ansi_escape.sub('', output['traceback'][-1])
         if html is not None:
             rv.append(div(html, _cls))
 
 
-def _notebook_cell_output_to_html(output, image_cell):
-    _type = output['output_type']
-    # logging.debug("_notebook_cell_output_to_html {}".format(_type))
-    # logging.debug(output)
-    if _type == 'stream':
-        return output['text']
-    elif _type == 'pyerr':
-        return ansi_escape.sub('', output['traceback'][-1])
-    elif _type == 'display_data':
-        if 'png' in output:
-            data = output['png']
-            return '<img src="data:image/png;base64,%s"></img>' % data
-    elif _type == 'pyout':
-        if 'html' in output:
-            return '<div class="rendered_html">%s</div>' % output['html']
-        elif not image_cell:
-            return output['text']
+#def _notebook_cell_output_to_html(output, image_cell):
+    #if 'data' in output:
+        #data = output['data']
+        #data_keys = data.keys()
+        ## logging.debug("_notebook_cell_output_to_html {}".format(_type))
+        ## logging.debug(output)
+        #if 'image/png' in data_keys:
+            #sdata = data['png']
+            #return '<img src="data:image/png;base64,%s"></img>' % sdata
+        #elif 'text/plain' in data_keys
+            #return data['text/plain']
+        #elif _type == 'pyerr':
+            #return ansi_escape.sub('', output['traceback'][-1])
+        #elif _type == 'display_data':
+            #if 'png' in output:
+                #data = output['png']
+                #return '<img src="data:image/png;base64,%s"></img>' % data
+        #elif _type == 'pyout':
+            #if 'html' in output:
+                #return '<div class="rendered_html">%s</div>' % output['html']
+            #elif not image_cell:
+                #return output['text']

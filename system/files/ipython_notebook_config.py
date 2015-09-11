@@ -10,6 +10,7 @@ c.IPKernelApp.matplotlib = 'inline'
 c.NotebookApp.ip = '*'
 c.NotebookApp.port = 8090
 c.NotebookApp.open_browser = False
+# c.InlineBackend.figure_format = 'retina'
 
 host = os.environ['WZDAT_HOST']
 cfg = make_config()
