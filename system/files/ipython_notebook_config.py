@@ -20,5 +20,5 @@ else:
     notedir = os.path.join(soldir, '__notes__', cfg['prj'])
 c.NotebookManager.notebook_dir = notedir
 dport = cfg['host_dashboard_port']
-c.NotebookApp.webapp_settings = {'headers': {'X-Frame-Options': 'ALLOW-FROM '
-                                             'http://%s:%s' % (host, dport)}}
+c.NotebookApp.tornado_settings = {'headers': {'X-Frame-Options': 'ALLOW-FROM '
+                                              'http://%s:%s' % (host, dport)}}
