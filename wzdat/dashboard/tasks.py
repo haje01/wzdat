@@ -161,7 +161,6 @@ def select_files(ftype, data):
 def zip_files(ftype, data):
     """Asynchronously zip files."""
     print 'zip_files'
-    print data
     files = data.split('\n')
     total = float(len(files))
     prog = 1

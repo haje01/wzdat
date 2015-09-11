@@ -5,6 +5,7 @@ import re
 import logging
 
 from Queue import Empty
+import codecs
 
 from markdown import markdown
 
@@ -100,8 +101,8 @@ def run_init(r, nbpath):
     initpath = ipython_start_script_path()
     init = u'__nbpath__ = u"{}"\n'.format(nbpath)
     if os.path.isfile(initpath):
-        with open(initpath.encode('utf-8')) as f:
-            init += f.read()
+        with codecs.open(initpath, 'r') as fp:
+            init += fp.read()
     run_code(r, init)
 
 
@@ -110,8 +111,9 @@ def update_notebook_by_run(path):
     logging.debug(u'update_notebook_by_run {}'.format(path))
 
     # init runner
-    nb = read(open(path.encode('utf-8')), IPYNB_VER)
-    r = NotebookRunner(nb, pylab=True)
+    with codecs.open(path, 'r', 'utf8') as fp:
+        nb = read(fp, IPYNB_VER)
+    r = NotebookRunner(nb)
     r.clear_outputs()
 
     # run config & startup
@@ -131,9 +133,11 @@ def update_notebook_by_run(path):
         err = unicode(e)
     except NoDataFound, e:
         logging.debug(unicode(e))
-        write(r.nb, open(path.encode('utf-8'), 'w'), IPYNB_VER)
+        with codecs.open(path, 'w', 'utf8') as fp:
+            write(r.nb, fp, IPYNB_VER)
     else:
-        write(r.nb, open(path.encode('utf-8'), 'w'), IPYNB_VER)
+        with codecs.open(path, 'w', 'utf8') as fp:
+            write(r.nb, fp, IPYNB_VER)
     finally:
         logging.debug("update_notebook_by_run finally")
         max_mem = max(memory_used)
@@ -211,7 +215,7 @@ def _parse_notebook_name(paths, scheds, groups, fnames, path, pjob, static):
 def notebook_outputs_to_html(path):
     logging.debug('notebook_outputs_to_html {}'.format(path.encode('utf-8')))
     rv = []
-    with open(path, 'r') as f:
+    with codecs.open(path, 'r', 'utf8') as f:
         nb = reads(f.read(), IPYNB_VER)
         if len(nb) > 0:
             try:
@@ -301,27 +305,3 @@ def notebook_cell_outputs_to_html(rv, outputs, _cls):
             html = ansi_escape.sub('', output['traceback'][-1])
         if html is not None:
             rv.append(div(html, _cls))
-
-
-#def _notebook_cell_output_to_html(output, image_cell):
-    #if 'data' in output:
-        #data = output['data']
-        #data_keys = data.keys()
-        ## logging.debug("_notebook_cell_output_to_html {}".format(_type))
-        ## logging.debug(output)
-        #if 'image/png' in data_keys:
-            #sdata = data['png']
-            #return '<img src="data:image/png;base64,%s"></img>' % sdata
-        #elif 'text/plain' in data_keys
-            #return data['text/plain']
-        #elif _type == 'pyerr':
-            #return ansi_escape.sub('', output['traceback'][-1])
-        #elif _type == 'display_data':
-            #if 'png' in output:
-                #data = output['png']
-                #return '<img src="data:image/png;base64,%s"></img>' % data
-        #elif _type == 'pyout':
-            #if 'html' in output:
-                #return '<div class="rendered_html">%s</div>' % output['html']
-            #elif not image_cell:
-                #return output['text']

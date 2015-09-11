@@ -50,6 +50,7 @@ def register_cron():
 
 @argh.arg('path', help="notebook path")
 def run_notebook(path):
+    assert path[0] == '/', "Need absolute path"
     path = path.decode('utf-8') if type(path) == str else path
     logging.debug(u'run_notebook {}'.format(path))
     try:

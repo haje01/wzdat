@@ -8,6 +8,7 @@ import logging
 from datetime import datetime
 import copy
 import json
+import codecs
 
 from nbformat import write, read
 
@@ -90,15 +91,18 @@ class Manifest(Property):
 
         if explicit_nbpath is None:
             nbdir = get_notebook_dir()
+            logging.debug(u"nbdir {}".format(nbdir))
             nbrpath = get_notebook_rpath()
+            logging.debug(u"nbrpath {}".format(nbrpath))
             self._nbapath = os.path.join(nbdir, nbrpath)
             self._path = os.path.join(nbdir,
                                       get_notebook_manifest_path(nbrpath))
         else:
+            logging.debug(u"explicit_nbpath {}".format(explicit_nbpath))
             self._nbapath = explicit_nbpath
             self._path = get_notebook_manifest_path(explicit_nbpath)
-        # logging.debug(u"Manifest __init__ for {}".format(self._nbapath))
 
+        logging.debug(u"find manifest {}".format(self._path))
         if not os.path.isfile(self._path.encode('utf8')):
             raise ManifestNotExist()
         self._init_checksum(check_depends)
@@ -135,7 +139,7 @@ class Manifest(Property):
 
     def _write_manifest_error(self, err):
         logging.debug(u"_write_manifest_error {}".format(err))
-        with open(self._path.encode('utf8'), 'r') as f:
+        with codecs.open(self._path, 'r', 'utf8') as f:
             nbdata = json.loads(f.read())
             cells = nbdata['cells']
             errdt = {
@@ -145,7 +149,7 @@ class Manifest(Property):
                 "text": "Manifest Error: {}".format(err)
             }
             cells[0]['outputs'] = [errdt]
-        with open(self._path.encode('utf8'), 'w') as f:
+        with codecs.open(self._path, 'w', 'utf8') as f:
             f.write(json.dumps(nbdata))
 
     def _iter_depend_hdf(self):
@@ -219,7 +223,9 @@ class Manifest(Property):
 
     def _write_result(self, elapsed, max_mem, err):
         logging.debug(u'_write_result {}'.format(self._path))
-        nb = read(open(self._path.encode('utf-8')), IPYNB_VER)
+        with codecs.open(self._path, 'r', 'utf8') as fp:
+            nb = read(fp, IPYNB_VER)
+        logging.debug(nb)
         nr = NotebookRunner(nb)
         try:
             nr.run_notebook()
@@ -227,7 +233,8 @@ class Manifest(Property):
             merr = unicode(e)
             logging.error(merr)
         else:
-            write(nr.nb, open(self._path.encode('utf-8'), 'w'), IPYNB_VER)
+            with codecs.open(self._path, 'w', 'utf8') as fp:
+                write(nr.nb, fp, IPYNB_VER)
 
         # clear surplus info
         first_cell = nr.nb['cells'][0]
@@ -257,7 +264,8 @@ class Manifest(Property):
             newcell['source'] = cs_body
             nr.nb['cells'].append(newcell)
 
-        write(nr.nb, open(self._path.encode('utf-8'), 'w'), IPYNB_VER)
+        with codecs.open(self._path, 'w', 'utf8') as fp:
+            write(nr.nb, fp, IPYNB_VER)
 
     def _write_result_depends(self, body):
         cdepends = []
@@ -272,7 +280,7 @@ class Manifest(Property):
                         format(',\n'.join(cdepends)))
 
     def _read_manifest(self):
-        with open(self._path.encode('utf8'), 'r') as f:
+        with codecs.open(self._path, 'r', 'utf8') as f:
             nbdata = json.loads(f.read())
             cells = nbdata['cells']
             for i, cell in enumerate(cells):

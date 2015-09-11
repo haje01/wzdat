@@ -207,7 +207,6 @@ class NotebookRunner(object):
         '''
         Iterate over the notebook cells.
         '''
-        print(self.nb)
         for cell in self.nb['cells']:
             yield cell
 
