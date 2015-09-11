@@ -293,6 +293,8 @@ def notebook_cell_outputs_to_html(rv, outputs, _cls):
             if 'image/png' in output['data']:
                 imgdata = output['data']['image/png']
                 html = '<img src="data:image/png;base64,%s"></img>' % imgdata
+            elif 'text/html' in output['data']:
+                html = ''.join(output['data']['text/html'])
             elif 'text/plain' in output['data'] and not img_cell:
                 html = output['data']['text/plain']
         elif 'ename' in opkeys:
