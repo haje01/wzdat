@@ -31,7 +31,6 @@ from wzdat.util import unique_tmp_path, sizeof_fmt, unique_list, \
     get_convfile_path, get_tmp_dir, get_conv_dir, load_files_precalc,\
     get_data_dir, is_step_only_idx
 from wzdat.lineinfo import LineInfo, LineInfoImpl_Count, LineInfoImpl_Array
-from wzdat.notebook_runner import NoDataFound
 
 qmode = 'files'
 cfg = make_config()
@@ -184,12 +183,14 @@ class SingleFile(FileCommon, IPathable):
 
     def to_frame(self, usecols=None, chunk_cnt=CHUNK_CNT, show_prog=True):
         """Build Pandas DataFrame from file and return it."""
-        if self.lcount == 0:
-            raise NoDataFound('No data exist.')
         _to_frame_fn = _get_member(self._ctx, 'to_frame', False)
 
         if _to_frame_fn is not None:
-            return _to_frame_fn(self.abspath, self, usecols)
+            try:
+                return _to_frame_fn(self.abspath, self, usecols)
+            except ValueError, e:
+                logging.error("to_frame: {} at  _to_frame_fn".format(str(e)))
+                return
         else:
             if self._ctx.isdblog:
                 assert False, "dblog should have its own 'to_frame'"
@@ -925,7 +926,8 @@ class FileSelector(FileCommon, IFilterable, IMergeable):
         for _file in c.files:
             c.pg.animate(c.fileno)
             df = _file.to_frame(usecols, chunk_cnt, False)
-            yield df
+            if df is not None and len(df) > 0:
+                yield df
             c.fileno += 1
 
     def sample(self, ratio=0.1):
