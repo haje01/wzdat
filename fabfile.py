@@ -2,9 +2,6 @@ import os
 
 from fabric.api import local, run, cd, env, abort
 
-from wzdat.util import get_wzdat_host
-
-
 env.password = 'docker'
 prj_map = {}
 
@@ -250,7 +247,8 @@ def launch_prj(prj, dbg=False):
     wzpkg = _get_pkg()
     wzdir = os.environ['WZDAT_DIR']
     wzsol = os.environ['WZDAT_SOL_DIR']
-    wzhost = get_wzdat_host()
+    wzhost = os.environ['WZDAT_HOST'] if 'WZDAT_B2DHOST' not in os.environ else \
+        os.environ['WZDAT_B2DHOST']
     runopt = ""
     cmd = ""
     if dbg is not False:
