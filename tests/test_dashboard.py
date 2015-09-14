@@ -24,6 +24,7 @@ def test_dashboard_home(app):
     assert 'test-notebook-plot' in rv.data
     assert '<img src' in rv.data
     assert 'HTML Header' in rv.data
+    assert 'test-notebook-error' in rv.data
 
 
 def test_dashboard_finder(app):

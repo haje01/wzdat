@@ -73,9 +73,12 @@ def dashboard():
         fn = os.path.basename(nbpath)
         url = os.path.join(base_url, sdir, fn)
         fname = os.path.splitext(os.path.basename(nbpath))[0]
-        if 'group' in mip['dashboard']:
-            gk = mip['dashboard']['group'].decode('utf8')
+        dashbrd_info = mip['dashboard']
+        if isinstance(dashbrd_info, dict):
+            gk = dashbrd_info['group'].decode('utf8')
             groups[gk].append((nbpath, url, fname))
+        else:
+            groups[''].append((nbpath, url, fname))
     logging.debug("collected notebooks by group")
 
     gnbs = []
