@@ -1,11 +1,9 @@
 import re
 import os
 
-import pytest
 
 import wzdat
 from wzdat.make_config import make_config
-from wzdat.notebook_runner import NoDataFound
 
 cfg = make_config()
 localhost = os.environ['WZDAT_HOST']
@@ -138,13 +136,6 @@ def test_selector_hdf(fxlogs):
         sdf = hdf.store['test_df']
 
     assert sdf.equals(df)
-
-
-def test_selector_nodata(fxlogs):
-    log = fxlogs[0]
-    f = log.files[0].find('no match')
-    with pytest.raises(NoDataFound):
-        f.to_frame()
 
 
 def test_selector_usecols(fxlogs):

@@ -9,7 +9,7 @@ from nbformat import reads
 
 from wzdat.notebook_runner import NoDataFound
 from wzdat.util import get_notebook_dir, parse_client_sdatetime,\
-    get_client_datetime, ansi_escape, get_run_info
+    get_client_datetime, ansi_escape, get_run_info, get_wzdat_host
 from wzdat.rundb import get_cache_info, get_finder_info
 from wzdat.jobs import cache_finder
 from wzdat.make_config import make_config
@@ -21,7 +21,7 @@ app = Flask(__name__)
 
 cfg = make_config()
 assert 'WZDAT_HOST' in os.environ
-HOST = os.environ['WZDAT_HOST']
+HOST = get_wzdat_host()
 app.debug = cfg['debug'] if 'debug' in cfg else False
 
 if not app.debug and 'admins' in cfg:
@@ -342,6 +342,7 @@ def notebooks():
     base_url = 'http://%s:%d/tree' % (HOST, iport)
     prj = cfg['prj']
     projname = prj.upper()
+    logging.debug("notebooks - {}".format(base_url))
 
     return render_template("notebooks.html", cur="notebooks",
                            projname=projname, nb_url=base_url, dev=dev,

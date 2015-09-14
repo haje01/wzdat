@@ -11,11 +11,11 @@ import requests
 
 from wzdat.make_config import make_config
 from wzdat.rundb import flush_unhandled_events, unhandled_events
+from wzdat.util import get_wzdat_host
 
 WEB_RESTART = False
 
-host = os.environ['WZDAT_HOST'] if 'WZDAT_B2DHOST' not in os.environ else\
-    os.environ['WZDAT_B2DHOST']
+host = get_wzdat_host()
 dashboard_url = 'http://{}:8085'.format(host)
 env = os.environ.copy()
 

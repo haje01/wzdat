@@ -1,6 +1,7 @@
 import os
 import sys
 sys.path.append('/solution')
+import matplotlib
 import matplotlib as mlp
 mlp.rcParams['font.family'] = u'NanumGothic'
 mlp.rcParams['font.size'] = 10
