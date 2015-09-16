@@ -192,7 +192,7 @@ class NotebookRunner(object):
             if 'NoDataFound' in traceback_text:
                 raise NoDataFound(traceback_text.split('\n')[-1])
             else:
-                logging.debug(u"NotebookError - {}".format(traceback_text))
+                logging.debug(u"NotebookError raised")
                 raise NotebookError(traceback_text)
 
     def iter_code_cells(self):

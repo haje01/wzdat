@@ -115,7 +115,7 @@ class Manifest(Property):
             self._out_hdf_chksum = None
         try:
             data = self._read_manifest()
-        except SyntaxError, e:
+        except Exception, e:
             # if user input has error, update manifest to write message
             self._write_manifest_error(str(e))
             raise
@@ -142,11 +142,15 @@ class Manifest(Property):
         with codecs.open(self._path, 'r', 'utf8') as f:
             nbdata = json.loads(f.read())
             cells = nbdata['cells']
+            logging.debug(err)
+            last_line = err.split('\n')[-1]
+            logging.debug("last_line {}".format(last_line))
+            ename = last_line.split(':')[0]
             errdt = {
-                "metadata": {},
-                "output_type": "pyout",
-                "prompt_number": 1,
-                "text": "Manifest Error: {}".format(err)
+                "ename": ename,
+                "evalue": '',
+                "output_type": "error",
+                "traceback": [err]
             }
             cells[0]['outputs'] = [errdt]
         with codecs.open(self._path, 'w', 'utf8') as f:
@@ -244,18 +248,18 @@ class Manifest(Property):
         last_run = datetime.fromtimestamp(time.time())
         last_run = convert_server_time_to_client(last_run)
         last_run = last_run.strftime("%Y-%m-%d %H:%M:%S")
-        body = ["    'last_run': '{}'".format(last_run)]
-        body.append("    'elapsed': '{}'".format(elapsed))
-        body.append("    'max_memory': '{}'".format(sizeof_fmt(max_mem)))
-        body.append("    'error': {}".format('None' if err is None else
+        body = ['    "last_run": "{}"'.format(last_run)]
+        body.append('    "elapsed": "{}"'.format(elapsed))
+        body.append('    "max_memory": "{}"'.format(sizeof_fmt(max_mem)))
+        body.append('    "error": {}'.format('None' if err is None else
                                              json.dumps(err)))
         if self._dep_files_chksum is not None or\
                 self._dep_hdf_chksum is not None:
             self._write_result_depends(body)
 
         if self._out_hdf_chksum is not None:  # could be multiple outputs
-            coutput = "        'hdf': {}".format(self._out_hdf_chksum)
-            body.append("    'output': {{\n{}\n    }}".format(coutput))
+            coutput = '        "hdf": {}'.format(self._out_hdf_chksum)
+            body.append('    "output": {{\n{}\n    }}'.format(coutput))
 
         if len(body) > 0:
             newcell = copy.deepcopy(nr.nb['cells'][0])
