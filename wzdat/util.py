@@ -17,6 +17,7 @@ import uuid as _uuid
 import codecs
 from collections import defaultdict
 import json
+import ast
 
 from crontab import CronTab
 import psutil
@@ -1097,20 +1098,24 @@ def system_memory_used():
 
 def get_run_info(nbapath):
     """Return notebook run info, if redis info not exists try manifest."""
+    logging.debug(u"get_run_info for {}".format(nbapath))
     from wzdat import rundb
     ri = rundb.get_run_info(nbapath)
     if ri is not None:
         return ri
-    logging.debug("get_run_info - fallback to manifest")
     mpath = get_notebook_manifest_path(nbapath)
+    logging.debug(u"get_run_info - fallback to manifest {}".format(mpath))
     if os.path.isfile(mpath.encode('utf8')):
         with open(mpath, 'r') as f:
             data = json.loads(f.read())
             # logging.debug(data)
             try:
                 inp = ''.join(data['cells'][1]['source'][1:])
-                inp = inp.replace("'", '"')
-                data = json.loads(inp)
+                logging.debug(inp)
+                # FIXME: replace with json.loads after single quotes
+                # disappeared
+                data = ast.literal_eval(inp)
+                # data = json.loads(inp)
                 return data['last_run'], data['elapsed'], 0, 0, data['error']
             except (KeyError, IndexError), e:
                 logging.error(u"{} at {}".format(e, mpath))
