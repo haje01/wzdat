@@ -8,13 +8,13 @@ import redis
 
 from wzdat.make_config import make_config
 from wzdat.util import file_checksum, get_sdatetime,\
-    parse_client_sdatetime, get_client_datetime
+    parse_client_sdatetime, get_client_datetime, get_wzdat_host
 from wzdat.const import EVENT_DEFAULT_PRIOR, FORWARDER_LOG_PREFIX
 
 WZDAT_REDIS_DB = 1
 
-host = os.environ['WZDAT_B2DHOST'] if 'WZDAT_B2DHOST' in os.environ else\
-    'localhost'
+host = get_wzdat_host()
+
 r = redis.StrictRedis(host=host, db=WZDAT_REDIS_DB)
 
 cfg = make_config()

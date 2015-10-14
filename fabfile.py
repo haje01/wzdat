@@ -247,8 +247,9 @@ def launch_prj(prj, dbg=False):
     wzpkg = _get_pkg()
     wzdir = os.environ['WZDAT_DIR']
     wzsol = os.environ['WZDAT_SOL_DIR']
-    wzhost = os.environ['WZDAT_HOST'] if 'WZDAT_B2DHOST' not in os.environ else \
-        os.environ['WZDAT_B2DHOST']
+    wzhost = _get_host()
+    #wzhost = os.environ['WZDAT_HOST'] if 'WZDAT_B2DHOST' not in os.environ else \
+    #    os.environ['WZDAT_B2DHOST']
     runopt = ""
     cmd = ""
     if dbg is not False:
@@ -297,8 +298,9 @@ def launch_prj(prj, dbg=False):
 
 
 def _get_host():
-    return os.environ['WZDAT_B2DHOST'] if 'WZDAT_B2DHOST' in os.environ else\
-        '0.0.0.0'
+    host = os.environ['DOCKER_HOST'] if 'DOCKER_HOST' in os.environ else\
+        'tcp://0.0.0.0'
+    return host.split(':')[1][2:]
 
 
 def ssh(_prj):
