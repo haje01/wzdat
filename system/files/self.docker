@@ -20,9 +20,10 @@ ADD files/ipython_notebook_config.py /root/.ipython/profile_default/ipython_note
 ADD files/ipython_startup.py /root/.ipython/profile_default/startup/01-wzdat.py
 RUN sed --in-place "s/# c.InteractiveShellApp.matplotlib = None/c.InteractiveShellApp.matplotlib = 'inline'/" /root/.ipython/profile_default/ipython_kernel_config.py 
 
-# MySQL
+# ETC
 RUN apt-get install -qq -y libmysqlclient-dev
 RUN pip install MySQL-python
+RUN pip install seaborn
 
 EXPOSE 22 8090 8095 6379
 ADD files/start.sh /root/start.sh
