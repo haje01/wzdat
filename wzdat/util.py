@@ -1007,6 +1007,7 @@ def iter_notebook_manifest_input(nbdir):
             try:
                 minp = ''.join(data['cells'][0]['source'])
             except (KeyError, IndexError):
+                logging.error(u"Error in Notebooks: {}".format(unicode(mpath)))
                 continue
             try:
                 minp = eval(minp)
