@@ -24,6 +24,9 @@ RUN sed --in-place "s/# c.InteractiveShellApp.matplotlib = None/c.InteractiveShe
 RUN apt-get install -qq -y libmysqlclient-dev
 RUN pip install MySQL-python
 RUN pip install seaborn
+RUN pip install mrjob
+RUN pip install ujson
+RUN pip install python-geoip
 
 EXPOSE 22 8090 8095 6379
 ADD files/start.sh /root/start.sh

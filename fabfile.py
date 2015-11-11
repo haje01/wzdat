@@ -134,7 +134,7 @@ def _build(_nocache, _remote):
     if len(r) == 0:
         print "No local 'haje01/wzdat-base' image. Trying to find in the "\
             "docker hub."
-    _cmd('ln -fs files/self.docker Dockerfile', _remote)
+    _cmd('cp -fs files/self.docker Dockerfile', _remote)
     _cmd(docker_build_cmd(_nocache) + '-t haje01/wzdat .', _remote)
     _cmd('rm -f Dockerfile', _remote)
 
@@ -147,7 +147,7 @@ def _build_dev(_nocache, _remote):
     if len(r) == 0:
         print "No local 'haje01/wzdat' image. Trying to find in the docker"\
             " hub."
-    _cmd('ln -fs files/dev/dev.docker Dockerfile', _remote)
+    _cmd('cp files/dev/dev.docker Dockerfile', _remote)
     _cmd(docker_build_cmd(_nocache) + '--no-cache -t haje01/wzdat-dev .',
          _remote)
     _cmd('rm -f Dockerfile', _remote)
