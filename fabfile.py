@@ -19,6 +19,7 @@ class _ChangeDir(object):
         self.path = os.path.join(*dirs)
 
     def __enter__(self):
+        print self.path
         assert os.path.isdir(self.path)
         os.chdir(self.path)
 

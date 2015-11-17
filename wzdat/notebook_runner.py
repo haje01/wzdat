@@ -212,7 +212,8 @@ class NotebookRunner(object):
 
     def clear_outputs(self):
         for cell in self.iter_cells():
-            cell['outputs'] = []
+            if 'outputs' in cell:
+                cell['outputs'] = []
 
     @property
     def cellcnt(self):

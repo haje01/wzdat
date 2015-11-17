@@ -58,6 +58,7 @@ def finish_run(path, err):
             r.hmset(key, {'elapsed': elapsed, 'cur': total})
             return elapsed
         else:
+            logging.debug(u"error {}".format(err))
             r.hmset(key, {'error': err})
     else:
         logging.debug(u'key {} not exist'.format(key))

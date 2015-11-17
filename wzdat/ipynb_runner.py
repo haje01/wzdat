@@ -126,7 +126,7 @@ def update_notebook_by_run(path):
     memory_used = []
     try:
         r.run_notebook(memory_used, lambda cur: _progress_cell(path, cur))
-        run_code(r, "if 'manifest_' in globals(): "
+        run_code(r, "if 'manifest_' in globals() and manifest_ is not None: "
                  "manifest_._check_output_hdf()")
     except NotebookError, e:
         logging.debug("except NotebookError")
