@@ -892,8 +892,10 @@ class KeyDefaultDict(defaultdict):
 
 
 def get_wzdat_host():
-    return os.environ['WZDAT_HOST'] if 'WZDAT_B2DHOST' not in os.environ else\
-        os.environ['WZDAT_B2DHOST']
+    dhost = os.environ['DOCKER_HOST'] if 'DOCKER_HOST' in os.environ else\
+        'tcp://0.0.0.0'
+    return os.environ['WZDAT_HOST'] if 'WZDAT_HOST' in os.environ else\
+        dhost.split(':')[1][2:]
 
 
 def get_dashboard_port():
@@ -1005,6 +1007,7 @@ def iter_notebook_manifest_input(nbdir):
             try:
                 minp = ''.join(data['cells'][0]['source'])
             except (KeyError, IndexError):
+                logging.error(u"Error in Notebooks: {}".format(unicode(mpath)))
                 continue
             try:
                 minp = eval(minp)

@@ -12,6 +12,9 @@ pd.set_option('io.hdf.default_format', 'table')  # default hdf format 'table'
 from pandas import Series, DataFrame
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
+sns.set_style('darkgrid', {'font.family': [u'NanumGothic']})
+
 from wzdat.util import hdf_path, hdf_exists, get_notebook_rpath, get_notebook_dir
 from wzdat.notebook_runner import NoDataFound
 

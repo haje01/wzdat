@@ -114,14 +114,14 @@ def rm_all(_remote=False):
 
 
 def _build_base(_nocache, _remote):
-    with open('../requirements.txt', 'r') as f:
+    with open('../requirements.txt', 'r') as fq:
         reqs = ['RUN pip install {}'.format(line.rstrip()) for line in
-                f.readlines()]
+                fq.readlines()]
     reqs.insert(0, '# WzDat requirements')
-    with open('files/base.docker', 'r') as f:
-        dockfile = f.read().replace('{%WZDAT_REQUIREMENTS%}', '\n'.join(reqs))
-    with open('Dockerfile', 'w') as f:
-        f.write(dockfile)
+    with open('files/base.docker', 'r') as fr:
+        dockfile = fr.read().replace('{%WZDAT_REQUIREMENTS%}', '\n'.join(reqs))
+    with open('Dockerfile', 'w') as fw:
+        fw.write(dockfile)
 
     _cmd(docker_build_cmd(_nocache) + '-t haje01/wzdat-base .', _remote)
     _cmd('rm -f Dockerfile', _remote)
@@ -135,7 +135,7 @@ def _build(_nocache, _remote):
     if len(r) == 0:
         print "No local 'haje01/wzdat-base' image. Trying to find in the "\
             "docker hub."
-    _cmd('ln -fs files/self.docker Dockerfile', _remote)
+    _cmd('cp files/self.docker Dockerfile', _remote)
     _cmd(docker_build_cmd(_nocache) + '-t haje01/wzdat .', _remote)
     _cmd('rm -f Dockerfile', _remote)
 
@@ -148,7 +148,7 @@ def _build_dev(_nocache, _remote):
     if len(r) == 0:
         print "No local 'haje01/wzdat' image. Trying to find in the docker"\
             " hub."
-    _cmd('ln -fs files/dev/dev.docker Dockerfile', _remote)
+    _cmd('cp files/dev/dev.docker Dockerfile', _remote)
     _cmd(docker_build_cmd(_nocache) + '--no-cache -t haje01/wzdat-dev .',
          _remote)
     _cmd('rm -f Dockerfile', _remote)
@@ -248,6 +248,7 @@ def launch_prj(prj, dbg=False):
     wzpkg = _get_pkg()
     wzdir = os.environ['WZDAT_DIR']
     wzsol = os.environ['WZDAT_SOL_DIR']
+    #wzhost = _get_host()
     wzhost = os.environ['WZDAT_HOST'] if 'WZDAT_B2DHOST' not in os.environ else \
         os.environ['WZDAT_B2DHOST']
     runopt = ""
@@ -298,8 +299,9 @@ def launch_prj(prj, dbg=False):
 
 
 def _get_host():
-    return os.environ['WZDAT_B2DHOST'] if 'WZDAT_B2DHOST' in os.environ else\
-        '0.0.0.0'
+    host = os.environ['DOCKER_HOST'] if 'DOCKER_HOST' in os.environ else\
+        'tcp://0.0.0.0'
+    return host.split(':')[1][2:]
 
 
 def ssh(_prj):

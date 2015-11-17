@@ -5,7 +5,8 @@ from wzdat.make_config import make_config
 c = get_config()
 
 # This starts plotting support always with matplotlib
-c.IPKernelApp.matplotlib = 'inline'
+#c.IPKernelApp.matplotlib = 'inline'
+c.InteractiveShellApp.matplotlib = "inline"
 
 c.NotebookApp.ip = '*'
 c.NotebookApp.port = 8090

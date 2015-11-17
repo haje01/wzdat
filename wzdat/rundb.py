@@ -15,6 +15,7 @@ WZDAT_REDIS_DB = 1
 
 host = os.environ['WZDAT_B2DHOST'] if 'WZDAT_B2DHOST' in os.environ else\
     'localhost'
+
 r = redis.StrictRedis(host=host, db=WZDAT_REDIS_DB)
 
 cfg = make_config()
