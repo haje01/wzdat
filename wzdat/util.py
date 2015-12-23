@@ -1117,7 +1117,10 @@ def get_run_info(nbapath):
                 logging.debug(inp)
                 # FIXME: replace with json.loads after single quotes
                 # disappeared
-                data = ast.literal_eval(inp)
+                try:
+                    data = ast.literal_eval(inp)
+                except SyntaxError:
+                    logging.error("literal_evel error: {}".format(inp))
                 # data = json.loads(inp)
                 return data['last_run'], data['elapsed'], 0, 0, data['error']
             except (KeyError, IndexError), e:
