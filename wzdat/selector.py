@@ -29,7 +29,7 @@ from wzdat.util import unique_tmp_path, sizeof_fmt, unique_list, \
     remove_empty_file, Property, remove_old_tmps, get_line_count, \
     get_slice_idx, ProgressBar, nprint, Context, convert_data_file,\
     get_convfile_path, get_tmp_dir, get_conv_dir, load_files_precalc,\
-    get_data_dir, is_step_only_idx
+    get_data_dir, is_step_only_idx, get_realpath
 from wzdat.lineinfo import LineInfo, LineInfoImpl_Count, LineInfoImpl_Array
 
 qmode = 'files'
@@ -520,7 +520,8 @@ def _file_head_or_tail(flike, head, count=10):
     tmp_file, _ = unique_tmp_path(TMP_PREFIX)
     with open(tmp_file, 'w') as out:
         c = 'head' if head else 'tail'
-        cmd = [c, '-n', str(count), flike.abspath]
+        abspath = get_realpath(flike.abspath)
+        cmd = [c, '-n', str(count), abspath]
         check_call(cmd, stdout=out)
 
     cnt = get_line_count(tmp_file)

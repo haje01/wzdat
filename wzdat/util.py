@@ -155,6 +155,7 @@ def get_kernel_id(cfile):
 
 
 def get_line_count(path):
+    path = get_realpath(path)
     return int(os.popen('wc -l "%s"' % path).read().split()[0])
 
 
@@ -1132,3 +1133,12 @@ def get_run_info(nbapath):
 
 def is_step_only_idx(idx):
     return idx.start is None and idx.stop is None and idx.step is not None
+
+
+def get_realpath(filepath):
+    if os.path.islink(filepath):
+        abspath = os.path.realpath(filepath)
+        data_dir = get_data_dir()
+        return os.path.join(data_dir, os.path.split(abspath)[1])
+    else:
+        return os.path.realpath(filepath)
