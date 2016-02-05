@@ -11,7 +11,7 @@ argh==0.25.0
 python-crontab==1.8.1
 BeautifulSoup==3.2.1
 tables==3.1.1
-pandas==0.16.2
+pandas==0.17.0
 ipython==4.0.0
 pyzmq==14.4.1
 tornado==4.0.2
