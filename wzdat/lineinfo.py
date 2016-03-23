@@ -293,19 +293,23 @@ class LineInfoImpl_Count(ILineInfoImpl):
 
     @property
     def nodes(self):
-        return (self.node,) * self.count
+        for i in xrange(self.count):
+            yield self.node
 
     @property
     def kinds(self):
-        return (self.kind,) * self.count
+        for i in xrange(self.count):
+            yield self.kind
 
     @property
     def dates(self):
-        return (self.date,) * self.count
+        for i in xrange(self.count):
+            yield self.date
 
     @property
     def files(self):
-        return (self._file,) * self.count
+        for i in xrange(self.count):
+            yield self._file
 
     @property
     def unique_nodes(self):
