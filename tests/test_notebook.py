@@ -232,7 +232,7 @@ def test_notebook_depresolv(fxsoldir):
 def test_notebook_dashboard(fxsoldir):
     nbdir = get_notebook_dir()
     dnbs = [nbpath for nbpath in iter_dashboard_notebook(nbdir)]
-    assert len(dnbs) == 4
+    assert len(dnbs) == 5
 
 
 def test_notebook_cron(fxsoldir):
@@ -276,6 +276,6 @@ def test_notebook_manifest_error():
         with open(mpath, 'r') as f:
             data = json.loads(f.read())
         cells = data['cells']
-        assert 'invalid syntax' in cells[0]['outputs'][0]['text']
+        assert 'invalid syntax' in cells[0]['outputs'][0]['traceback'][0]
     else:
         assert False

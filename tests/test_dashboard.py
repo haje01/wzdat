@@ -18,7 +18,6 @@ def test_dashboard_home(app):
     assert '200 OK' == rv.status
     assert 'WzDat MYPRJ Dashboard' in rv.data
     assert 'test-notebook' in rv.data
-    assert 'current time' in rv.data
     assert 'test-notebook2' in rv.data
     assert 'test-notebook3' not in rv.data
     assert 'test-notebook-plot' in rv.data
