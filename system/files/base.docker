@@ -69,7 +69,33 @@ RUN pip3 install snakemake
 # Update Bash
 RUN apt-get update && apt-get install --only-upgrade bash
 
-{%WZDAT_REQUIREMENTS%}
+# WzDat requirements
+RUN pip install Markdown==2.4.1
+RUN pip install numpy==1.9.2
+RUN pip install scipy==0.14.0
+RUN pip install numexpr==2.4.3
+RUN pip install Cython==0.21.1
+RUN pip install PyYAML==3.11
+RUN pip install pygeoip==0.3.1
+RUN pip install matplotlib==1.4.2
+RUN pip install Flask==0.10.1
+RUN pip install argh==0.25.0
+RUN pip install python-crontab==1.8.1
+RUN pip install BeautifulSoup==3.2.1
+RUN pip install tables==3.1.1
+RUN pip install pandas==0.17.0
+RUN pip install ipython==4.0.0
+RUN pip install pyzmq==14.4.1
+RUN pip install tornado==4.0.2
+RUN pip install requests==2.5.1
+RUN pip install redis==2.10.3
+RUN pip install hiredis==0.2.0
+RUN pip install psutil==3.1.1
+RUN pip install runipy==0.1.3
+RUN pip install pytz==2015.4
+RUN pip install jupyter==1.0.0
+RUN pip install nbformat==4.0.0
+RUN pip install ipykernel==4.0.3
 
 # for ML
 RUN pip install scikit-learn==0.16.1
