@@ -929,8 +929,9 @@ def get_notebook_rpath(fallback_nbpath=True):
         else:
             raise
 
-    url = "http://{}:{}/api/sessions".format(
-        get_wzdat_host(), get_ipython_port())
+    # url = "http://{}:{}/api/sessions".format(
+    #     get_wzdat_host(), get_ipython_port())
+    url = "http://localhost:8090/api/sessions"
     sessions = json.load(urllib2.urlopen(url))
     for sess in sessions:
         if sess['kernel']['id'] == kernel_id:
